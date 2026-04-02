@@ -2,3 +2,9 @@
 *.translation
 *.pyc
 .DS_Store
+
+# 导入元数据文件
+*.import
+
+# Godot 导出配置（包含敏感信息）
+export_presets.cfg
