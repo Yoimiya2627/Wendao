@@ -1,0 +1,235 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script"      path="res://scripts/ShopScene.gd"   id="1"]
+[ext_resource type="PackedScene" path="res://scenes/NPC.tscn"         id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn"      id="3"]
+[ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="4"]
+
+; ── 碰撞形状（场景尺寸 480×320，tile=32px，15×10 格）────────────
+; 后室整体（顶部 2 行 y=0-64，含左右墙上半段）
+[sub_resource type="RectangleShape2D" id="Wall_top"]
+size = Vector2(480.0, 64.0)
+
+; 底部边界（场景外侧）
+[sub_resource type="RectangleShape2D" id="Wall_bot"]
+size = Vector2(480.0, 20.0)
+
+; 左墙（1格=32px，全高）
+[sub_resource type="RectangleShape2D" id="Wall_lft"]
+size = Vector2(32.0, 320.0)
+
+; 右墙（1格=32px，全高）
+[sub_resource type="RectangleShape2D" id="Wall_rgt"]
+size = Vector2(32.0, 320.0)
+
+; 柜台碰撞条（y=64-80，x=32-448）
+[sub_resource type="RectangleShape2D" id="Counter_col"]
+size = Vector2(416.0, 16.0)
+
+; 出口触发区（左下角，贴紧出口标记，玩家走到正中央才触发）
+[sub_resource type="RectangleShape2D" id="Exit_shape"]
+size = Vector2(32.0, 28.0)
+
+; ── 场景根节点 ────────────────────────────────────────────────────
+[node name="ShopScene" type="Node2D"]
+script = ExtResource("1")
+
+; ── 背景装饰层 ────────────────────────────────────────────────────
+[node name="Background" type="Node2D" parent="."]
+
+; 温暖木地板（满铺 480×320）
+[node name="Floor" type="ColorRect" parent="Background"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.68, 0.48, 0.28, 1)
+
+; 后室/灶台区背景（顶部 2 格，深棕）
+[node name="WallTop" type="ColorRect" parent="Background"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 480.0
+offset_bottom = 64.0
+color = Color(0.35, 0.22, 0.10, 1)
+
+; 左墙（1 格宽）
+[node name="WallLeft" type="ColorRect" parent="Background"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 32.0
+offset_bottom = 320.0
+color = Color(0.35, 0.22, 0.10, 1)
+
+; 右墙（1 格宽）
+[node name="WallRight" type="ColorRect" parent="Background"]
+offset_left = 448.0
+offset_top = 0.0
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.35, 0.22, 0.10, 1)
+
+; 木制柜台面（y=64-80）
+[node name="Counter" type="ColorRect" parent="Background"]
+offset_left = 32.0
+offset_top = 64.0
+offset_right = 448.0
+offset_bottom = 80.0
+color = Color(0.50, 0.32, 0.14, 1)
+
+; 柜台前沿阴影
+[node name="CounterShadow" type="ColorRect" parent="Background"]
+offset_left = 32.0
+offset_top = 80.0
+offset_right = 448.0
+offset_bottom = 86.0
+color = Color(0.22, 0.14, 0.06, 0.6)
+
+; 右侧货架（x=400-440，y=128-260）
+[node name="Shelf" type="ColorRect" parent="Background"]
+offset_left = 408.0
+offset_top = 128.0
+offset_right = 440.0
+offset_bottom = 264.0
+color = Color(0.42, 0.28, 0.12, 1)
+
+; 货架隔板（中段横条）
+[node name="ShelfDivider" type="ColorRect" parent="Background"]
+offset_left = 408.0
+offset_top = 192.0
+offset_right = 440.0
+offset_bottom = 198.0
+color = Color(0.28, 0.18, 0.08, 0.8)
+
+; 地毯（中央暖色小方块，增加空间层次感）
+[node name="Rug" type="ColorRect" parent="Background"]
+offset_left = 96.0
+offset_top = 200.0
+offset_right = 384.0
+offset_bottom = 272.0
+color = Color(0.55, 0.30, 0.18, 0.45)
+
+; 破碗（地毯左上角，柜台旁）
+[node name="BrokenBowl" type="ColorRect" parent="Background"]
+offset_left = 104.0
+offset_top = 128.0
+offset_right = 128.0
+offset_bottom = 144.0
+color = Color(0.60, 0.52, 0.42, 0.9)
+
+; 出口标记（左下角，x=32-96，y=256-316，暖棕色与室内风格一致）
+[node name="ExitMarker" type="ColorRect" parent="Background"]
+offset_left = 32.0
+offset_top = 256.0
+offset_right = 96.0
+offset_bottom = 316.0
+color = Color(0.50, 0.32, 0.14, 0.5)
+
+; 出口文字
+[node name="ExitLabel" type="Label" parent="Background"]
+offset_left = 34.0
+offset_top = 278.0
+offset_right = 94.0
+offset_bottom = 316.0
+text = "出口"
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1.0, 0.85, 0.60, 1.0)
+
+; ── 碰撞边界 ─────────────────────────────────────────────────────
+[node name="Boundaries" type="Node2D" parent="."]
+
+; 后室整体碰撞（y=0-64）
+[node name="WallTop" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(240.0, 32.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallTop"]
+shape = SubResource("Wall_top")
+
+; 底部边界
+[node name="WallBot" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(240.0, 330.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallBot"]
+shape = SubResource("Wall_bot")
+
+; 左墙
+[node name="WallLft" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(16.0, 160.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallLft"]
+shape = SubResource("Wall_lft")
+
+; 右墙
+[node name="WallRgt" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(464.0, 160.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallRgt"]
+shape = SubResource("Wall_rgt")
+
+; 柜台碰撞
+[node name="CounterWall" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(240.0, 72.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/CounterWall"]
+shape = SubResource("Counter_col")
+
+; ── NPC 层 ────────────────────────────────────────────────────────
+[node name="NPCLayer" type="Node2D" parent="."]
+
+; 苏明（父亲，柜台前方中央）
+[node name="NPC_SuMing" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(240.0, 145.0)
+npc_name = "苏明"
+dialogue_scene_id = "suming"
+body_color = Color(0.25, 0.35, 0.55, 1)
+
+; 年年（妹妹，柜台前方偏左，白色与其他NPC区分）
+[node name="NPC_Niannian" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(144.0, 155.0)
+npc_name = "年年"
+dialogue_scene_id = "niannian"
+body_color = Color(1.0, 1.0, 1.0, 1)
+
+; 大鱼（猫，柜台前方偏右）
+[node name="NPC_Dayu" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(352.0, 155.0)
+npc_name = "大鱼"
+dialogue_scene_id = "dayu"
+body_color = Color(0.85, 0.40, 0.15, 1)
+
+; ── 出口触发区 ────────────────────────────────────────────────────
+[node name="ExitArea" type="Area2D" parent="."]
+position = Vector2(48.0, 288.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitArea"]
+shape = SubResource("Exit_shape")
+
+; ── 出生点（房间中央偏下，与苏明(145)拉开距离避免进场触发交互提示）──
+[node name="SpawnPoint" type="Node2D" parent="."]
+position = Vector2(240.0, 230.0)
+
+; ── 玩家（初始位置由 _ready() 从 SpawnPoint 读取，此处仅为编辑器预览）──
+[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector2(240.0, 230.0)
+
+; ── UI 层 ────────────────────────────────────────────────────────
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="DialogueBox" parent="UILayer" instance=ExtResource("4")]
+
+; 出口提示标签：进入出口区域时居中显示在屏幕下方
+[node name="ExitHintLabel" type="Label" parent="UILayer"]
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_right = 100.0
+offset_top = -80.0
+offset_bottom = -50.0
+text = "按 E 离开"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1, 1, 0.6, 1)
+visible = false

@@ -1,0 +1,151 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script"      path="res://scripts/PlazaScene.gd"   id="1"]
+[ext_resource type="PackedScene" path="res://scenes/NPC.tscn"          id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn"       id="3"]
+[ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn"  id="4"]
+
+; 四面边界碰撞形状（800×600 地图）
+[sub_resource type="RectangleShape2D" id="Wall_top"]
+size = Vector2(800.0, 20.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_bot"]
+size = Vector2(800.0, 20.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_lft"]
+size = Vector2(20.0, 600.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_rgt"]
+size = Vector2(20.0, 600.0)
+
+; 左侧出口触发区形状（60×120 px）
+[sub_resource type="RectangleShape2D" id="Exit_shape"]
+size = Vector2(60.0, 120.0)
+
+; ── 场景根节点 ───────────────────────────────────────────────
+[node name="PlazaScene" type="Node2D"]
+script = ExtResource("1")
+
+; ── 背景装饰层（由下到上依次渲染）──────────────────────────
+[node name="Background" type="Node2D" parent="."]
+
+; 灰色石板地面（铺满 800×600）
+[node name="Floor" type="ColorRect" parent="Background"]
+color = Color(0.58, 0.56, 0.60, 1)
+size = Vector2(800.0, 600.0)
+
+; 广场内圈浅色区域（体现石板纹理感）
+[node name="PlazaInner" type="ColorRect" parent="Background"]
+position = Vector2(40.0, 40.0)
+color = Color(0.65, 0.63, 0.67, 1)
+size = Vector2(720.0, 520.0)
+
+; 顶部装饰围墙（深灰）
+[node name="BorderTop" type="ColorRect" parent="Background"]
+color = Color(0.40, 0.38, 0.42, 1)
+size = Vector2(800.0, 55.0)
+
+; 底部装饰围墙
+[node name="BorderBot" type="ColorRect" parent="Background"]
+position = Vector2(0.0, 545.0)
+color = Color(0.40, 0.38, 0.42, 1)
+size = Vector2(800.0, 55.0)
+
+; 右侧装饰围墙
+[node name="BorderRgt" type="ColorRect" parent="Background"]
+position = Vector2(745.0, 0.0)
+color = Color(0.40, 0.38, 0.42, 1)
+size = Vector2(55.0, 600.0)
+
+; 测试石台（中央偏上，灰白色，玩家站上去接受灵根测试）
+[node name="TestPlatform" type="ColorRect" parent="Background"]
+position = Vector2(350.0, 250.0)
+color = Color(0.85, 0.85, 0.88, 1)
+size = Vector2(100.0, 80.0)
+
+; 石台基座装饰（稍深一圈）
+[node name="PlatformBase" type="ColorRect" parent="Background"]
+position = Vector2(344.0, 324.0)
+color = Color(0.70, 0.68, 0.72, 1)
+size = Vector2(112.0, 10.0)
+
+; 左侧出口提示色块（半透明绿）
+[node name="ExitMarker" type="ColorRect" parent="Background"]
+position = Vector2(10.0, 240.0)
+color = Color(0.30, 0.65, 0.30, 0.35)
+size = Vector2(60.0, 120.0)
+
+; ── 边界碰撞墙（防止玩家走出地图）──────────────────────────
+[node name="Boundaries" type="Node2D" parent="."]
+
+[node name="WallTop" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(400.0, -10.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallTop"]
+shape = SubResource("Wall_top")
+
+[node name="WallBot" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(400.0, 610.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallBot"]
+shape = SubResource("Wall_bot")
+
+[node name="WallLft" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(-10.0, 300.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallLft"]
+shape = SubResource("Wall_lft")
+
+[node name="WallRgt" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(810.0, 300.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallRgt"]
+shape = SubResource("Wall_rgt")
+
+; ── NPC 层 ────────────────────────────────────────────────────
+[node name="NPCLayer" type="Node2D" parent="."]
+
+; 测试官（石台正前方主持测试，使用 test 对话场景）
+[node name="NPC_Examiner" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(400.0, 195.0)
+npc_name = "测试官"
+dialogue_scene_id = "test"
+body_color = Color(0.60, 0.60, 0.75, 1)
+
+; 围观者甲（左侧人群）
+[node name="NPC_BystanderA" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(160.0, 310.0)
+npc_name = "围观者甲"
+dialogue_scene_id = "market"
+body_color = Color(0.55, 0.45, 0.35, 1)
+
+; 围观者乙（右侧人群）
+[node name="NPC_BystanderB" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(630.0, 310.0)
+npc_name = "围观者乙"
+dialogue_scene_id = "market"
+body_color = Color(0.50, 0.60, 0.45, 1)
+
+; 围观者丙（左下方人群，稍靠后）
+[node name="NPC_BystanderC" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(220.0, 440.0)
+npc_name = "围观者丙"
+dialogue_scene_id = "market"
+body_color = Color(0.65, 0.50, 0.40, 1)
+
+; ── 出口触发区（左侧，与出口标记对齐）────────────────────────
+[node name="ExitArea" type="Area2D" parent="."]
+position = Vector2(40.0, 300.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitArea"]
+shape = SubResource("Exit_shape")
+
+; ── 玩家（初始在石台正前方，面朝测试官）───────────────────────
+[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector2(400.0, 380.0)
+
+; ── UI 层（CanvasLayer 确保对话框始终渲染在最顶层）──────────
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="DialogueBox" parent="UILayer" instance=ExtResource("4")]

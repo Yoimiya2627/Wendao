@@ -1,0 +1,116 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script"      path="res://scripts/TownScene.gd"   id="1"]
+[ext_resource type="PackedScene" path="res://scenes/NPC.tscn"         id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn"      id="3"]
+[ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="4"]
+
+; 地图四边边界碰撞形状（防止玩家走出地图）
+[sub_resource type="RectangleShape2D" id="Wall_top"]
+size = Vector2(1320.0, 20.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_bot"]
+size = Vector2(1320.0, 20.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_lft"]
+size = Vector2(20.0, 1000.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_rgt"]
+size = Vector2(20.0, 1000.0)
+
+; ── 场景根节点 ────────────────────────────────────────────────────
+[node name="TownScene" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1")
+
+; TileMap：Layer0=地面，Layer1=碰撞（由TownScene.gd._ready()程序化填充）
+[node name="TownMap" type="TileMap" parent="."]
+y_sort_enabled = true
+tile_set = null
+format = 2
+
+; ── 地图四边边界（StaticBody2D，防越界） ────────────────────────────
+[node name="Boundaries" type="Node2D" parent="."]
+
+[node name="WallTop" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(640.0, -10.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallTop"]
+shape = SubResource("Wall_top")
+
+; 地图底边在960px处，WallBot置于970确保紧贴底边
+[node name="WallBot" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(640.0, 970.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallBot"]
+shape = SubResource("Wall_bot")
+
+[node name="WallLft" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(-10.0, 480.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallLft"]
+shape = SubResource("Wall_lft")
+
+[node name="WallRgt" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(1290.0, 480.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallRgt"]
+shape = SubResource("Wall_rgt")
+
+; ── NPC 层 ───────────────────────────────────────────────────────
+[node name="NPCLayer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+; 茶馆掌柜：格(27,25) → 像素(864,800)
+[node name="NPC_TeahouseBoss" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(864.0, 800.0)
+npc_name = "茶馆掌柜"
+dialogue_scene_id = "teahouse_before"
+body_color = Color(0.30, 0.50, 0.80, 1)
+
+; 老婆婆（碎玉集市摊贩）：格(6,22) → 像素(192,704)
+[node name="NPC_OldWoman" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(192.0, 704.0)
+npc_name = "老婆婆"
+dialogue_scene_id = "market"
+body_color = Color(0.72, 0.67, 0.60, 1)
+
+; 顾飞白（南门附近，仅 story_phase >= 4 可见并可交互）
+; 格(20,27) → 像素(640,864)
+[node name="NPC_GufeiBai" parent="NPCLayer" instance=ExtResource("2")]
+position = Vector2(640.0, 864.0)
+npc_name = "顾飞白"
+dialogue_scene_id = "after_battle"
+body_color = Color(0.85, 0.85, 0.90, 1)
+required_phase = 4
+
+; ── 出生点（TownScene.gd._set_spawn_position() 动态修改此位置）────
+[node name="SpawnPoint" type="Node2D" parent="."]
+position = Vector2(640.0, 448.0)
+
+; ── 玩家（初始位置由 _set_spawn_position() 覆盖，此处仅为编辑器预览）─
+[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector2(640.0, 448.0)
+
+; ── UI 层（CanvasLayer 确保 UI 渲染在最顶层，不受摄像机影响）────────
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="DialogueBox" parent="UILayer" instance=ExtResource("4")]
+
+; 建筑入口提示标签：靠近入口时居中显示在屏幕下方
+; 锚点：水平居中，底部对齐；偏移量：上方80px处，高30px
+[node name="EnterHintLabel" type="Label" parent="UILayer"]
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_right = 100.0
+offset_top = -80.0
+offset_bottom = -50.0
+text = "按 E 进入"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(1, 1, 0.6, 1)
+visible = false

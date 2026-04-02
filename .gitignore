@@ -1,0 +1,4 @@
+.godot/
+*.translation
+*.pyc
+.DS_Store

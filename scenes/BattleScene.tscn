@@ -1,0 +1,158 @@
+[gd_scene format=3 uid="uid://bvca8ohiagmbi"]
+
+[ext_resource type="Script" uid="uid://bvyuu25jmhh6y" path="res://scripts/BattleUI.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="2"]
+
+[node name="BattleScene" type="Control" unique_id=779163303]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="." unique_id=2139864171]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.078, 0.051, 0.149, 1)
+
+[node name="TitleLabel" type="Label" parent="." unique_id=328209684]
+layout_mode = 0
+offset_left = 440.0
+offset_top = 12.0
+offset_right = 840.0
+offset_bottom = 54.0
+theme_override_font_sizes/font_size = 30
+text = "问  道"
+horizontal_alignment = 1
+
+[node name="EnemyPanel" type="Panel" parent="." unique_id=1540455503]
+layout_mode = 0
+offset_left = 680.0
+offset_top = 60.0
+offset_right = 1240.0
+offset_bottom = 220.0
+
+[node name="EnemyNameLabel" type="Label" parent="EnemyPanel" unique_id=1903504666]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 548.0
+offset_bottom = 44.0
+theme_override_font_sizes/font_size = 20
+text = "妖兽"
+
+[node name="EnemyHPBar" type="ProgressBar" parent="EnemyPanel" unique_id=1821412090]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 54.0
+offset_right = 548.0
+offset_bottom = 90.0
+value = 100.0
+show_percentage = false
+
+[node name="EnemyHPLabel" type="Label" parent="EnemyPanel" unique_id=1638286371]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 100.0
+offset_right = 548.0
+offset_bottom = 132.0
+text = "HP: 80 / 80"
+
+[node name="PlayerPanel" type="Panel" parent="." unique_id=1092698283]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 380.0
+offset_right = 620.0
+offset_bottom = 540.0
+
+[node name="PlayerNameLabel" type="Label" parent="PlayerPanel" unique_id=1623586504]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = 548.0
+offset_bottom = 44.0
+theme_override_font_sizes/font_size = 20
+text = "无名散修"
+
+[node name="PlayerHPBar" type="ProgressBar" parent="PlayerPanel" unique_id=1680710275]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 54.0
+offset_right = 548.0
+offset_bottom = 90.0
+value = 100.0
+show_percentage = false
+
+[node name="PlayerHPLabel" type="Label" parent="PlayerPanel" unique_id=11296529]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 100.0
+offset_right = 548.0
+offset_bottom = 132.0
+text = "HP: 100 / 100"
+
+[node name="LogPanel" type="Panel" parent="." unique_id=970382150]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 460.0
+offset_right = 820.0
+offset_bottom = 700.0
+
+[node name="LogTitleLabel" type="Label" parent="LogPanel" unique_id=149724242]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = 750.0
+offset_bottom = 36.0
+text = "── 战斗日志 ──"
+
+[node name="LogText" type="RichTextLabel" parent="LogPanel" unique_id=1174643094]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 42.0
+offset_right = -10.0
+offset_bottom = -10.0
+bbcode_enabled = true
+scroll_following = true
+
+[node name="SkillPanel" type="VBoxContainer" parent="." unique_id=165985237]
+layout_mode = 0
+offset_left = 870.0
+offset_top = 455.0
+offset_right = 1240.0
+offset_bottom = 700.0
+theme_override_constants/separation = 10
+
+[node name="SkillTitleLabel" type="Label" parent="SkillPanel" unique_id=231327972]
+layout_mode = 2
+text = "── 技  能 ──"
+horizontal_alignment = 1
+
+[node name="AttackButton" type="Button" parent="SkillPanel" unique_id=1537043644]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "⚔  普通攻击"
+
+[node name="SkillButton" type="Button" parent="SkillPanel" unique_id=1181962217]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "✦  聚 灵 弹"
+
+[node name="DefendButton" type="Button" parent="SkillPanel" unique_id=1695527808]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "🛡  防    御"
+
+[node name="DialogueBox" parent="." unique_id=443098735 instance=ExtResource("2")]
+layout_mode = 1
+grow_horizontal = 2
+grow_vertical = 2

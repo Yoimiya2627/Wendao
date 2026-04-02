@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/NPC.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="Rect_body"]
+size = Vector2(24.0, 36.0)
+
+[sub_resource type="CircleShape2D" id="Circle_interact"]
+radius = 24.0
+
+; NPC 根节点（Node2D + NPC.gd）
+[node name="NPC" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1")
+
+; 占位色块（颜色由 NPC.gd._ready() 根据 body_color 属性覆盖）
+[node name="Body" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-12, -18, 12, -18, 12, 18, -12, 18)
+color = Color(0.7, 0.5, 0.2, 1)
+
+; 物理碰撞：阻止玩家穿过 NPC
+[node name="StaticBody" type="StaticBody2D" parent="."]
+
+[node name="BodyShape" type="CollisionShape2D" parent="StaticBody"]
+shape = SubResource("Rect_body")
+
+; 头顶名字标签（默认隐藏，靠近时由 Player 调用 show_name_label 显示）
+[node name="NameLabel" type="Label" parent="."]
+position = Vector2(-32.0, -46.0)
+text = "NPC名"
+theme_override_font_sizes/font_size = 14
+
+; 互动触发区（玩家的 InteractArea 进入此区域后会高亮提示）
+[node name="InteractArea" type="Area2D" parent="."]
+
+[node name="InteractShape" type="CollisionShape2D" parent="InteractArea"]
+shape = SubResource("Circle_interact")

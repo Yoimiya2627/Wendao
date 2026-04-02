@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(where python:*)",
+      "Bash(where node:*)",
+      "Bash(where jq:*)",
+      "Bash(node:*)",
+      "Bash(find E:/wendao -name *.ttf -o -name *.otf -o -name *.woff)"
+    ]
+  }
+}

@@ -1,0 +1,120 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script"      path="res://scripts/TempleScene.gd"  id="1"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn"      id="2"]
+[ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="3"]
+
+[sub_resource type="RectangleShape2D" id="Wall_top"]
+size = Vector2(1320.0, 20.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_bot"]
+size = Vector2(1320.0, 20.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_lft"]
+size = Vector2(20.0, 760.0)
+
+[sub_resource type="RectangleShape2D" id="Wall_rgt"]
+size = Vector2(20.0, 760.0)
+
+[sub_resource type="RectangleShape2D" id="Exit_shape"]
+size = Vector2(120.0, 80.0)
+
+; ── 场景根节点 ────────────────────────────────────────────────────
+[node name="TempleScene" type="Node2D"]
+script = ExtResource("1")
+
+; 背景：深绿废庙氛围，1280×720
+[node name="Background" type="ColorRect" parent="."]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.08, 0.12, 0.08, 1)
+
+; 顶部装饰条
+[node name="WallTop" type="ColorRect" parent="."]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 1280.0
+offset_bottom = 100.0
+color = Color(0.05, 0.08, 0.05, 1)
+
+; 占位文字（第三阶段替换为四块碑文）
+[node name="PlaceholderLabel" type="Label" parent="."]
+offset_left = 440.0
+offset_top = 300.0
+offset_right = 840.0
+offset_bottom = 345.0
+text = "废庙（第三阶段：碑文+战斗）"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.5, 0.8, 0.5, 1)
+
+[node name="ToDoLabel" type="Label" parent="."]
+offset_left = 390.0
+offset_top = 355.0
+offset_right = 890.0
+offset_bottom = 395.0
+text = "TODO: 四块道纹碑文 → 石碑发光 → 混沌灵根激活 → 战斗"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.4, 0.6, 0.4, 0.7)
+
+; 出口标记（左下角）
+[node name="ExitMarker" type="ColorRect" parent="."]
+offset_left = 20.0
+offset_top = 620.0
+offset_right = 140.0
+offset_bottom = 700.0
+color = Color(0.30, 0.65, 0.30, 0.35)
+
+[node name="ExitLabel" type="Label" parent="."]
+offset_left = 22.0
+offset_top = 700.0
+offset_right = 138.0
+offset_bottom = 720.0
+text = "出口"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.5, 0.9, 0.5, 0.8)
+
+; 边界碰撞
+[node name="Boundaries" type="Node2D" parent="."]
+
+[node name="WallTop" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(640.0, -10.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallTop"]
+shape = SubResource("Wall_top")
+
+[node name="WallBot" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(640.0, 730.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallBot"]
+shape = SubResource("Wall_bot")
+
+[node name="WallLft" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(-10.0, 360.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallLft"]
+shape = SubResource("Wall_lft")
+
+[node name="WallRgt" type="StaticBody2D" parent="Boundaries"]
+position = Vector2(1290.0, 360.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallRgt"]
+shape = SubResource("Wall_rgt")
+
+; 出口触发区
+[node name="ExitArea" type="Area2D" parent="."]
+position = Vector2(80.0, 660.0)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitArea"]
+shape = SubResource("Exit_shape")
+
+; 玩家
+[node name="Player" parent="." instance=ExtResource("2")]
+position = Vector2(640.0, 520.0)
+
+; UI 层
+[node name="UILayer" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="DialogueBox" parent="UILayer" instance=ExtResource("3")]
