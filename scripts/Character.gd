@@ -46,3 +46,10 @@ func is_alive() -> bool:
 ## 使用 Godot 4 虚方法 _to_string()，令 str(obj) / print(obj) 均走此路径。
 func _to_string() -> String:
 	return "%s  HP:%d/%d  ATK:%d  DEF:%d" % [char_name, hp, max_hp, atk, def]
+
+
+## 造成真实伤害（无视防御），用于蓄势破甲、淬血、感应破防、毒液
+func take_damage_raw(amount: int) -> int:
+	var actual: int = max(amount, 1)
+	hp = max(hp - actual, 0)
+	return actual

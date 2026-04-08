@@ -10,8 +10,6 @@ var player: Character = null
 # ── 游戏进度 ──────────────────────────────────────
 var current_chapter: int = 1   ## 当前章节
 var gold: int = 0              ## 灵石（货币）
-var exp: int = 0               ## 经验值
-var level: int = 1             ## 境界等级
 
 # ── 剧情阶段 ──────────────────────────────────────
 ## 0 = 游戏刚开始，自动播放 morning 场景
@@ -29,6 +27,57 @@ signal story_phase_changed(new_phase: int)
 ## TownScene._ready() 读取此值决定出生点，读后清空
 var last_scene: String = ""
 
+## 回程强制触发节点的已触发ID列表（持久化，防止场景切换后重置）
+var triggered_events: Array[String] = []
+
+## 破碗是否已交互（持久化，只能触发一次）
+var bowl_interacted: bool = false
+
+## 碑文阅读进度（持久化，四个元素对应四块碑文）
+var stones_read: Array[bool] = [false, false, false, false]
+
+## 夜晚是否已触发（持久化，防止进出室内场景后重置）
+var night_triggered: bool = false
+
+## 隐藏道具：算命先生的铜钱
+var got_coin: bool = false
+
+## 章末路径标记（"a"=一起走，"b"=回去看爹，""=未到章末）
+var chapter_end_path: String = ""
+
+## 存档时所在场景名（供读档后跳转用，与last_scene解耦）
+var saved_scene_name: String = "TownScene"
+## 存档时玩家坐标（仅TownScene内有意义）
+var saved_player_position: Vector2 = Vector2.ZERO
+
+## 消耗品库存
+var heal_potions: int = 0    ## 伤药数量
+var incenses: int = 0        ## 定神香数量
+var talismans: int = 0       ## 辟邪符数量
+
+## 古井今日是否已回血（每次进入TownScene重置）
+var well_used_today: bool = false
+
+## 旧物背包已解锁物品列表（持久化）
+var unlocked_old_items: Array[String] = []
+
+## 战斗是否胜利（BattleScene写入，TempleScene读取后清空）
+var battle_won: bool = false
+
+## 废庙副本状态
+var temple_dungeon_state: Dictionary = {
+	"wolf_left_defeated": false,
+	"wolf_right_defeated": false,
+	"toad_defeated": false,
+	"boss_defeated": false,
+}
+## 当前正在交战的敌人ID
+var current_enemy_id: String = ""
+## 当前敌人数据（供BattleUI读取）
+var current_enemy_data: Dictionary = {}
+## 战斗前玩家坐标（返回TempleScene后恢复）
+var last_player_position: Vector2 = Vector2.ZERO
+
 
 func _ready() -> void:
 	# 创建默认玩家角色（后续可改为从存档加载）
@@ -37,34 +86,59 @@ func _ready() -> void:
 
 ## 初始化玩家角色，使用默认起始属性。
 func _init_player() -> void:
-	player = Character.new("无名散修", 100, 15, 5)
+	player = Character.new("苏云晚", 100, 15, 5)
 	print("GameData: 玩家角色已初始化 —— ", str(player))
 
 
-## 玩家获得经验值，满足阈值后自动升级。
-func gain_exp(amount: int) -> void:
-	exp += amount
-	var threshold: int = level * 100  # 每级所需经验 = 等级 × 100
-	if exp >= threshold:
-		exp -= threshold
-		_level_up()
+## 剧情阶段自增一步，发出信号供场景脚本监听。
+func advance_phase() -> void:
+	story_phase += 1
+	story_phase_changed.emit(story_phase)
+	print("GameData: story_phase推进到 ", story_phase)
 
 
-## 升级：提升属性并打印日志。
-func _level_up() -> void:
-	level += 1
-	player.max_hp += 20
-	player.hp = player.max_hp  # 升级时回满 HP
-	player.atk += 3
-	player.def += 1
-	print("🎊 境界突破！当前等级：%d  %s" % [level, str(player)])
+## 仅供Debug使用，强制设置story_phase到指定值并发出信号
+func debug_set_phase(target: int) -> void:
+	story_phase = target
+	story_phase_changed.emit(story_phase)
+	print("DEBUG GameData: story_phase强制设为 ", story_phase)
 
 
-## 推进剧情阶段，发出信号供场景脚本监听。
-func set_story_phase(phase: int) -> void:
-	story_phase = phase
-	story_phase_changed.emit(phase)
-	print("GameData: 剧情阶段推进 → phase ", phase)
+## 重置所有游戏数据到初始状态（新游戏时调用）
+## 不清除 manual_1 / manual_2 手动存档文件，只重置内存数据
+func reset_to_default() -> void:
+	_init_player()
+	current_chapter    = 1
+	gold               = 0
+	story_phase        = 0
+	morning_triggered  = false
+	last_scene         = ""
+	saved_scene_name   = "TownScene"
+	saved_player_position = Vector2.ZERO
+	triggered_events   = []
+	bowl_interacted    = false
+	stones_read        = [false, false, false, false]
+	night_triggered    = false
+
+	got_coin           = false
+	chapter_end_path   = ""
+	heal_potions       = 0
+	incenses           = 0
+	talismans          = 0
+	well_used_today    = false
+	unlocked_old_items = []
+	battle_won         = false
+	temple_dungeon_state = {
+		"wolf_left_defeated": false,
+		"wolf_right_defeated": false,
+		"toad_defeated":       false,
+		"boss_defeated":       false,
+	}
+	current_enemy_id   = ""
+	current_enemy_data = {}
+	last_player_position = Vector2.ZERO
+	story_phase_changed.emit(story_phase)
+	print("GameData: 已重置为初始状态（新游戏）")
 
 
 ## 获得灵石。
@@ -88,10 +162,26 @@ func save_data() -> Dictionary:
 		"player_max_hp":  player.max_hp,
 		"player_atk":     player.atk,
 		"player_def":     player.def,
-		"level":          level,
-		"exp":            exp,
 		"gold":           gold,
 		"chapter":        current_chapter,
+
+		"got_coin":           got_coin,
+		"chapter_end_path":  chapter_end_path,
+		"story_phase":       story_phase,
+		"morning_triggered": morning_triggered,
+		"triggered_events":  triggered_events,
+		"bowl_interacted":   bowl_interacted,
+		"stones_read":       stones_read,
+		"night_triggered":   night_triggered,
+		"temple_dungeon_state": temple_dungeon_state,
+		"last_scene":           last_scene,
+		"heal_potions":         heal_potions,
+		"incenses":             incenses,
+		"talismans":            talismans,
+		"unlocked_old_items":   unlocked_old_items,
+		"saved_scene_name":     get_tree().current_scene.name if get_tree() and get_tree().current_scene else "TownScene",
+		"saved_player_position_x": saved_player_position.x,
+		"saved_player_position_y": saved_player_position.y,
 	}
 
 
@@ -100,8 +190,164 @@ func load_data(data: Dictionary) -> void:
 	player          = Character.new(data["player_name"], data["player_max_hp"],
 									data["player_atk"],  data["player_def"])
 	player.hp       = data["player_hp"]
-	level           = data["level"]
-	exp             = data["exp"]
 	gold            = data["gold"]
-	current_chapter = data["chapter"]
+	current_chapter    = data["chapter"]
+
+	got_coin           = data.get("got_coin", false)
+	chapter_end_path   = data.get("chapter_end_path", "")
+	story_phase        = data.get("story_phase", 0)
+	morning_triggered  = data.get("morning_triggered", false)
+	triggered_events   = Array(data.get("triggered_events", []), TYPE_STRING, "", null)
+	bowl_interacted    = data.get("bowl_interacted", false)
+	stones_read        = Array(data.get("stones_read", [false, false, false, false]), TYPE_BOOL, "", null)
+	night_triggered    = data.get("night_triggered", false)
+	var default_dungeon_state := {
+		"wolf_left_defeated": false,
+		"wolf_right_defeated": false,
+		"toad_defeated": false,
+		"boss_defeated": false
+	}
+	var loaded_dungeon_state: Dictionary = data.get("temple_dungeon_state", {})
+	default_dungeon_state.merge(loaded_dungeon_state, true)
+	temple_dungeon_state = default_dungeon_state
+	last_scene   = data.get("last_scene", "")
+	heal_potions = data.get("heal_potions", 0)
+	incenses     = data.get("incenses", 0)
+	talismans    = data.get("talismans", 0)
+	unlocked_old_items = Array(data.get("unlocked_old_items", []), TYPE_STRING, "", null)
+	well_used_today = false
+	saved_scene_name = data.get("saved_scene_name", "TownScene")
+	saved_player_position = Vector2(
+		data.get("saved_player_position_x", 0.0),
+		data.get("saved_player_position_y", 0.0)
+	)
 	print("GameData: 存档加载完毕 —— ", str(player))
+
+
+## 存档槽路径映射
+const SAVE_PATHS := {
+	"auto":      "user://save_auto.json",
+	"manual_1":  "user://save_manual_1.json",
+	"manual_2":  "user://save_manual_2.json",
+	"crossroad": "user://save_crossroad.json",
+}
+
+
+## 将当前GameData写入指定存档槽
+## slot_name: "auto" / "manual_1" / "manual_2" / "crossroad"
+## 使用"先写临时文件再替换"的安全写入策略，防止写入中断导致存档损坏
+func save_to_file(slot_name: String = "auto") -> void:
+	if not SAVE_PATHS.has(slot_name):
+		push_error("GameData: 未知存档槽 '%s'" % slot_name)
+		return
+
+	var path: String = SAVE_PATHS[slot_name]
+	var data := save_data()
+	var json_str := JSON.stringify(data, "\t")
+
+	## 先写临时文件
+	var tmp_path := path + ".tmp"
+	var tmp_file := FileAccess.open(tmp_path, FileAccess.WRITE)
+	if tmp_file == null:
+		push_error("GameData: 无法写入临时存档文件，错误码 %d" % FileAccess.get_open_error())
+		return
+	tmp_file.store_string(json_str)
+	tmp_file.close()
+
+	## 临时文件写入成功后替换正式存档
+	## Windows上rename_absolute无法覆盖已存在文件，必须先删除旧档
+	if FileAccess.file_exists(path):
+		var rm_err := DirAccess.remove_absolute(path)
+		if rm_err != OK:
+			push_error("GameData: 无法删除旧存档以进行覆盖，错误码 %d" % rm_err)
+			return
+
+	var err := DirAccess.rename_absolute(tmp_path, path)
+	if err != OK:
+		push_error("GameData: 存档替换失败，错误码 %d" % err)
+		return
+
+	print("GameData: 存档已保存 → %s（槽位：%s）" % [path, slot_name])
+
+
+## 从指定存档槽读取并恢复GameData
+## slot_name: "auto" / "manual_1" / "manual_2" / "crossroad"
+## 返回true表示成功读取，false表示无存档或读取失败
+func load_from_file(slot_name: String = "auto") -> bool:
+	if not SAVE_PATHS.has(slot_name):
+		push_error("GameData: 未知存档槽 '%s'" % slot_name)
+		return false
+
+	var path: String = SAVE_PATHS[slot_name]
+
+	if not FileAccess.file_exists(path):
+		print("GameData: 槽位 '%s' 无存档文件" % slot_name)
+		return false
+
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("GameData: 无法读取存档文件，错误码 %d" % FileAccess.get_open_error())
+		return false
+
+	var raw := file.get_as_text()
+	file.close()
+
+	var json := JSON.new()
+	var err := json.parse(raw)
+	if err != OK:
+		push_error("GameData: 存档JSON解析失败（行 %d）：%s" % [
+			json.get_error_line(), json.get_error_message()])
+		return false
+
+	load_data(json.data)
+	print("GameData: 存档读取成功（槽位：%s）story_phase = %d，last_scene = %s" % [
+		slot_name, story_phase, last_scene])
+	return true
+
+
+## 删除指定存档槽文件（用于"重新开始"或覆盖提示前的清理）
+func delete_save(slot_name: String = "auto") -> void:
+	if not SAVE_PATHS.has(slot_name):
+		push_error("GameData: 未知存档槽 '%s'" % slot_name)
+		return
+
+	var path: String = SAVE_PATHS[slot_name]
+	if FileAccess.file_exists(path):
+		var err := DirAccess.remove_absolute(path)
+		if err == OK:
+			print("GameData: 存档已删除（槽位：%s）" % slot_name)
+		else:
+			push_error("GameData: 存档删除失败，错误码 %d" % err)
+
+
+## 查询指定存档槽是否有存档文件（供主菜单和系统菜单判断按钮状态）
+func has_save(slot_name: String) -> bool:
+	if not SAVE_PATHS.has(slot_name):
+		return false
+	return FileAccess.file_exists(SAVE_PATHS[slot_name])
+
+
+## 获取指定存档槽的简要信息（供主菜单显示存档预览）
+## 返回字典含 phase/gold/name，读取失败返回空字典
+func get_save_preview(slot_name: String) -> Dictionary:
+	if not has_save(slot_name):
+		return {}
+
+	var path: String = SAVE_PATHS[slot_name]
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {}
+
+	var raw := file.get_as_text()
+	file.close()
+
+	var json := JSON.new()
+	if json.parse(raw) != OK:
+		return {}
+
+	var data: Dictionary = json.data
+	return {
+		"phase": data.get("story_phase", 0),
+		"gold":  data.get("gold", 0),
+		"name":  data.get("player_name", "苏云晚"),
+	}

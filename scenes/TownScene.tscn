@@ -1,116 +1,481 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://14exw07r1v01"]
 
-[ext_resource type="Script"      path="res://scripts/TownScene.gd"   id="1"]
-[ext_resource type="PackedScene" path="res://scenes/NPC.tscn"         id="2"]
-[ext_resource type="PackedScene" path="res://scenes/Player.tscn"      id="3"]
+[ext_resource type="Script" uid="uid://vrl1ukmqllxr" path="res://scripts/TownScene.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/NPC.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="4"]
 
-; 地图四边边界碰撞形状（防止玩家走出地图）
 [sub_resource type="RectangleShape2D" id="Wall_top"]
-size = Vector2(1320.0, 20.0)
+size = Vector2(1320, 20)
 
 [sub_resource type="RectangleShape2D" id="Wall_bot"]
-size = Vector2(1320.0, 20.0)
+size = Vector2(1320, 20)
 
 [sub_resource type="RectangleShape2D" id="Wall_lft"]
-size = Vector2(20.0, 1000.0)
+size = Vector2(20, 1000)
 
 [sub_resource type="RectangleShape2D" id="Wall_rgt"]
-size = Vector2(20.0, 1000.0)
+size = Vector2(20, 1000)
 
-; ── 场景根节点 ────────────────────────────────────────────────────
-[node name="TownScene" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="Temple_shape"]
+size = Vector2(96, 160)
+
+[sub_resource type="RectangleShape2D" id="Stone_interact_shape"]
+size = Vector2(40, 40)
+
+[sub_resource type="RectangleShape2D" id="Stone_collide_shape"]
+size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="Bystander_shape"]
+size = Vector2(12, 20)
+
+[node name="TownScene" type="Node2D" unique_id=496292225]
 y_sort_enabled = true
 script = ExtResource("1")
 
-; TileMap：Layer0=地面，Layer1=碰撞（由TownScene.gd._ready()程序化填充）
-[node name="TownMap" type="TileMap" parent="."]
+[node name="TownMap" type="TileMap" parent="." unique_id=504387095]
 y_sort_enabled = true
-tile_set = null
 format = 2
 
-; ── 地图四边边界（StaticBody2D，防越界） ────────────────────────────
-[node name="Boundaries" type="Node2D" parent="."]
+[node name="Boundaries" type="Node2D" parent="." unique_id=766099908]
 
-[node name="WallTop" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(640.0, -10.0)
+[node name="WallTop" type="StaticBody2D" parent="Boundaries" unique_id=1842059936]
+position = Vector2(640, -10)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallTop"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallTop" unique_id=1590516847]
 shape = SubResource("Wall_top")
 
-; 地图底边在960px处，WallBot置于970确保紧贴底边
-[node name="WallBot" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(640.0, 970.0)
+[node name="WallBot" type="StaticBody2D" parent="Boundaries" unique_id=1653779906]
+position = Vector2(640, 970)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallBot"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallBot" unique_id=2089605385]
 shape = SubResource("Wall_bot")
 
-[node name="WallLft" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(-10.0, 480.0)
+[node name="WallLft" type="StaticBody2D" parent="Boundaries" unique_id=308515378]
+position = Vector2(-10, 480)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallLft"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallLft" unique_id=1379941918]
 shape = SubResource("Wall_lft")
 
-[node name="WallRgt" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(1290.0, 480.0)
+[node name="WallRgt" type="StaticBody2D" parent="Boundaries" unique_id=1733420766]
+position = Vector2(1290, 480)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallRgt"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallRgt" unique_id=249183068]
 shape = SubResource("Wall_rgt")
 
-; ── NPC 层 ───────────────────────────────────────────────────────
-[node name="NPCLayer" type="Node2D" parent="."]
+[node name="TempleWall" type="StaticBody2D" parent="Boundaries" unique_id=2028011551]
+position = Vector2(1232, 880)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/TempleWall" unique_id=1531845512]
+shape = SubResource("Temple_shape")
+
+[node name="NPCLayer" type="Node2D" parent="." unique_id=675597162]
 y_sort_enabled = true
 
-; 茶馆掌柜：格(27,25) → 像素(864,800)
-[node name="NPC_TeahouseBoss" parent="NPCLayer" instance=ExtResource("2")]
-position = Vector2(864.0, 800.0)
-npc_name = "茶馆掌柜"
-dialogue_scene_id = "teahouse_before"
-body_color = Color(0.30, 0.50, 0.80, 1)
-
-; 老婆婆（碎玉集市摊贩）：格(6,22) → 像素(192,704)
-[node name="NPC_OldWoman" parent="NPCLayer" instance=ExtResource("2")]
-position = Vector2(192.0, 704.0)
+[node name="NPC_OldWoman" parent="NPCLayer" unique_id=429220155 instance=ExtResource("2")]
+position = Vector2(704, 416)
 npc_name = "老婆婆"
 dialogue_scene_id = "market"
-body_color = Color(0.72, 0.67, 0.60, 1)
+body_color = Color(0.72, 0.67, 0.6, 1)
 
-; 顾飞白（南门附近，仅 story_phase >= 4 可见并可交互）
-; 格(20,27) → 像素(640,864)
-[node name="NPC_GufeiBai" parent="NPCLayer" instance=ExtResource("2")]
-position = Vector2(640.0, 864.0)
-npc_name = "顾飞白"
-dialogue_scene_id = "after_battle"
-body_color = Color(0.85, 0.85, 0.90, 1)
-required_phase = 4
+[node name="NPC_FortuneTeller" parent="NPCLayer" unique_id=434028795 instance=ExtResource("2")]
+position = Vector2(256, 704)
+npc_name = "算命先生"
+dialogue_scene_id = "fortune_teller"
+body_color = Color(0.6, 0.45, 0.2, 1)
+dialogue_scene_id_after = "fortune_teller_return"
 
-; ── 出生点（TownScene.gd._set_spawn_position() 动态修改此位置）────
-[node name="SpawnPoint" type="Node2D" parent="."]
-position = Vector2(640.0, 448.0)
+[node name="NPC_AuntA" parent="NPCLayer" unique_id=94885309 instance=ExtResource("2")]
+position = Vector2(448, 448)
+npc_name = "大婶"
+dialogue_scene_id = "aunts_before"
+body_color = Color(0.8, 0.6, 0.55, 1)
+dialogue_scene_id_after = "aunts_return"
 
-; ── 玩家（初始位置由 _set_spawn_position() 覆盖，此处仅为编辑器预览）─
-[node name="Player" parent="." instance=ExtResource("3")]
-position = Vector2(640.0, 448.0)
+[node name="NPC_WaterCarrier" parent="NPCLayer" unique_id=1606685697 instance=ExtResource("2")]
+position = Vector2(672, 480)
+npc_name = "打水人"
+dialogue_scene_id = "water_carrier_before"
+body_color = Color(0.45, 0.45, 0.55, 1)
+dialogue_scene_id_after = "water_carrier_return"
 
-; ── UI 层（CanvasLayer 确保 UI 渲染在最顶层，不受摄像机影响）────────
-[node name="UILayer" type="CanvasLayer" parent="."]
-layer = 10
+[node name="NPC_OldDog" parent="NPCLayer" unique_id=1908173483 instance=ExtResource("2")]
+position = Vector2(544, 512)
+npc_name = "老狗"
+dialogue_scene_id = "dog_before"
+body_color = Color(0.55, 0.45, 0.35, 1)
+dialogue_scene_id_after = "dog_return"
 
-[node name="DialogueBox" parent="UILayer" instance=ExtResource("4")]
+[node name="NPC_Guard" parent="NPCLayer" unique_id=1329392274 instance=ExtResource("2")]
+position = Vector2(640, 928)
+npc_name = "守卫"
+dialogue_scene_id = "guard"
+body_color = Color(0.4, 0.4, 0.5, 1)
+dialogue_scene_id_after = "guard"
 
-; 建筑入口提示标签：靠近入口时居中显示在屏幕下方
-; 锚点：水平居中，底部对齐；偏移量：上方80px处，高30px
-[node name="EnterHintLabel" type="Label" parent="UILayer"]
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = -100.0
-offset_right = 100.0
-offset_top = -80.0
-offset_bottom = -50.0
+[node name="NPC_Examiner" parent="NPCLayer" unique_id=1153897598 instance=ExtResource("2")]
+position = Vector2(1024, 224)
+npc_name = "测验师"
+dialogue_scene_id = "test"
+body_color = Color(0.6, 0.55, 0.7, 1)
+
+[node name="NPC_Vendor_A" parent="NPCLayer" unique_id=700903852 instance=ExtResource("2")]
+position = Vector2(128, 640)
+npc_name = "糖葫芦摊"
+dialogue_scene_id = "vendor_a"
+body_color = Color(0.7, 0.35, 0.25, 1)
+dialogue_scene_id_after = "vendor_a_return"
+
+[node name="NPC_Vendor_B" parent="NPCLayer" unique_id=776050637 instance=ExtResource("2")]
+position = Vector2(288, 736)
+npc_name = "香料摊"
+dialogue_scene_id = "vendor_b"
+body_color = Color(0.55, 0.42, 0.2, 1)
+dialogue_scene_id_after = "vendor_b_return"
+
+[node name="NPC_Vendor_C" parent="NPCLayer" unique_id=340157143 instance=ExtResource("2")]
+position = Vector2(448, 800)
+npc_name = "鸡鸭摊"
+dialogue_scene_id = "vendor_c"
+body_color = Color(0.55, 0.48, 0.3, 1)
+dialogue_scene_id_after = "vendor_c_return"
+
+[node name="PlazaLayer" type="Node2D" parent="." unique_id=1096653151]
+
+[node name="TestingStone" type="Node2D" parent="PlazaLayer" unique_id=1494839200]
+position = Vector2(960, 224)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/TestingStone" unique_id=1809524178]
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+color = Color(0.55, 0.58, 0.65, 1)
+
+[node name="Area2D" type="Area2D" parent="PlazaLayer/TestingStone" unique_id=1405156744]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/TestingStone/Area2D" unique_id=712932854]
+shape = SubResource("Stone_interact_shape")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/TestingStone" unique_id=1457261489]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/TestingStone/StaticBody2D" unique_id=1527178667]
+shape = SubResource("Stone_collide_shape")
+
+[node name="Queue_A" type="Node2D" parent="PlazaLayer" unique_id=451001842]
+position = Vector2(864, 325)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Queue_A" unique_id=1355944390]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.58, 0.52, 0.47, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Queue_A" unique_id=76212529]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Queue_A/StaticBody2D" unique_id=545748330]
+shape = SubResource("Bystander_shape")
+
+[node name="Queue_B" type="Node2D" parent="PlazaLayer" unique_id=381099476]
+position = Vector2(960, 352)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Queue_B" unique_id=212109758]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.55, 0.5, 0.44, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Queue_B" unique_id=1822971951]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Queue_B/StaticBody2D" unique_id=1116201802]
+shape = SubResource("Bystander_shape")
+
+[node name="Queue_C" type="Node2D" parent="PlazaLayer" unique_id=1547158993]
+position = Vector2(928, 329)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Queue_C" unique_id=1532050041]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.6, 0.54, 0.48, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Queue_C" unique_id=887161825]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Queue_C/StaticBody2D" unique_id=837400110]
+shape = SubResource("Bystander_shape")
+
+[node name="Queue_D" type="Node2D" parent="PlazaLayer" unique_id=539043430]
+position = Vector2(868, 389)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Queue_D" unique_id=706385682]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.56, 0.51, 0.45, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Queue_D" unique_id=379060519]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Queue_D/StaticBody2D" unique_id=412313259]
+shape = SubResource("Bystander_shape")
+
+[node name="Pass_A" type="Node2D" parent="PlazaLayer" unique_id=51867416]
+position = Vector2(1056, 293)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Pass_A" unique_id=1089841604]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.45, 0.55, 0.5, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Pass_A" unique_id=1943432162]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Pass_A/StaticBody2D" unique_id=1425662541]
+shape = SubResource("Bystander_shape")
+
+[node name="Pass_B" type="Node2D" parent="PlazaLayer" unique_id=294136390]
+position = Vector2(1090, 329)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Pass_B" unique_id=1525520990]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.42, 0.52, 0.47, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Pass_B" unique_id=259379878]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Pass_B/StaticBody2D" unique_id=813502211]
+shape = SubResource("Bystander_shape")
+
+[node name="Pass_C" type="Node2D" parent="PlazaLayer" unique_id=399392402]
+position = Vector2(1064, 361)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Pass_C" unique_id=1667765429]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.44, 0.54, 0.49, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Pass_C" unique_id=512841113]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Pass_C/StaticBody2D" unique_id=1399010813]
+shape = SubResource("Bystander_shape")
+
+[node name="Pass_D" type="Node2D" parent="PlazaLayer" unique_id=1378896623]
+position = Vector2(1120, 301)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Pass_D" unique_id=1130856765]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.4, 0.5, 0.45, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Pass_D" unique_id=948693301]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Pass_D/StaticBody2D" unique_id=1294605548]
+shape = SubResource("Bystander_shape")
+
+[node name="Watch_A" type="Node2D" parent="PlazaLayer" unique_id=390620012]
+position = Vector2(1056, 133)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Watch_A" unique_id=1780856198]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.52, 0.48, 0.43, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Watch_A" unique_id=1301170458]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Watch_A/StaticBody2D" unique_id=296785171]
+shape = SubResource("Bystander_shape")
+
+[node name="Watch_B" type="Node2D" parent="PlazaLayer" unique_id=1768232686]
+position = Vector2(1098, 117)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Watch_B" unique_id=761431004]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.5, 0.46, 0.41, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Watch_B" unique_id=682925958]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Watch_B/StaticBody2D" unique_id=1806005918]
+shape = SubResource("Bystander_shape")
+
+[node name="Watch_C" type="Node2D" parent="PlazaLayer" unique_id=1266003971]
+position = Vector2(1128, 149)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Watch_C" unique_id=1836622386]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.54, 0.49, 0.44, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Watch_C" unique_id=284199129]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Watch_C/StaticBody2D" unique_id=795139732]
+shape = SubResource("Bystander_shape")
+
+[node name="Watch_D" type="Node2D" parent="PlazaLayer" unique_id=916275605]
+position = Vector2(1074, 165)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Watch_D" unique_id=1029174789]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.51, 0.47, 0.42, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Watch_D" unique_id=1712990471]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Watch_D/StaticBody2D" unique_id=366185169]
+shape = SubResource("Bystander_shape")
+
+[node name="Wander_A" type="Node2D" parent="PlazaLayer" unique_id=616159478]
+position = Vector2(832, 101)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Wander_A" unique_id=842222684]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.57, 0.52, 0.46, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Wander_A" unique_id=1101000618]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Wander_A/StaticBody2D" unique_id=1634298037]
+shape = SubResource("Bystander_shape")
+
+[node name="Wander_B" type="Node2D" parent="PlazaLayer" unique_id=1101879454]
+position = Vector2(800, 133)
+
+[node name="ColorRect" type="ColorRect" parent="PlazaLayer/Wander_B" unique_id=1074688606]
+offset_left = -7.0
+offset_top = -12.0
+offset_right = 7.0
+offset_bottom = 12.0
+color = Color(0.55, 0.5, 0.44, 1)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="PlazaLayer/Wander_B" unique_id=845526186]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="PlazaLayer/Wander_B/StaticBody2D" unique_id=778803038]
+shape = SubResource("Bystander_shape")
+
+[node name="TempleDecoration" type="Node2D" parent="." unique_id=954804786]
+
+[node name="TempleBuilding" type="ColorRect" parent="TempleDecoration" unique_id=1315777724]
+offset_left = 1184.0
+offset_top = 800.0
+offset_right = 1280.0
+offset_bottom = 960.0
+color = Color(0.12, 0.1, 0.08, 1)
+
+[node name="TempleRoof" type="ColorRect" parent="TempleDecoration" unique_id=2013264178]
+offset_left = 1160.0
+offset_top = 784.0
+offset_right = 1280.0
+offset_bottom = 800.0
+color = Color(0.08, 0.06, 0.05, 1)
+
+[node name="TempleDoorTop" type="ColorRect" parent="TempleDecoration" unique_id=904172210]
+offset_left = 1160.0
+offset_top = 868.0
+offset_right = 1186.0
+offset_bottom = 880.0
+color = Color(0.22, 0.16, 0.1, 1)
+
+[node name="TempleDoorBot" type="ColorRect" parent="TempleDecoration" unique_id=914448402]
+offset_left = 1160.0
+offset_top = 920.0
+offset_right = 1186.0
+offset_bottom = 932.0
+color = Color(0.22, 0.16, 0.1, 1)
+
+[node name="TempleDoorGap" type="ColorRect" parent="TempleDecoration" unique_id=180841996]
+offset_left = 1160.0
+offset_top = 880.0
+offset_right = 1186.0
+offset_bottom = 920.0
+color = Color(0.04, 0.03, 0.02, 1)
+
+[node name="TempleLabel" type="Label" parent="TempleDecoration" unique_id=906949161]
+offset_left = 1168.0
+offset_top = 768.0
+offset_right = 1268.0
+offset_bottom = 786.0
+theme_override_colors/font_color = Color(0.75, 0.65, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "废庙"
+
+[node name="BuildingLabels" type="Node2D" parent="." unique_id=811849754]
+
+[node name="ShopLabel" type="Label" parent="BuildingLabels" unique_id=1201870150]
+offset_left = 160.0
+offset_top = 48.0
+offset_right = 280.0
+offset_bottom = 68.0
+theme_override_colors/font_color = Color(0.75, 0.65, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "苏家杂货铺"
+
+[node name="TeaLabel" type="Label" parent="BuildingLabels" unique_id=1321696370]
+offset_left = 830.0
+offset_top = 560.0
+offset_right = 950.0
+offset_bottom = 580.0
+theme_override_colors/font_color = Color(0.75, 0.65, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "悠然茶馆"
+
+[node name="PlazaLabel" type="Label" parent="BuildingLabels" unique_id=1157347400]
+offset_left = 960.0
+offset_top = 48.0
+offset_right = 1120.0
+offset_bottom = 68.0
+theme_override_colors/font_color = Color(0.75, 0.65, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "测灵广场"
+
+[node name="MarketLabel" type="Label" parent="BuildingLabels" unique_id=1384014765]
+offset_left = 220.0
+offset_top = 560.0
+offset_right = 340.0
+offset_bottom = 580.0
+theme_override_colors/font_color = Color(0.75, 0.65, 0.4, 1)
+theme_override_font_sizes/font_size = 14
+text = "碎玉集市"
+
+[node name="SpawnPoint" type="Node2D" parent="." unique_id=410409377]
+position = Vector2(640, 448)
+
+[node name="Player" parent="." unique_id=521079840 instance=ExtResource("3")]
+position = Vector2(640, 448)
+
+[node name="EnterHintLabel" type="Label" parent="Player" unique_id=561108855]
+visible = false
+offset_left = -50.0
+offset_top = -60.0
+offset_right = -50.0
+offset_bottom = -60.0
+theme_override_colors/font_color = Color(1, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 16
 text = "按 E 进入"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 16
-theme_override_colors/font_color = Color(1, 1, 0.6, 1)
-visible = false
+
+[node name="UILayer" type="CanvasLayer" parent="." unique_id=711541418]
+layer = 10
+
+[node name="DialogueBox" parent="UILayer" unique_id=1797865139 instance=ExtResource("4")]
+grow_horizontal = 2
+grow_vertical = 2

@@ -28,6 +28,8 @@ var _current_node: Dictionary = {}   ## 当前对话节点数据
 var is_active: bool = false
 ## 是否正在等待玩家选择（此时 advance() 无效）
 var waiting_for_choice: bool = false
+## 是否正在等待阻塞型事件完成（切场/战斗等）；为 true 时 advance() 被拦截
+var is_waiting_event_finish: bool = false
 
 # DialogueBox 节点缓存（懒加载，避免重复 find_child）
 var _dialogue_box: Node = null
@@ -47,8 +49,9 @@ func start_scene(scene_id: String) -> void:
 
 	_current_scene_id  = scene_id
 	_current_scene     = _all_data["scenes"][scene_id]
-	is_active          = true
-	waiting_for_choice = false
+	is_active               = true
+	waiting_for_choice      = false
+	is_waiting_event_finish = false
 
 	dialogue_started.emit(scene_id)
 	var db := _get_dialogue_box()
@@ -60,7 +63,7 @@ func start_scene(scene_id: String) -> void:
 
 ## 推进到下一节点（普通对话节点调用；选择等待时无效）
 func advance() -> void:
-	if not is_active or waiting_for_choice:
+	if not is_active or waiting_for_choice or is_waiting_event_finish:
 		return
 
 	var next_id: String = _current_node.get("next", "")
@@ -95,6 +98,15 @@ func make_choice(choice_index: int) -> void:
 		_end_scene()
 	else:
 		_go_to_node(next_id)
+
+
+## 由外部系统（黑屏完成、战斗结束等）调用，释放阻塞型事件锁并继续推进对话
+func finish_event() -> void:
+	if not is_waiting_event_finish:
+		push_warning("DialogueManager: finish_event() 调用时并无阻塞事件在等待，忽略。")
+		return
+	is_waiting_event_finish = false
+	advance()
 
 
 ## 获取当前节点数据（供 UI 查询 choices 等字段）
@@ -158,13 +170,15 @@ func _go_to_node(node_id: String) -> void:
 
 	match node_type:
 		"event":
-			# 事件节点：触发信号，等一帧让外部逻辑响应，再自动推进
+			# 事件节点：默认全部视为阻塞型事件，由外部调用 finish_event() 释放
 			var evt: String = _current_node.get("event", "")
 			if not evt.is_empty():
+				is_waiting_event_finish = true
 				event_triggered.emit(evt)
-			# 等待一帧后推进，使外部代码有机会处理事件
-			await get_tree().process_frame
-			advance()
+				# 不再自动 advance()；控制权交给外部系统
+			else:
+				## 空事件节点兜底：直接推进，防止对话假死
+				advance()
 
 		"choice":
 			# 选择节点：锁定推进，等待玩家调用 make_choice()

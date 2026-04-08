@@ -353,40 +353,45 @@ func advance_phase() -> void:
 ## 任务
 把新写的所有对话补充进chapter1.json
 
-## 新增scenes列表
+## 当前scenes列表（已完成）
 
-```json
-需要新增以下scene_id：
-- "niannian_morning"：年年早晨互动
-- "dayu_morning"：大鱼早晨互动
-- "bowl_interact"：破碗互动
-- "return_home"：回家盛饭
-- "niannian_comfort"：年年回家安慰
-- "dayu_comfort"：大鱼回家安慰
-- "fortune_teller"：算命先生去程
-- "aunts_before"：两个大婶去程
-- "water_carrier_before"：打水人去程
-- "dog_before"：老狗去程（旁白）
-- "notice_board"：公告栏
-- "guard"：守卫
-- "teahouse_before"：茶馆掌柜去程
-- "teahouse_after"：茶馆掌柜回程
-- "celebration_boy"：庆祝的少年（旁白）
-- "temple_stone_1/2/3/4"：四块碑文
-- "activation_monologue"：激活混沌灵根独白
-- "monster_approach"：妖兽出现过渡旁白
-```
+chapter1.json已包含以下49个场景（全部正式内容）：
 
-## 回程旁白scenes
+正式场景（核心剧情）：
+morning、market、test、after_battle、
+after_battle_coin、letter、activation_monologue、
+activation_monologue_stubborn、activation_monologue_warm、
+suming、niannian、dayu、temple（已废弃保留）
 
-```json
-需要新增以下回程旁白（强制触发，不需要按E）：
-- "fortune_teller_return"：算命先生收摊
-- "aunts_return"：大婶窃窃私语
-- "water_carrier_return"：打水人低头
-- "dog_return"：老狗继续睡
-- "grandma_return"：老婆婆消失
-```
+回家流程：
+return_home、niannian_comfort、dayu_comfort、
+sword_tassel_hint
+
+NPC对话（去程）：
+fortune_teller、aunts_before、water_carrier_before、
+dog_before、guard、teahouse_before、
+bowl_interact、niannian_morning、dayu_morning
+
+NPC对话（回程）：
+fortune_teller_return、aunts_return、
+water_carrier_return、dog_return、
+celebration_boy、teahouse_after、
+old_wanderer_return、guard_return
+
+茶馆NPC：
+storyteller、disciple_a、disciple_b、old_wanderer
+
+废庙：
+temple_stone_1、temple_stone_2、
+temple_stone_3、temple_stone_4、
+monster_approach
+
+夜晚流程：
+night_walk_tree、night_walk_well、
+temple_entrance_night、night_exit（已废弃）
+
+章末：
+chapter_end_a、chapter_end_b
 
 ## 第五阶段测试标准
 
@@ -412,6 +417,65 @@ func advance_phase() -> void:
 7. 禁止在_process()里做地图操作
 8. 所有UI使用锚点布局，不用固定像素坐标
 ```
+
+### story_phase实际状态（第二轮更新）
+- phase 0：游戏启动，在ShopScene，morning未触发
+- phase 1：morning结束，玩家可出门探索
+- phase 2：已废弃
+- phase 3：测试结束，回程模式，回家流程
+- phase 4：BOSS战胜利，after_battle对话结束后推进
+  注意：进入BOSS战时不推进phase，防止战败返回误触发胜利流程
+- phase 5：战斗结束，after_battle对话结束
+
+### 新增GameData变量（第二轮）
+temple_dungeon_state: Dictionary = {
+    "wolf_left_defeated": false,
+    "wolf_right_defeated": false,
+}
+current_enemy_id: String = ""
+current_enemy_data: Dictionary = {}
+last_player_position: Vector2 = Vector2.ZERO
+
+### 废庙房间布局（空间平移法）最终确认版
+- 入口大厅：坐标(0,0)，SpawnPoint(32,270)
+- 左厢房：坐标(-600,0)，Stone2在(-360,80)，幽影狼在(-360,120)
+- 右厢房：坐标(600,0)，Stone3在(840,80)，幽影狼在(840,120)
+- 内殿：坐标(0,-320)，Stone4(240,-190)，石皮蟾(240,-110)
+- BOSS间：坐标(0,-640)，主石碑(240,-520)，顾飞白(120,-450)
+- 门坐标：
+  - 大厅→左厢：(80,60)，左厢→大厅：(-520,280)
+  - 大厅→右厢：(380,60)，右厢→大厅：(680,280)
+  - 大厅→内殿：(240,60)，内殿→大厅：(240,-20)
+  - 内殿→BOSS间：(240,-250)，BOSS间→内殿：(240,-340)
+- 玩家落点：
+  - 进inner：y=-50，进boss：y=-370
+  - KEY_5调试落点：y=-51
+
+### 道心系统（新增）
+GameData新增变量：
+- dao_heart_stubborn：倔强/逆天倾向
+- dao_heart_warm：温暖/在乎倾向
+
+触发点：
+1. test场景二选一：选"我不信"→stubborn+1，
+   选"没什么大不了的"→warm+1
+2. 回家悬筷子那一刻：根据道心显示不同内心旁白
+3. 废庙激活灵根：
+   stubborn高→activation_monologue_stubborn
+   warm高→activation_monologue_warm
+4. 战斗前旁白：根据道心显示不同文字
+
+### 铜钱分支（新增）
+GameData.got_coin：算命先生铜钱是否获得
+BattleManager战斗结束后检查got_coin：
+- false→start_scene("after_battle")
+- true→start_scene("after_battle_coin")
+
+### 章末路径（新增）
+GameData.chapter_end_path：
+- "a"：一起走路径
+- "b"：回去看爹路径
+- ""：未到章末
 
 ---
 
@@ -453,6 +517,21 @@ func advance_phase() -> void:
 ✓ 场景切换前queue_free()动态节点
 ```
 
+### 信号作用域问题
+DialogueManager的event_triggered信号
+只在当前场景树中的节点有效。
+TownScene不在场景树时，
+收不到任何DialogueManager信号。
+确认每个event在正确的场景里处理，
+不要依赖跨场景的信号传递。
+
+### ShopScene三种状态
+ShopScene._ready()根据story_phase走不同流程：
+- phase 0：morning流程
+- phase 3：回家流程（猫咪门口等待）
+- phase 5：看信流程
+其他phase默认走morning流程。
+
 ---
 
 # 待完善内容（后续阶段处理）
@@ -466,3 +545,104 @@ func advance_phase() -> void:
 6. Android导出适配
 7. 存档系统完善
 ```
+
+---
+
+# UIManager使用规范
+
+## 公开接口
+```gdscript
+UIManager.refresh_hp()          ## 刷新HP条（战斗回合后调用）
+UIManager.refresh_all_data()    ## 全量同步UI（读档后调用）
+UIManager.add_item(item_id)     ## 添加旧物（叙事道具专用）
+UIManager.on_battle_start()     ## 进入战斗时隐藏常驻UI
+UIManager.on_battle_end()       ## 战斗结束时恢复常驻UI
+```
+
+## 调用规范
+- BattleUI._ready()：调用on_battle_start()
+- BattleUI结束切场景前：调用on_battle_end()
+- BattleUI._refresh_all_hp()：调用refresh_hp()
+- TownScene._ready()末尾：调用refresh_all_data()
+- 获得叙事道具时：调用add_item()
+- 全屏画面场景（ChapterEndScene等）的_ready()：调用on_battle_start()隐藏常驻UI
+```gdscript
+UIManager.on_battle_start()  ## 隐藏常驻UI（章末画面等全屏场景调用）
+UIManager.on_battle_end()    ## 恢复常驻UI
+```
+
+## 旧物背包物品ID
+- "sword_tassel"：旧剑穗
+- "cinnamon"：桂皮
+- "coin"：铜钱
+
+## 技术债记录
+当前UIManager.refresh_all_data()在TownScene._ready()里手动调用。
+未来加主菜单时，改为：
+1. GameData.gd加 signal data_loaded
+2. load_from_file()末尾加 data_loaded.emit()
+3. UIManager._ready()加 GameData.data_loaded.connect(refresh_all_data)
+
+---
+
+### _detect_current_room() 判断边界
+- py < -320 → boss间
+- py < -50  → inner内殿
+- px < -300 → left左厢房
+- px > 300  → right右厢房
+- 其他      → main大厅
+
+---
+
+## UIManager扩展接口（第九版新增）
+
+### 功法栏接口
+```gdscript
+## 以下由UIManager内部管理，无需外部调用：
+## _toggle_skill_panel()  ## ESC或"悟"按钮触发
+## _rebuild_skill_panel() ## 解锁状态变化时内部调用
+```
+
+### 存档系统规范（重构后）
+存档槽位：
+
+```
+"auto"      → save_auto.json      自动存档
+"manual_1"  → save_manual_1.json  手动槽1
+"manual_2"  → save_manual_2.json  手动槽2
+"crossroad" → save_crossroad.json 章末路口存档
+```
+
+调用规范：
+```gdscript
+GameData.save_to_file("auto")       ## 自动存档
+GameData.save_to_file("crossroad")  ## 章末路口
+GameData.load_from_file("auto")     ## 读自动存档
+GameData.has_save("manual_1")       ## 查询是否有存档
+GameData.get_save_preview("manual_1") ## 读取预览信息
+```
+
+禁止：
+- 场景内直接调用load_from_file()（读档职能归MainMenuScene）
+- 战斗中调用save_to_file()（战斗中不存档）
+
+
+### 主菜单规范（待实装）
+主场景：MainMenuScene.tscn
+
+读档后进入场景判断：
+```
+last_scene == "shop"   → ShopScene.tscn
+last_scene == "tea"    → TeaScene.tscn
+last_scene == "temple" → TempleScene.tscn
+其他（含""）           → TownScene.tscn
+```
+
+### ESC系统菜单规范（待实装）
+触发条件：ui_cancel（ESC键），由UIManager监听
+
+禁用存档的状态：
+- GameData._in_battle == true（战斗中不存档）
+- DialogueManager.is_active == true（对话中不存档）
+
+面板按钮：继续 / 存入槽1 / 存入槽2 / 返回主菜单

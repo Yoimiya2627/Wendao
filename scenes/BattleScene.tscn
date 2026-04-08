@@ -152,6 +152,12 @@ custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "🛡  防    御"
 
+[node name="ItemButton" type="Button" parent="SkillPanel"]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "伤药 (×0)"
+disabled = true
+
 [node name="DialogueBox" parent="." unique_id=443098735 instance=ExtResource("2")]
 layout_mode = 1
 grow_horizontal = 2

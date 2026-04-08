@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/NPC.gd" id="1"]
 
 [sub_resource type="RectangleShape2D" id="Rect_body"]
-size = Vector2(24.0, 36.0)
+size = Vector2(20.0, 10.0)
 
 [sub_resource type="CircleShape2D" id="Circle_interact"]
 radius = 24.0
@@ -19,9 +19,12 @@ polygon = PackedVector2Array(-12, -18, 12, -18, 12, 18, -12, 18)
 color = Color(0.7, 0.5, 0.2, 1)
 
 ; 物理碰撞：阻止玩家穿过 NPC
-[node name="StaticBody" type="StaticBody2D" parent="."]
+[node name="BodyCollider" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 1
 
-[node name="BodyShape" type="CollisionShape2D" parent="StaticBody"]
+[node name="BodyShape" type="CollisionShape2D" parent="BodyCollider"]
+position = Vector2(0, 8)
 shape = SubResource("Rect_body")
 
 ; 头顶名字标签（默认隐藏，靠近时由 Player 调用 show_name_label 显示）

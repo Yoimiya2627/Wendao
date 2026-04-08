@@ -11,6 +11,8 @@ var _is_transitioning := false
 
 
 func _ready() -> void:
+	## 确保场景切换动画在游戏暂停状态下仍能正常执行
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	# 置于最高层，确保遮罩覆盖所有内容
 	layer = 128
 
@@ -58,3 +60,8 @@ func _fade(target_alpha: float) -> void:
 		.set_ease(Tween.EASE_IN_OUT)\
 		.set_trans(Tween.TRANS_SINE)
 	await _tween.finished
+
+
+## 将遮罩直接设为完全不透明（供ShopScene夜晚渐变衔接使用）
+func set_overlay_opaque() -> void:
+	_overlay.modulate.a = 1.0

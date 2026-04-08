@@ -127,8 +127,8 @@ func _input(event: InputEvent) -> void:
 	if not (is_mouse_click or is_confirm_key):
 		return
 
-	# 等待选择且逐字已结束时，鼠标点击留给选项按钮处理，不在这里消耗
-	if is_mouse_click and DialogueManager.waiting_for_choice and not _is_typing:
+	# 等待选择且逐字已结束时，留给选项按钮处理，不在这里消耗
+	if DialogueManager.waiting_for_choice and not _is_typing:
 		return
 
 	if _is_typing:

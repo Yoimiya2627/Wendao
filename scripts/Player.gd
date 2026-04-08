@@ -7,6 +7,9 @@ const SPEED := 150.0
 ## 当前进入互动范围的 NPC 列表（支持多个同时在范围内时取最后进入的）
 var _nearby_npcs: Array = []
 
+## 是否允许NPC交互（ShopScene猫咪流程时关闭）
+var npc_interaction_enabled: bool = true
+
 @onready var interact_label: Label  = $InteractLabel
 @onready var interact_area : Area2D = $InteractArea
 
@@ -36,11 +39,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			and event.keycode == KEY_E \
 			and event.pressed \
 			and not event.echo:
-		var npc := _get_nearest_npc()
-		if npc:
-			npc.interact()
-			# 修复1：截断事件，防止冒泡到 TownScene 触发场景切换
-			get_viewport().set_input_as_handled()
+		if npc_interaction_enabled:
+			var npc := _get_nearest_npc()
+			if npc:
+				npc.interact()
+				# 修复1：截断事件，防止冒泡到 TownScene 触发场景切换
+				get_viewport().set_input_as_handled()
 
 
 func _get_nearest_npc() -> Node:

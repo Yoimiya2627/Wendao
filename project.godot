@@ -16,7 +16,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 config/name="wendao"
 config/description="回合制修仙游戏"
-run/main_scene="res://scenes/TownScene.tscn"
+run/main_scene="res://scenes/MainMenuScene.tscn"
 config/features=PackedStringArray("4.6")
 config/icon="res://icon.svg"
 
@@ -25,6 +25,7 @@ config/icon="res://icon.svg"
 GameData="*res://scripts/GameData.gd"
 DialogueManager="*res://scripts/DialogueManager.gd"
 SceneTransition="*uid://5sgp8k2em81h"
+UIManager="*res://scripts/UIManager.gd"
 
 [display]
 

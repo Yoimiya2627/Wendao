@@ -1,120 +1,497 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script"      path="res://scripts/TempleScene.gd"  id="1"]
-[ext_resource type="PackedScene" path="res://scenes/Player.tscn"      id="2"]
-[ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn"      id="3"]
+[ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="4"]
 
 [sub_resource type="RectangleShape2D" id="Wall_top"]
-size = Vector2(1320.0, 20.0)
+size = Vector2(480, 48)
 
 [sub_resource type="RectangleShape2D" id="Wall_bot"]
-size = Vector2(1320.0, 20.0)
+size = Vector2(480, 20)
 
 [sub_resource type="RectangleShape2D" id="Wall_lft"]
-size = Vector2(20.0, 760.0)
+size = Vector2(16, 320)
 
 [sub_resource type="RectangleShape2D" id="Wall_rgt"]
-size = Vector2(20.0, 760.0)
+size = Vector2(16, 320)
 
 [sub_resource type="RectangleShape2D" id="Exit_shape"]
-size = Vector2(120.0, 80.0)
+size = Vector2(32, 28)
+
+[sub_resource type="RectangleShape2D" id="Stone_shape"]
+size = Vector2(48, 48)
+
+[sub_resource type="RectangleShape2D" id="Monolith_shape"]
+size = Vector2(64, 72)
+
+[sub_resource type="RectangleShape2D" id="StoneCollider_shape"]
+size = Vector2(24, 40)
+
+[sub_resource type="RectangleShape2D" id="MonolithCollider_shape"]
+size = Vector2(32, 48)
 
 ; ── 场景根节点 ────────────────────────────────────────────────────
 [node name="TempleScene" type="Node2D"]
 script = ExtResource("1")
 
-; 背景：深绿废庙氛围，1280×720
-[node name="Background" type="ColorRect" parent="."]
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 1280.0
-offset_bottom = 720.0
-color = Color(0.08, 0.12, 0.08, 1)
+; ── 背景视觉层 ────────────────────────────────────────────────────
+[node name="Background" type="Node2D" parent="."]
+z_index = -1
 
-; 顶部装饰条
-[node name="WallTop" type="ColorRect" parent="."]
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 1280.0
-offset_bottom = 100.0
-color = Color(0.05, 0.08, 0.05, 1)
+; 废庙暗色地面
+[node name="Floor" type="ColorRect" parent="Background"]
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.15, 0.12, 0.10, 1)
 
-; 占位文字（第三阶段替换为四块碑文）
-[node name="PlaceholderLabel" type="Label" parent="."]
-offset_left = 440.0
-offset_top = 300.0
-offset_right = 840.0
-offset_bottom = 345.0
-text = "废庙（第三阶段：碑文+战斗）"
-theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(0.5, 0.8, 0.5, 1)
+; 顶墙
+[node name="WallTop" type="ColorRect" parent="Background"]
+offset_right = 480.0
+offset_bottom = 48.0
+color = Color(0.10, 0.08, 0.06, 1)
 
-[node name="ToDoLabel" type="Label" parent="."]
-offset_left = 390.0
-offset_top = 355.0
-offset_right = 890.0
-offset_bottom = 395.0
-text = "TODO: 四块道纹碑文 → 石碑发光 → 混沌灵根激活 → 战斗"
-theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.4, 0.6, 0.4, 0.7)
+; 左墙
+[node name="WallLeft" type="ColorRect" parent="Background"]
+offset_right = 16.0
+offset_bottom = 320.0
+color = Color(0.10, 0.08, 0.06, 1)
 
-; 出口标记（左下角）
-[node name="ExitMarker" type="ColorRect" parent="."]
-offset_left = 20.0
-offset_top = 620.0
-offset_right = 140.0
-offset_bottom = 700.0
-color = Color(0.30, 0.65, 0.30, 0.35)
+; 右墙
+[node name="WallRight" type="ColorRect" parent="Background"]
+offset_left = 464.0
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.10, 0.08, 0.06, 1)
 
-[node name="ExitLabel" type="Label" parent="."]
-offset_left = 22.0
-offset_top = 700.0
-offset_right = 138.0
-offset_bottom = 720.0
+; 出口标记
+[node name="ExitMarker" type="ColorRect" parent="Background"]
+offset_left = 16.0
+offset_top = 256.0
+offset_right = 48.0
+offset_bottom = 316.0
+color = Color(0.3, 0.25, 0.20, 0.5)
+
+; 出口文字
+[node name="ExitLabel" type="Label" parent="Background"]
+offset_left = 18.0
+offset_top = 278.0
+offset_right = 46.0
+offset_bottom = 316.0
+theme_override_colors/font_color = Color(1, 0.85, 0.6, 1)
+theme_override_font_sizes/font_size = 11
 text = "出口"
-theme_override_font_sizes/font_size = 13
-theme_override_colors/font_color = Color(0.5, 0.9, 0.5, 0.8)
 
-; 边界碰撞
+; ── 碰撞边界 ──────────────────────────────────────────────────────
 [node name="Boundaries" type="Node2D" parent="."]
 
 [node name="WallTop" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(640.0, -10.0)
+position = Vector2(240, 24)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallTop"]
 shape = SubResource("Wall_top")
 
 [node name="WallBot" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(640.0, 730.0)
+position = Vector2(240, 330)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallBot"]
 shape = SubResource("Wall_bot")
 
 [node name="WallLft" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(-10.0, 360.0)
+position = Vector2(8, 160)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallLft"]
 shape = SubResource("Wall_lft")
 
 [node name="WallRgt" type="StaticBody2D" parent="Boundaries"]
-position = Vector2(1290.0, 360.0)
+position = Vector2(472, 160)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Boundaries/WallRgt"]
 shape = SubResource("Wall_rgt")
 
-; 出口触发区
+; ── 左厢房背景 ────────────────────────────────────────────────────
+[node name="BackgroundLeft" type="Node2D" parent="."]
+position = Vector2(-600, 0)
+z_index = -1
+
+[node name="Floor" type="ColorRect" parent="BackgroundLeft"]
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.15, 0.12, 0.10, 1)
+
+[node name="WallTop" type="ColorRect" parent="BackgroundLeft"]
+offset_right = 480.0
+offset_bottom = 48.0
+color = Color(0.10, 0.08, 0.06, 1)
+
+[node name="WallLeft" type="ColorRect" parent="BackgroundLeft"]
+offset_right = 16.0
+offset_bottom = 320.0
+color = Color(0.10, 0.08, 0.06, 1)
+
+[node name="WallRight" type="ColorRect" parent="BackgroundLeft"]
+offset_left = 464.0
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.10, 0.08, 0.06, 1)
+
+; ── 左厢房碰撞边界 ────────────────────────────────────────────────
+[node name="BoundariesLeft" type="Node2D" parent="."]
+position = Vector2(-600, 0)
+
+[node name="WallTop" type="StaticBody2D" parent="BoundariesLeft"]
+position = Vector2(240, 24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesLeft/WallTop"]
+shape = SubResource("Wall_top")
+
+[node name="WallBot" type="StaticBody2D" parent="BoundariesLeft"]
+position = Vector2(240, 330)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesLeft/WallBot"]
+shape = SubResource("Wall_bot")
+
+[node name="WallLft" type="StaticBody2D" parent="BoundariesLeft"]
+position = Vector2(8, 160)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesLeft/WallLft"]
+shape = SubResource("Wall_lft")
+
+[node name="WallRgt" type="StaticBody2D" parent="BoundariesLeft"]
+position = Vector2(472, 160)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesLeft/WallRgt"]
+shape = SubResource("Wall_rgt")
+
+; ── 右厢房背景 ────────────────────────────────────────────────────
+[node name="BackgroundRight" type="Node2D" parent="."]
+position = Vector2(600, 0)
+z_index = -1
+
+[node name="Floor" type="ColorRect" parent="BackgroundRight"]
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.15, 0.12, 0.10, 1)
+
+[node name="WallTop" type="ColorRect" parent="BackgroundRight"]
+offset_right = 480.0
+offset_bottom = 48.0
+color = Color(0.10, 0.08, 0.06, 1)
+
+[node name="WallLeft" type="ColorRect" parent="BackgroundRight"]
+offset_right = 16.0
+offset_bottom = 320.0
+color = Color(0.10, 0.08, 0.06, 1)
+
+[node name="WallRight" type="ColorRect" parent="BackgroundRight"]
+offset_left = 464.0
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.10, 0.08, 0.06, 1)
+
+; ── 右厢房碰撞边界 ────────────────────────────────────────────────
+[node name="BoundariesRight" type="Node2D" parent="."]
+position = Vector2(600, 0)
+
+[node name="WallTop" type="StaticBody2D" parent="BoundariesRight"]
+position = Vector2(240, 24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesRight/WallTop"]
+shape = SubResource("Wall_top")
+
+[node name="WallBot" type="StaticBody2D" parent="BoundariesRight"]
+position = Vector2(240, 330)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesRight/WallBot"]
+shape = SubResource("Wall_bot")
+
+[node name="WallLft" type="StaticBody2D" parent="BoundariesRight"]
+position = Vector2(8, 160)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesRight/WallLft"]
+shape = SubResource("Wall_lft")
+
+[node name="WallRgt" type="StaticBody2D" parent="BoundariesRight"]
+position = Vector2(472, 160)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesRight/WallRgt"]
+shape = SubResource("Wall_rgt")
+
+; ── 四块碑文 ──────────────────────────────────────────────────────
+[node name="Stones" type="Node2D" parent="."]
+
+; 碑文1（左上）
+[node name="Stone1" type="Node2D" parent="Stones"]
+position = Vector2(80, 80)
+
+[node name="ColorRect" type="ColorRect" parent="Stones/Stone1"]
+offset_left = -12.0
+offset_top = -20.0
+offset_right = 12.0
+offset_bottom = 20.0
+color = Color(0.35, 0.32, 0.28, 1)
+
+[node name="Area2D" type="Area2D" parent="Stones/Stone1"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Stones/Stone1/Area2D"]
+shape = SubResource("Stone_shape")
+
+[node name="StoneCollider" type="StaticBody2D" parent="Stones/Stone1"]
+collision_layer = 1
+collision_mask = 1
+
+[node name="StoneShape" type="CollisionShape2D" parent="Stones/Stone1/StoneCollider"]
+shape = SubResource("StoneCollider_shape")
+
+; 碑文2（右上）
+[node name="Stone2" type="Node2D" parent="Stones"]
+position = Vector2(360, 80)
+
+[node name="ColorRect" type="ColorRect" parent="Stones/Stone2"]
+offset_left = -12.0
+offset_top = -20.0
+offset_right = 12.0
+offset_bottom = 20.0
+color = Color(0.35, 0.32, 0.28, 1)
+
+[node name="Area2D" type="Area2D" parent="Stones/Stone2"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Stones/Stone2/Area2D"]
+shape = SubResource("Stone_shape")
+
+[node name="StoneCollider" type="StaticBody2D" parent="Stones/Stone2"]
+collision_layer = 1
+collision_mask = 1
+
+[node name="StoneShape" type="CollisionShape2D" parent="Stones/Stone2/StoneCollider"]
+shape = SubResource("StoneCollider_shape")
+
+; 碑文3（左下）
+[node name="Stone3" type="Node2D" parent="Stones"]
+position = Vector2(80, 220)
+
+[node name="ColorRect" type="ColorRect" parent="Stones/Stone3"]
+offset_left = -12.0
+offset_top = -20.0
+offset_right = 12.0
+offset_bottom = 20.0
+color = Color(0.35, 0.32, 0.28, 1)
+
+[node name="Area2D" type="Area2D" parent="Stones/Stone3"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Stones/Stone3/Area2D"]
+shape = SubResource("Stone_shape")
+
+[node name="StoneCollider" type="StaticBody2D" parent="Stones/Stone3"]
+collision_layer = 1
+collision_mask = 1
+
+[node name="StoneShape" type="CollisionShape2D" parent="Stones/Stone3/StoneCollider"]
+shape = SubResource("StoneCollider_shape")
+
+; 碑文4（右下）
+[node name="Stone4" type="Node2D" parent="Stones"]
+position = Vector2(360, 220)
+
+[node name="ColorRect" type="ColorRect" parent="Stones/Stone4"]
+offset_left = -12.0
+offset_top = -20.0
+offset_right = 12.0
+offset_bottom = 20.0
+color = Color(0.35, 0.32, 0.28, 1)
+
+[node name="Area2D" type="Area2D" parent="Stones/Stone4"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Stones/Stone4/Area2D"]
+shape = SubResource("Stone_shape")
+
+[node name="StoneCollider" type="StaticBody2D" parent="Stones/Stone4"]
+collision_layer = 1
+collision_mask = 1
+
+[node name="StoneShape" type="CollisionShape2D" parent="Stones/Stone4/StoneCollider"]
+shape = SubResource("StoneCollider_shape")
+
+; ── 石碑（默认隐藏，四块碑文全读完后显示） ────────────────────────
+[node name="Monolith" type="Node2D" parent="."]
+position = Vector2(240, 160)
+visible = false
+
+[node name="ColorRect" type="ColorRect" parent="Monolith"]
+offset_left = -16.0
+offset_top = -24.0
+offset_right = 16.0
+offset_bottom = 24.0
+color = Color(0.55, 0.50, 0.45, 1)
+
+[node name="Area2D" type="Area2D" parent="Monolith"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Monolith/Area2D"]
+shape = SubResource("Monolith_shape")
+
+[node name="MonolithCollider" type="StaticBody2D" parent="Monolith"]
+collision_layer = 1
+collision_mask = 1
+
+[node name="MonolithShape" type="CollisionShape2D" parent="Monolith/MonolithCollider"]
+shape = SubResource("MonolithCollider_shape")
+
+; ── 出口检测区域 ──────────────────────────────────────────────────
 [node name="ExitArea" type="Area2D" parent="."]
-position = Vector2(80.0, 660.0)
+position = Vector2(32, 288)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitArea"]
 shape = SubResource("Exit_shape")
 
-; 玩家
-[node name="Player" parent="." instance=ExtResource("2")]
-position = Vector2(640.0, 520.0)
+; ── 出生点 ────────────────────────────────────────────────────────
+[node name="SpawnPoint" type="Node2D" parent="."]
+position = Vector2(32, 270)
 
-; UI 层
+; ── 玩家 ──────────────────────────────────────────────────────────
+[node name="Player" parent="." instance=ExtResource("3")]
+position = Vector2(32, 270)
+
+; ── UI 层 ─────────────────────────────────────────────────────────
 [node name="UILayer" type="CanvasLayer" parent="."]
 layer = 10
 
-[node name="DialogueBox" parent="UILayer" instance=ExtResource("3")]
+[node name="DialogueBox" parent="UILayer" instance=ExtResource("4")]
+
+[node name="ExitHintLabel" type="Label" parent="UILayer"]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -80.0
+offset_right = 100.0
+offset_bottom = -50.0
+theme_override_colors/font_color = Color(1, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 16
+text = "按 E 离开"
+horizontal_alignment = 1
+
+[node name="InteractHintLabel" type="Label" parent="UILayer"]
+visible = false
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -120.0
+offset_right = 100.0
+offset_bottom = -90.0
+theme_override_colors/font_color = Color(1, 1, 0.6, 1)
+theme_override_font_sizes/font_size = 16
+text = "按 E 阅读碑文"
+horizontal_alignment = 1
+
+; ── 内殿背景 ────────────────────────────────────────────────────
+[node name="BackgroundInner" type="Node2D" parent="."]
+position = Vector2(0, -320)
+z_index = -1
+
+[node name="Floor" type="ColorRect" parent="BackgroundInner"]
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.12, 0.09, 0.08, 1)
+
+[node name="WallTop" type="ColorRect" parent="BackgroundInner"]
+offset_right = 480.0
+offset_bottom = 48.0
+color = Color(0.08, 0.06, 0.05, 1)
+
+[node name="WallLeft" type="ColorRect" parent="BackgroundInner"]
+offset_right = 16.0
+offset_bottom = 320.0
+color = Color(0.08, 0.06, 0.05, 1)
+
+[node name="WallRight" type="ColorRect" parent="BackgroundInner"]
+offset_left = 464.0
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.08, 0.06, 0.05, 1)
+
+; ── 内殿碰撞边界 ──────────────────────────────────────────────────
+[node name="BoundariesInner" type="Node2D" parent="."]
+position = Vector2(0, -320)
+
+[node name="WallTop" type="StaticBody2D" parent="BoundariesInner"]
+position = Vector2(240, 24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesInner/WallTop"]
+shape = SubResource("Wall_top")
+
+[node name="WallBot" type="StaticBody2D" parent="BoundariesInner"]
+position = Vector2(240, 330)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesInner/WallBot"]
+shape = SubResource("Wall_bot")
+
+[node name="WallLft" type="StaticBody2D" parent="BoundariesInner"]
+position = Vector2(8, 160)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesInner/WallLft"]
+shape = SubResource("Wall_lft")
+
+[node name="WallRgt" type="StaticBody2D" parent="BoundariesInner"]
+position = Vector2(472, 160)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesInner/WallRgt"]
+shape = SubResource("Wall_rgt")
+
+; ── BOSS间背景 ──────────────────────────────────────────────────
+[node name="BackgroundBoss" type="Node2D" parent="."]
+position = Vector2(0, -640)
+z_index = -1
+
+[node name="Floor" type="ColorRect" parent="BackgroundBoss"]
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.08, 0.06, 0.07, 1)
+
+[node name="WallTop" type="ColorRect" parent="BackgroundBoss"]
+offset_right = 480.0
+offset_bottom = 48.0
+color = Color(0.05, 0.04, 0.05, 1)
+
+[node name="WallLeft" type="ColorRect" parent="BackgroundBoss"]
+offset_right = 16.0
+offset_bottom = 320.0
+color = Color(0.05, 0.04, 0.05, 1)
+
+[node name="WallRight" type="ColorRect" parent="BackgroundBoss"]
+offset_left = 464.0
+offset_right = 480.0
+offset_bottom = 320.0
+color = Color(0.05, 0.04, 0.05, 1)
+
+; ── BOSS间碰撞边界 ────────────────────────────────────────────────
+[node name="BoundariesBoss" type="Node2D" parent="."]
+position = Vector2(0, -640)
+
+[node name="WallTop" type="StaticBody2D" parent="BoundariesBoss"]
+position = Vector2(240, 24)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesBoss/WallTop"]
+shape = SubResource("Wall_top")
+
+[node name="WallBot" type="StaticBody2D" parent="BoundariesBoss"]
+position = Vector2(240, 330)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesBoss/WallBot"]
+shape = SubResource("Wall_bot")
+
+[node name="WallLft" type="StaticBody2D" parent="BoundariesBoss"]
+position = Vector2(8, 160)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesBoss/WallLft"]
+shape = SubResource("Wall_lft")
+
+[node name="WallRgt" type="StaticBody2D" parent="BoundariesBoss"]
+position = Vector2(472, 160)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BoundariesBoss/WallRgt"]
+shape = SubResource("Wall_rgt")

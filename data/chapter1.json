@@ -1,6 +1,5 @@
 {
   "scenes": {
-
     "suming": {
       "title": "清晨·苏明",
       "start": "sm_01",
@@ -17,11 +16,10 @@
         },
         "sm_03": {
           "type": "narration",
-          "text": "爹向来不多说话。这句\u201c记得回来吃饭\u201d，却让她鼻子微微一酸。"
+          "text": "爹向来不多说话。这句「记得回来吃饭」，却让她鼻子微微一酸。"
         }
       }
     },
-
     "niannian": {
       "title": "年年",
       "start": "nn_01",
@@ -32,7 +30,6 @@
         }
       }
     },
-
     "dayu": {
       "title": "大鱼",
       "start": "dy_01",
@@ -43,7 +40,6 @@
         }
       }
     },
-
     "morning": {
       "title": "清晨·杂货铺",
       "start": "m_01",
@@ -85,12 +81,12 @@
         },
         "m_08": {
           "speaker": "苏明",
-          "text": "去吧。不管测出什么，记得回来吃饭。",
+          "text": "去吧。不管测出什么，记得回来吃饭。顺路去集市看看有没有桂皮，家里的快用完了。",
           "next": "m_09"
         },
         "m_09": {
           "type": "narration",
-          "text": "爹向来不多说话。这句\u201c记得回来吃饭\u201d，却让她鼻子微微一酸。她把围裙解下来挂在门边的钉子上，出门了。",
+          "text": "爹向来不多说话。这句「记得回来吃饭」，却让她鼻子微微一酸。她把围裙解下来挂在门边的钉子上，出门了。",
           "next": "m_end"
         },
         "m_end": {
@@ -99,10 +95,9 @@
         }
       }
     },
-
     "market": {
       "title": "集市·平安符",
-      "start": "mk_02",
+      "start": "mk_01",
       "nodes": {
         "mk_01": {
           "type": "narration",
@@ -145,14 +140,13 @@
         }
       }
     },
-
     "test": {
-      "title": "灵根测试",
+      "title": "灵根测试·测验师",
       "start": "t_01",
       "nodes": {
         "t_01": {
           "type": "narration",
-          "text": "测灵台搭在城东空地上。长长的队列，百余人，大多是城里的年轻人，也有几个一脸风尘的外乡人。那块灵石有拳头大，据说能感应持握者的根骨高低。",
+          "text": "测灵台搭在广场中央。长长的队列，大多是城里的年轻人。那块灵石有拳头大，据说能感应持握者的根骨高低。",
           "next": "t_02"
         },
         "t_02": {
@@ -162,64 +156,70 @@
         },
         "t_03": {
           "type": "narration",
-          "text": "苏云晚走上台。灵石很凉，像一块普通的河边卵石。她将手扣上去，等了很久，灵石纹丝不动。",
+          "text": "苏云晚走上台。测验师抬了抬下巴，示意她走向左侧的灵石台。",
           "next": "t_04"
         },
         "t_04": {
           "speaker": "测验师",
-          "text": "无灵根。",
-          "next": "t_05"
+          "text": "手放上去，等着就行。",
+          "next": "t_end_first"
         },
-        "t_05": {
-          "type": "narration",
-          "text": "台下有人窃窃私语，有人轻轻笑了一声，也有人叹气。风来了，把她额前的碎发吹起来。",
-          "next": "t_06"
-        },
-        "t_06": {
-          "speaker": "测验师",
-          "text": "姑娘，下去吧。后面还有人。",
-          "next": "t_07"
-        },
-        "t_07": {
-          "type": "choice",
-          "text": "十八年。这是她第一次站在这么多人面前，成为那个\u201c什么都没有\u201d的人。",
-          "choices": [
-            { "text": "没什么大不了的", "next": "t_08a" },
-            { "text": "我不信",          "next": "t_08b" }
-          ]
-        },
-        "t_08a": {
-          "speaker": "苏云晚",
-          "text": "没什么大不了的。无非是，命里没有这条路罢了。",
-          "next": "t_09a"
-        },
-        "t_09a": {
-          "type": "narration",
-          "text": "她走下台，脚步很稳。只是眼眶有些发热，她把头微微偏了偏，不让人看见。",
-          "next": "t_10"
-        },
-        "t_08b": {
-          "speaker": "苏云晚",
-          "text": "等一下。再测一次。",
-          "next": "t_09b"
-        },
-        "t_09b": {
-          "speaker": "测验师",
-          "text": "灵石不说谎，姑娘。后面排着人，不要耽搁。",
-          "next": "t_09b2"
-        },
-        "t_09b2": {
-          "type": "narration",
-          "text": "她握了握拳，松开，走下台。脚步是稳的，但指甲在手心留了四道月牙痕。",
-          "next": "t_10"
-        },
-        "t_10": {
-          "type": "narration",
-          "text": "天色渐暗。她没有直接回家。"
+        "t_end_first": {
+          "type": "event",
+          "event": "test_first_done"
         }
       }
     },
-
+    "test_stone": {
+      "title": "灵根测试·灵石",
+      "start": "ts_01",
+      "nodes": {
+        "ts_01": {
+          "type": "narration",
+          "text": "灵石纹丝不动。",
+          "next": "ts_02"
+        },
+        "ts_02": {
+          "speaker": "测验师",
+          "text": "无灵根。下去吧，后面还有人。",
+          "next": "ts_03"
+        },
+        "ts_03": {
+          "type": "narration",
+          "text": "台下有人低声说了什么。风把话吹走了。",
+          "next": "ts_04"
+        },
+        "ts_04": {
+          "type": "narration",
+          "text": "她走下台。",
+          "next": "ts_05"
+        },
+        "ts_05": {
+          "type": "narration",
+          "text": "口袋里的旧剑穗硌着手。",
+          "next": "ts_06"
+        },
+        "ts_06": {
+          "speaker": "苏云晚",
+          "text": "回家。"
+        }
+      }
+    },
+    "examiner_after": {
+      "title": "测验师·测后",
+      "start": "ea_01",
+      "nodes": {
+        "ea_01": {
+          "speaker": "测验师",
+          "text": "结果已出。回去吧。",
+          "next": "ea_02"
+        },
+        "ea_02": {
+          "type": "narration",
+          "text": "他已经在看下一个人了。"
+        }
+      }
+    },
     "temple": {
       "title": "废庙·独白",
       "start": "tp_01",
@@ -265,7 +265,6 @@
         }
       }
     },
-
     "after_battle": {
       "title": "战斗后·顾飞白",
       "start": "ab_01",
@@ -314,8 +313,14 @@
           "type": "choice",
           "text": "苏云晚抬起头看天。月亮已经出来了，大而圆。家里的灯这时候应该亮着，爹做的菜大概还热着。",
           "choices": [
-            { "text": "一起走",      "next": "ab_together_01", "event": "" },
-            { "text": "先回去看爹", "next": "ab_return_01",   "event": "" }
+            {
+              "text": "一起走",
+              "next": "ab_together_01"
+            },
+            {
+              "text": "先回去看爹",
+              "next": "ab_return_01"
+            }
           ]
         },
         "ab_together_01": {
@@ -330,7 +335,7 @@
         },
         "ab_together_end": {
           "type": "event",
-          "event": "chapter_end_path_a"
+          "event": "start_chapter_end_a"
         },
         "ab_return_01": {
           "speaker": "苏云晚",
@@ -349,11 +354,10 @@
         },
         "ab_return_end": {
           "type": "event",
-          "event": "return_home"
+          "event": "return_home_final"
         }
       }
     },
-
     "letter": {
       "title": "爹的信",
       "hidden": true,
@@ -366,40 +370,2004 @@
         },
         "lt_02": {
           "speaker": "苏明〔信〕",
-          "text": "云晚，爹去外面走走，几日就回，你别担心。家里米缸是满的，咸菜罐子在左边橱柜里，别找错了。",
+          "text": "云晚，爹有些事要去办，快则几日，慢则……不好说。你别等。",
           "next": "lt_03"
         },
         "lt_03": {
           "speaker": "苏明〔信〕",
-          "text": "年年喜欢喝甜汤，睡前记得给她熬一碗。大鱼怕黑这件事你别说出去，晚上记得给他留一盏灯。",
+          "text": "家里米缸是满的，咸菜罐子在左边橱柜里，别找错了。",
           "next": "lt_04"
         },
         "lt_04": {
           "speaker": "苏明〔信〕",
-          "text": "爹这一生，没什么大本事，就是在这片地上种了些菜，养了些鸡，把你们几个拉扯大。说起来，也已经够了。",
+          "text": "年年喜欢喝甜汤，睡前记得给她熬一碗。大鱼怕黑这件事你别说出去，晚上记得给他留一盏灯。",
           "next": "lt_05"
         },
         "lt_05": {
           "speaker": "苏明〔信〕",
-          "text": "云晚，你要走，就走吧。山高路远，爹拦不住，也不想拦。只是记住一句话：活着，比赢了更要紧。",
+          "text": "爹这一生，没什么大本事，就是在这片地上种了些菜，养了些鸡，把你们几个拉扯大。说起来，也已经够了。",
           "next": "lt_06"
         },
         "lt_06": {
-          "type": "narration",
-          "text": "信的末尾没有署名。她把信仔细折好，夹进了那张平安符里面。",
+          "speaker": "苏明〔信〕",
+          "text": "云晚，你要走，就走吧。山高路远，爹拦不住，也不想拦。只是记住一句话：活着，比赢了更要紧。",
           "next": "lt_07"
         },
         "lt_07": {
+          "type": "narration",
+          "text": "信的末尾没有署名。她把信仔细折好，夹进了那张平安符里面。",
+          "next": "lt_08"
+        },
+        "lt_08": {
+          "type": "narration",
+          "text": "桌上的饭菜早就凉透了。",
+          "next": "lt_09"
+        },
+        "lt_09": {
+          "type": "narration",
+          "text": "她不知道爹是什么时候走的，也不知道他去哪里，要去做什么。",
+          "next": "lt_10"
+        },
+        "lt_10": {
+          "type": "narration",
+          "text": "她重新坐下来，拿起筷子，把那碗冷掉的饭，一口一口吃完了。",
+          "next": "lt_11"
+        },
+        "lt_11": {
+          "type": "narration",
+          "text": "活着，比赢了更要紧。",
+          "next": "lt_12"
+        },
+        "lt_12": {
           "speaker": "苏云晚",
-          "text": "爹。",
+          "text": "知道了，爹。",
           "next": "lt_end"
         },
         "lt_end": {
           "type": "event",
+          "event": "start_chapter_end_b"
+        }
+      }
+    },
+    "activation_monologue": {
+      "title": "混沌灵根激活",
+      "start": "am_01",
+      "nodes": {
+        "am_01": {
+          "type": "narration",
+          "text": "石碑很凉。和广场上那块一样凉。",
+          "next": "am_02"
+        },
+        "am_02": {
+          "type": "narration",
+          "text": "但这一次，某种东西在她胸口松动了。",
+          "next": "am_03"
+        },
+        "am_03": {
+          "speaker": "苏云晚",
+          "text": "原来如此。",
+          "next": "am_04"
+        },
+        "am_04": {
+          "type": "narration",
+          "text": "远处传来声音。",
+          "next": "am_05"
+        },
+        "am_05": {
+          "speaker": "苏云晚",
+          "text": "……妖？",
+          "next": "am_06"
+        },
+        "am_06": {
+          "type": "narration",
+          "text": "她看了看手里的旧剑穗。",
+          "next": "am_07"
+        },
+        "am_07": {
+          "type": "narration",
+          "text": "也不知道管不管用。",
+          "next": "am_08"
+        },
+        "am_08": {
+          "speaker": "苏云晚",
+          "text": "试试吧。",
+          "next": "am_end"
+        },
+        "am_end": {
+          "type": "event",
+          "event": "trigger_battle"
+        }
+      }
+    },
+    "bowl_interact": {
+      "title": "破碗",
+      "start": "bi_01",
+      "nodes": {
+        "bi_01": {
+          "type": "narration",
+          "text": "一只针线篓，搁在书架角落。里头压着一块布，针脚缝了一半，线头还别在那里，像是随手搁下，准备一会儿再接着做。",
+          "next": "bi_02"
+        },
+        "bi_02": {
+          "type": "narration",
+          "text": "她伸手想碰一碰。",
+          "next": "bi_03"
+        },
+        "bi_03": {
+          "speaker": "苏明",
+          "text": "别动那个。",
+          "next": "bi_04"
+        },
+        "bi_04": {
+          "type": "narration",
+          "text": "爹头也没抬，语气很平。",
+          "next": "bi_05"
+        },
+        "bi_05": {
+          "speaker": "苏明",
+          "text": "等她回来自己补。",
+          "next": "bi_06"
+        },
+        "bi_06": {
+          "type": "narration",
+          "text": "苏云晚把手收回来，没有问是谁。"
+        }
+      }
+    },
+    "light_still_on": {
+      "title": "灯还亮着",
+      "start": "ls_01",
+      "nodes": {
+        "ls_01": {
+          "type": "narration",
+          "text": "灯还亮着。"
+        }
+      }
+    },
+    "bowl_interact_return": {
+      "title": "针线篓·回家",
+      "start": "bir_01",
+      "nodes": {
+        "bir_01": {
+          "type": "narration",
+          "text": "那个针线篓还在原处。",
+          "next": "bir_02"
+        },
+        "bir_02": {
+          "type": "narration",
+          "text": "线头别在那里，没有人动过。",
+          "next": "bir_03"
+        },
+        "bir_03": {
+          "type": "narration",
+          "text": "不知道她什么时候回来。"
+        }
+      }
+    },
+    "return_home": {
+      "title": "回家·爹不在",
+      "start": "rh_01",
+      "nodes": {
+        "rh_01": {
+          "type": "narration",
+          "text": "屋子里没有人。",
+          "next": "rh_02"
+        },
+        "rh_02": {
+          "type": "narration",
+          "text": "灶台上的锅还热着，咕嘟咕嘟地响。",
+          "next": "rh_03"
+        },
+        "rh_03": {
+          "type": "narration",
+          "text": "桌上摆着一碗饭，一碗汤，碗边还冒着热气。",
+          "next": "rh_04"
+        },
+        "rh_04": {
+          "type": "narration",
+          "text": "爹走之前把饭盛好了。",
+          "next": "rh_05"
+        },
+        "rh_05": {
+          "type": "narration",
+          "text": "灶台边挂着一件旧围裙，不是爹的，也不是她的，洗得发白，已经很久没人动过了。",
+          "next": "rh_end"
+        },
+        "rh_end": {
+          "type": "narration",
+          "text": "屋子里很静。",
+          "next": "rh_note_01"
+        },
+        "rh_note_01": {
+          "type": "narration",
+          "text": "桌边压着一张纸条。",
+          "next": "rh_note_02"
+        },
+        "rh_note_02": {
+          "type": "narration",
+          "text": "「若旧剑穗发热，去废庙，别怕。门会开的。」",
+          "next": "rh_note_03"
+        },
+        "rh_note_03": {
+          "type": "narration",
+          "text": "她把那张纸条叠起来，放进口袋。"
+        }
+      }
+    },
+    "niannian_morning": {
+      "title": "年年·清晨",
+      "start": "nm_01",
+      "nodes": {
+        "nm_01": {
+          "type": "narration",
+          "text": "年年趴在门槛上，见云晚要出门，抬起头看了她一眼。",
+          "next": "nm_02"
+        },
+        "nm_02": {
+          "type": "narration",
+          "text": "云晚蹲下来，揉了揉它的脑袋。它没有躲，轻轻地把头往她手心里靠了靠，然后闭上眼睛。",
+          "next": "nm_03"
+        },
+        "nm_03": {
+          "speaker": "苏云晚",
+          "text": "今天去测灵根，你说能不能测出来？",
+          "next": "nm_04"
+        },
+        "nm_04": {
+          "type": "narration",
+          "text": "年年没有回答，只是安静地靠着她的手。",
+          "next": "nm_05"
+        },
+        "nm_05": {
+          "type": "narration",
+          "text": "她站起来，年年重新把头放回爪子上，看着她出门。"
+        }
+      }
+    },
+    "dayu_morning": {
+      "title": "大鱼·清晨",
+      "start": "dm_01",
+      "nodes": {
+        "dm_01": {
+          "type": "narration",
+          "text": "后院传来一声响，大鱼从柜台后面跳出来，险些把云晚撞个趔趄。",
+          "next": "dm_02"
+        },
+        "dm_02": {
+          "speaker": "苏云晚",
+          "text": "大鱼！",
+          "next": "dm_03"
+        },
+        "dm_03": {
+          "type": "narration",
+          "text": "它在她脚边绕了两圈，叼起地上的一段旧剑穗，往她脚边一放，然后大摇大摆地走开了。",
+          "next": "dm_04"
+        },
+        "dm_04": {
+          "speaker": "苏云晚",
+          "text": "你从哪捡来的破东西。",
+          "next": "dm_05"
+        },
+        "dm_05": {
+          "type": "narration",
+          "text": "大鱼没有回头，尾巴扫了扫空气。"
+        }
+      }
+    },
+    "niannian_comfort": {
+      "title": "年年·回家安慰",
+      "start": "nc_01",
+      "nodes": {
+        "nc_01": {
+          "type": "narration",
+          "text": "年年从柜台上跳下来，走到她脚边，安静地坐着。",
+          "next": "nc_02"
+        },
+        "nc_02": {
+          "type": "narration",
+          "text": "不叫，不蹭，就是坐在那里。",
+          "next": "nc_03"
+        },
+        "nc_03": {
+          "type": "narration",
+          "text": "苏云晚低头看了它一眼，伸手摸了摸它的头。",
+          "next": "nc_04"
+        },
+        "nc_04": {
+          "type": "narration",
+          "text": "它把头轻轻靠进她掌心，闭上眼睛。还是和早晨一样。"
+        }
+      }
+    },
+    "dayu_approach": {
+      "title": "大鱼·出现",
+      "start": "da_01",
+      "nodes": {
+        "da_01": {
+          "type": "narration",
+          "text": "大鱼从柜台后面跑出来，用它巨大的脑袋用力蹭了蹭她的腿。"
+        }
+      }
+    },
+    "dayu_comfort": {
+      "title": "大鱼·回家安慰",
+      "start": "dc_01",
+      "nodes": {
+        "dc_01": {
+          "speaker": "苏云晚",
+          "text": "……轻点。",
+          "next": "dc_02"
+        },
+        "dc_02": {
+          "type": "narration",
+          "text": "它抬头看了她一眼，继续蹭。",
+          "next": "dc_03"
+        },
+        "dc_03": {
+          "type": "narration",
+          "text": "她没有推开它。"
+        }
+      }
+    },
+    "niannian_after": {
+      "title": "年年·陪伴",
+      "start": "na_01",
+      "nodes": {
+        "na_01": {
+          "type": "narration",
+          "text": "年年把头靠在她手心里，没有动。"
+        }
+      }
+    },
+    "dayu_after": {
+      "title": "大鱼·陪伴",
+      "start": "daa_01",
+      "nodes": {
+        "daa_01": {
+          "type": "narration",
+          "text": "大鱼在她脚边绕了一圈，又绕回来。"
+        }
+      }
+    },
+    "fortune_teller": {
+      "title": "算命先生·去程",
+      "start": "ft_01",
+      "nodes": {
+        "ft_01": {
+          "speaker": "算命先生",
+          "text": "姑娘，且慢。",
+          "next": "ft_02"
+        },
+        "ft_02": {
+          "speaker": "算命先生",
+          "text": "老夫看你面相，有一句话想说。",
+          "next": "ft_03"
+        },
+        "ft_03": {
+          "speaker": "苏云晚",
+          "text": "说吧。",
+          "next": "ft_04"
+        },
+        "ft_04": {
+          "speaker": "算命先生",
+          "text": "有些种子，埋得太深，连天道都没发现。",
+          "next": "ft_05"
+        },
+        "ft_05": {
+          "speaker": "算命先生",
+          "text": "姑娘，你身上有样东西，连你自己都不知道。",
+          "next": "ft_06"
+        },
+        "ft_06": {
+          "speaker": "苏云晚",
+          "text": "什么东西？",
+          "next": "ft_07"
+        },
+        "ft_07": {
+          "type": "narration",
+          "text": "算命先生摇了摇头，不再说话。"
+        }
+      }
+    },
+    "fortune_teller_return": {
+      "title": "算命先生·收摊",
+      "start": "ftr_01",
+      "nodes": {
+        "ftr_01": {
+          "type": "narration",
+          "text": "算命先生正在收摊。",
+          "next": "ftr_02"
+        },
+        "ftr_02": {
+          "type": "narration",
+          "text": "他抬眼看了她一下，什么都没说。",
+          "next": "ftr_03"
+        },
+        "ftr_03": {
+          "type": "narration",
+          "text": "只是把桌上的铜钱卦收进了布袋里，像是今天的生意已经结束了。"
+        }
+      }
+    },
+    "fortune_teller_coin": {
+      "title": "算命先生·铜钱",
+      "start": "ftc_01",
+      "nodes": {
+        "ftc_01": {
+          "type": "narration",
+          "text": "算命先生从布袋里摸出一枚铜钱，放在桌上。",
+          "next": "ftc_02"
+        },
+        "ftc_02": {
+          "speaker": "算命先生",
+          "text": "这枚钱，正反两面都是正面。",
+          "next": "ftc_03"
+        },
+        "ftc_03": {
+          "speaker": "苏云晚",
+          "text": "这有什么用？",
+          "next": "ftc_04"
+        },
+        "ftc_04": {
+          "speaker": "算命先生",
+          "text": "天道掷钱定命数。遇上这枚，它只能认输。",
+          "next": "ftc_05"
+        },
+        "ftc_05": {
+          "type": "narration",
+          "text": "他把铜钱推到她面前，收起布袋，起身离开，没有再说话。",
+          "next": "ftc_06"
+        },
+        "ftc_06": {
+          "type": "narration",
+          "text": "苏云晚看了那枚铜钱很久，揣进口袋。"
+        }
+      }
+    },
+    "aunts_before": {
+      "title": "大婶·去程",
+      "start": "ab_b01",
+      "nodes": {
+        "ab_b01": {
+          "speaker": "大婶甲",
+          "text": "哎，云晚啊，今天去测灵根？",
+          "next": "ab_b02"
+        },
+        "ab_b02": {
+          "speaker": "苏云晚",
+          "text": "嗯。",
+          "next": "ab_b03"
+        },
+        "ab_b03": {
+          "speaker": "大婶乙",
+          "text": "好啊好啊，苏家丫头一看就是有福气的，说不定测出个好灵根呢。",
+          "next": "ab_b04"
+        },
+        "ab_b04": {
+          "speaker": "大婶甲",
+          "text": "就是就是，你爹把你养得这么好，指不定老天爷也偏心你。",
+          "next": "ab_b05"
+        },
+        "ab_b05": {
+          "speaker": "苏云晚",
+          "text": "借您吉言。",
+          "next": "ab_b06"
+        },
+        "ab_b06": {
+          "type": "narration",
+          "text": "她们笑着挥手，目送苏云晚走远。"
+        }
+      }
+    },
+    "aunts_return": {
+      "title": "大婶·回程",
+      "start": "ar_01",
+      "nodes": {
+        "ar_01": {
+          "type": "narration",
+          "text": "苏云晚路过，听见了一半。",
+          "next": "ar_02"
+        },
+        "ar_02": {
+          "speaker": "大婶甲",
+          "text": "……苏家那丫头，没测出来。",
+          "next": "ar_03"
+        },
+        "ar_03": {
+          "speaker": "大婶乙",
+          "text": "哎，我就说嘛，看着机灵，但这种事——",
+          "next": "ar_04"
+        },
+        "ar_04": {
+          "speaker": "大婶甲",
+          "text": "嘘，来了来了。",
+          "next": "ar_05"
+        },
+        "ar_05": {
+          "type": "narration",
+          "text": "两人同时停了话头，朝苏云晚笑了笑。",
+          "next": "ar_06"
+        },
+        "ar_06": {
+          "speaker": "大婶乙",
+          "text": "云晚啊，回来啦？",
+          "next": "ar_07"
+        },
+        "ar_07": {
+          "type": "narration",
+          "text": "苏云晚点了点头，没有停步。她听见了。她们也知道她听见了。但大家都没有说破。"
+        }
+      }
+    },
+    "water_carrier_before": {
+      "title": "打水人·去程",
+      "start": "wc_01",
+      "nodes": {
+        "wc_01": {
+          "speaker": "打水人",
+          "text": "今儿去测灵根？",
+          "next": "wc_02"
+        },
+        "wc_02": {
+          "speaker": "苏云晚",
+          "text": "嗯。",
+          "next": "wc_03"
+        },
+        "wc_03": {
+          "speaker": "打水人",
+          "text": "去吧。我家老大当年也去测过，木灵根，三品，现在在城外宗门里打杂。",
+          "next": "wc_04"
+        },
+        "wc_04": {
+          "speaker": "苏云晚",
+          "text": "那还不错。",
+          "next": "wc_05"
+        },
+        "wc_05": {
+          "speaker": "打水人",
+          "text": "……嗯。",
+          "next": "wc_06"
+        },
+        "wc_06": {
+          "type": "narration",
+          "text": "他提起水桶，没有再说话。"
+        }
+      }
+    },
+    "water_carrier_return": {
+      "title": "打水人·回程",
+      "start": "wcr_01",
+      "nodes": {
+        "wcr_01": {
+          "type": "narration",
+          "text": "打水人还在，换了一桶继续打。",
+          "next": "wcr_02"
+        },
+        "wcr_02": {
+          "type": "narration",
+          "text": "他看见苏云晚，像是想说什么，最后把头低下去，专心看着井里的水。",
+          "next": "wcr_03"
+        },
+        "wcr_03": {
+          "type": "narration",
+          "text": "有时候沉默比安慰更难开口。"
+        }
+      }
+    },
+    "dog_before": {
+      "title": "老狗·去程",
+      "start": "db_01",
+      "nodes": {
+        "db_01": {
+          "type": "narration",
+          "text": "老狗趴在榕树根上，听见脚步声，抬了抬眼皮，又放下了。",
+          "next": "db_02"
+        },
+        "db_02": {
+          "type": "narration",
+          "text": "云晚蹲下来摸了摸它，它蹭了蹭她的手，打了个哈欠。",
+          "next": "db_03"
+        },
+        "db_03": {
+          "speaker": "苏云晚",
+          "text": "你倒是自在。"
+        }
+      }
+    },
+    "dog_return": {
+      "title": "老狗·回程",
+      "start": "dr_01",
+      "nodes": {
+        "dr_01": {
+          "type": "narration",
+          "text": "老狗还在原地趴着，听见脚步声，抬了抬眼皮。",
+          "next": "dr_02"
+        },
+        "dr_02": {
+          "type": "narration",
+          "text": "继续睡。"
+        }
+      }
+    },
+    "guard": {
+      "title": "守卫",
+      "start": "g_01",
+      "nodes": {
+        "g_01": {
+          "speaker": "守卫",
+          "text": "站住。镇外近日妖兽躁动，宗门下了令，无通行文书者一律不得出镇。",
+          "next": "g_02"
+        },
+        "g_02": {
+          "speaker": "苏云晚",
+          "text": "我只是想看看。",
+          "next": "g_03"
+        },
+        "g_03": {
+          "speaker": "守卫",
+          "text": "看什么都不行。出了事谁负责？回去吧。"
+        }
+      }
+    },
+    "celebration_boy": {
+      "title": "庆祝的少年",
+      "start": "cb_01",
+      "nodes": {
+        "cb_01": {
+          "type": "narration",
+          "text": "前面有些热闹。",
+          "next": "cb_02"
+        },
+        "cb_02": {
+          "type": "narration",
+          "text": "一个和她年纪相仿的少年站在人群中间，脸红扑扑的，手里攥着一张宗门的录取文书，不知道该往哪放。",
+          "next": "cb_03"
+        },
+        "cb_03": {
+          "type": "narration",
+          "text": "他娘在旁边抹眼泪。他爹拍着他的肩膀，用力得像是要把他拍进地里。",
+          "next": "cb_04"
+        },
+        "cb_04": {
+          "type": "narration",
+          "text": "周围的人都在笑，真心实意的那种。",
+          "next": "cb_05"
+        },
+        "cb_05": {
+          "type": "narration",
+          "text": "少年往这边看了一眼。两个人对上了视线。",
+          "next": "cb_06"
+        },
+        "cb_06": {
+          "type": "narration",
+          "text": "他很快把眼神移开了，不是恶意，就是——不知道该说什么。",
+          "next": "cb_07"
+        },
+        "cb_07": {
+          "type": "narration",
+          "text": "苏云晚也移开了视线，继续走。"
+        }
+      }
+    },
+    "teahouse_before": {
+      "title": "茶馆掌柜·去程",
+      "start": "tb_01",
+      "nodes": {
+        "tb_01": {
+          "speaker": "茶馆掌柜",
+          "text": "今天去测灵根？",
+          "next": "tb_02"
+        },
+        "tb_02": {
+          "speaker": "苏云晚",
+          "text": "嗯。",
+          "next": "tb_03"
+        },
+        "tb_03": {
+          "speaker": "茶馆掌柜",
+          "text": "去看看也好。",
+          "next": "tb_04"
+        },
+        "tb_04": {
+          "speaker": "苏云晚",
+          "text": "掌柜见过测出来的人吗？",
+          "next": "tb_05"
+        },
+        "tb_05": {
+          "speaker": "茶馆掌柜",
+          "text": "见过。上个月有个外乡来的少年，金灵根，五品。太平宗的人当场就把他带走了，连行李都没来得及收拾。",
+          "next": "tb_06"
+        },
+        "tb_06": {
+          "speaker": "苏云晚",
+          "text": "那他家里人呢？",
+          "next": "tb_07"
+        },
+        "tb_07": {
+          "speaker": "茶馆掌柜",
+          "text": "他娘送到镇口，哭了一路。",
+          "next": "tb_08"
+        },
+        "tb_08": {
+          "type": "narration",
+          "text": "他顿了顿，把抹布搭在肩上。",
+          "next": "tb_09"
+        },
+        "tb_09": {
+          "speaker": "茶馆掌柜",
+          "text": "走了是好事。这地方，待着也没什么出路。"
+        }
+      }
+    },
+    "teahouse_after": {
+      "title": "茶馆掌柜·回程",
+      "start": "ta_01",
+      "nodes": {
+        "ta_01": {
+          "speaker": "茶馆掌柜",
+          "text": "回来了。",
+          "next": "ta_02"
+        },
+        "ta_02": {
+          "speaker": "苏云晚",
+          "text": "嗯。",
+          "next": "ta_03"
+        },
+        "ta_03": {
+          "speaker": "茶馆掌柜",
+          "text": "进来喝杯茶？",
+          "next": "ta_04"
+        },
+        "ta_04": {
+          "speaker": "苏云晚",
+          "text": "不了。",
+          "next": "ta_05"
+        },
+        "ta_05": {
+          "type": "narration",
+          "text": "掌柜点了点头，没有再说话。"
+        }
+      }
+    },
+    "storyteller": {
+      "title": "说书人",
+      "start": "st_01",
+      "nodes": {
+        "st_01": {
+          "type": "narration",
+          "text": "说书人拍了拍醒木，声音不大，茶馆里却突然安静下来。",
+          "next": "st_02"
+        },
+        "st_02": {
+          "speaker": "说书人",
+          "text": "话说九洲仙墟，天道设规，灵根定命。有人生来五灵俱全，平步青云；有人一根独秀，另辟蹊径。",
+          "next": "st_03"
+        },
+        "st_03": {
+          "speaker": "说书人",
+          "text": "然而，列位可曾听闻——这世上，还有第三种人？",
+          "next": "st_04"
+        },
+        "st_04": {
+          "type": "narration",
+          "text": "他顿了顿，端起茶盏喝了一口。没有人催他，大家都等着。",
+          "next": "st_05"
+        },
+        "st_05": {
+          "speaker": "说书人",
+          "text": "万年前的事了，不提也罢。",
+          "next": "st_06"
+        },
+        "st_06": {
+          "type": "narration",
+          "text": "他放下茶盏，拍了拍醒木，话锋一转，说起了别的。"
+        }
+      }
+    },
+    "disciple_a_before": {
+      "title": "太平宗弟子甲·去程",
+      "start": "dab_01",
+      "nodes": {
+        "dab_01": {
+          "speaker": "太平宗弟子甲",
+          "text": "今年来了几个镇子了，都差不多。",
+          "next": "dab_02"
+        },
+        "dab_02": {
+          "speaker": "苏云晚",
+          "text": "……",
+          "next": "dab_03"
+        },
+        "dab_03": {
+          "speaker": "太平宗弟子甲",
+          "text": "你也来测？下午广场，别迟到。"
+        }
+      }
+    },
+    "disciple_b_before": {
+      "title": "太平宗弟子乙·去程",
+      "start": "dbb_01",
+      "nodes": {
+        "dbb_01": {
+          "speaker": "太平宗弟子乙",
+          "text": "这茶还不错。比宗门里的好。",
+          "next": "dbb_02"
+        },
+        "dbb_02": {
+          "speaker": "苏云晚",
+          "text": "……",
+          "next": "dbb_03"
+        },
+        "dbb_03": {
+          "speaker": "太平宗弟子乙",
+          "text": "碎玉镇的人多不多？今年报名的苗子怎么样？",
+          "next": "dbb_04"
+        },
+        "dbb_04": {
+          "speaker": "苏云晚",
+          "text": "不知道。",
+          "next": "dbb_05"
+        },
+        "dbb_05": {
+          "speaker": "太平宗弟子乙",
+          "text": "哦。"
+        }
+      }
+    },
+    "disciple_a": {
+      "title": "太平宗弟子甲",
+      "start": "da_01",
+      "nodes": {
+        "da_01": {
+          "speaker": "太平宗弟子甲",
+          "text": "今年碎玉镇的苗子比去年差远了。一个五品以上的都没有。",
+          "next": "da_02"
+        },
+        "da_02": {
+          "speaker": "苏云晚",
+          "text": "……",
+          "next": "da_03"
+        },
+        "da_03": {
+          "speaker": "太平宗弟子甲",
+          "text": "哦，你就是今天那个无灵根的？",
+          "next": "da_04"
+        },
+        "da_04": {
+          "type": "narration",
+          "text": "他说话时没有恶意，就是陈述一个事实，像是在说今天天气不好。",
+          "next": "da_05"
+        },
+        "da_05": {
+          "speaker": "苏云晚",
+          "text": "有什么问题？",
+          "next": "da_06"
+        },
+        "da_06": {
+          "speaker": "太平宗弟子甲",
+          "text": "没有问题。各人命数，强求不得。",
+          "next": "da_07"
+        },
+        "da_07": {
+          "type": "narration",
+          "text": "他端起茶杯，继续和同伴说话，再没有看她一眼。"
+        }
+      }
+    },
+    "disciple_b": {
+      "title": "太平宗弟子乙",
+      "start": "db_b01",
+      "nodes": {
+        "db_b01": {
+          "speaker": "太平宗弟子乙",
+          "text": "这茶还不错。比宗门里的好。",
+          "next": "db_b02"
+        },
+        "db_b02": {
+          "speaker": "苏云晚",
+          "text": "……",
+          "next": "db_b03"
+        },
+        "db_b03": {
+          "speaker": "太平宗弟子乙",
+          "text": "你今天没测出来吧？",
+          "next": "db_b04"
+        },
+        "db_b04": {
+          "speaker": "苏云晚",
+          "text": "嗯。",
+          "next": "db_b05"
+        },
+        "db_b05": {
+          "speaker": "太平宗弟子乙",
+          "text": "别太难过。无灵根的人，也有无灵根的活法。这碎玉镇，挺好的。",
+          "next": "db_b06"
+        },
+        "db_b06": {
+          "type": "narration",
+          "text": "他是真的在安慰她，没有讽刺的意思。但不知道为什么，这话比骂她还难受。"
+        }
+      }
+    },
+    "old_wanderer": {
+      "title": "老江湖",
+      "start": "ow_01",
+      "nodes": {
+        "ow_01": {
+          "type": "narration",
+          "text": "角落里坐着一个喝酒的老人，衣服旧了，但背脊很直。",
+          "next": "ow_02"
+        },
+        "ow_02": {
+          "speaker": "老江湖",
+          "text": "小姑娘，今天测灵根？",
+          "next": "ow_03"
+        },
+        "ow_03": {
+          "speaker": "苏云晚",
+          "text": "嗯。",
+          "next": "ow_04"
+        },
+        "ow_04": {
+          "speaker": "老江湖",
+          "text": "测出来什么？",
+          "next": "ow_05"
+        },
+        "ow_05": {
+          "speaker": "苏云晚",
+          "text": "无灵根。",
+          "next": "ow_06"
+        },
+        "ow_06": {
+          "type": "narration",
+          "text": "老人沉默了一会儿，把酒盅推到桌边。",
+          "next": "ow_07"
+        },
+        "ow_07": {
+          "speaker": "老江湖",
+          "text": "我走江湖四十年，见过太多有灵根的，后来死在自己灵根上的。",
+          "next": "ow_08"
+        },
+        "ow_08": {
+          "speaker": "老江湖",
+          "text": "也见过无灵根的，最后活得比谁都长。",
+          "next": "ow_09"
+        },
+        "ow_09": {
+          "speaker": "苏云晚",
+          "text": "您是在安慰我？",
+          "next": "ow_10"
+        },
+        "ow_10": {
+          "speaker": "老江湖",
+          "text": "我就是说个事实。",
+          "next": "ow_11"
+        },
+        "ow_11": {
+          "type": "narration",
+          "text": "他重新端起酒盅，没有再说话。"
+        }
+      }
+    },
+    "temple_stone_1": {
+      "title": "碑文一",
+      "start": "ts1_01",
+      "nodes": {
+        "ts1_01": {
+          "type": "narration",
+          "text": "第一块碑，碑石风化，字迹仍清晰。",
+          "next": "ts1_02"
+        },
+        "ts1_02": {
+          "type": "narration",
+          "text": "「万年前，有人持灵石测之，石裂。」"
+        }
+      }
+    },
+    "temple_stone_2": {
+      "title": "碑文二",
+      "start": "ts2_01",
+      "nodes": {
+        "ts2_01": {
+          "type": "narration",
+          "text": "第二块碑，字体比第一块更细，像是另一个人刻的。",
+          "next": "ts2_02"
+        },
+        "ts2_02": {
+          "type": "narration",
+          "text": "「测者惶恐，以为己过。再测，石再裂。」"
+        }
+      }
+    },
+    "temple_stone_3": {
+      "title": "碑文三",
+      "start": "ts3_01",
+      "nodes": {
+        "ts3_01": {
+          "type": "narration",
+          "text": "第三块碑边缘有缺口，最后几个字要凑近才能看清。",
+          "next": "ts3_02"
+        },
+        "ts3_02": {
+          "type": "narration",
+          "text": "「后人考之，非石之过，非人之过。」"
+        }
+      }
+    },
+    "temple_stone_4": {
+      "title": "碑文四",
+      "start": "ts4_01",
+      "nodes": {
+        "ts4_01": {
+          "type": "narration",
+          "text": "最后一块最小，立在角落里，差点被野草遮住。",
+          "next": "ts4_02"
+        },
+        "ts4_02": {
+          "type": "narration",
+          "text": "「后人问：此人今在何处？无人能答。」",
+          "next": "ts4_03"
+        },
+        "ts4_03": {
+          "type": "narration",
+          "text": "苏云晚站在原地，看了很久。"
+        }
+      }
+    },
+    "monster_approach": {
+      "title": "妖兽靠近",
+      "start": "ma_01",
+      "nodes": {
+        "ma_01": {
+          "type": "narration",
+          "text": "远处传来声音。",
+          "next": "ma_02"
+        },
+        "ma_02": {
+          "type": "narration",
+          "text": "不像风，不像野兽，更像是某种东西正在靠近，朝这里来。",
+          "next": "ma_03"
+        },
+        "ma_03": {
+          "speaker": "苏云晚",
+          "text": "……妖？",
+          "next": "ma_04"
+        },
+        "ma_04": {
+          "type": "narration",
+          "text": "她想跑。",
+          "next": "ma_05"
+        },
+        "ma_05": {
+          "type": "narration",
+          "text": "但年年每天都走这条路回家。今天下午出门的时候，它还靠在她手心里，看着她出门。",
+          "next": "ma_06"
+        },
+        "ma_06": {
+          "type": "narration",
+          "text": "她站起来，握紧了手。",
+          "next": "ma_07"
+        },
+        "ma_07": {
+          "speaker": "苏云晚",
+          "text": "不行。不能让它留在这里。"
+        }
+      }
+    },
+    "night_exit": {
+      "title": "夜晚出门",
+      "start": "ne_01",
+      "nodes": {
+        "ne_01": {
+          "type": "narration",
+          "text": "夜风从镇东头吹来，带着一点不对劲的气息。",
+          "next": "ne_02"
+        },
+        "ne_02": {
+          "type": "narration",
+          "text": "她站在门口，往废庙方向看了一眼。"
+        }
+      }
+    },
+    "temple_entrance_night": {
+      "title": "废庙入口·夜",
+      "start": "ten_01",
+      "nodes": {
+        "ten_01": {
+          "type": "narration",
+          "text": "大门开着。白天还是锁着的。",
+          "next": "ten_02"
+        },
+        "ten_02": {
+          "type": "narration",
+          "text": "风把枯叶卷进去，很快不见了。"
+        }
+      }
+    },
+    "night_walk_tree": {
+      "title": "夜行·榕树",
+      "start": "nwt_01",
+      "nodes": {
+        "nwt_01": {
+          "type": "narration",
+          "text": "榕树影子很深，风把树叶吹得沙沙响。"
+        }
+      }
+    },
+    "night_walk_well": {
+      "title": "夜行·古井",
+      "start": "nww_01",
+      "nodes": {
+        "nww_01": {
+          "type": "narration",
+          "text": "井里的水反着月光。"
+        }
+      }
+    },
+    "old_wanderer_return": {
+      "title": "老江湖·回程",
+      "start": "owr_01",
+      "nodes": {
+        "owr_01": {
+          "type": "narration",
+          "text": "老人还坐在角落里，酒盅又空了一个。",
+          "next": "owr_02"
+        },
+        "owr_02": {
+          "type": "narration",
+          "text": "他看了云晚一眼，没有问结果。",
+          "next": "owr_03"
+        },
+        "owr_03": {
+          "speaker": "老江湖",
+          "text": "你爹当年，也是这副表情。",
+          "next": "owr_04"
+        },
+        "owr_04": {
+          "type": "narration",
+          "text": "他重新端起酒盅，不再说话。"
+        }
+      }
+    },
+    "guard_return": {
+      "title": "守卫·测试后",
+      "start": "gr_01",
+      "nodes": {
+        "gr_01": {
+          "speaker": "守卫",
+          "text": "镇外妖兽躁动，无通行文书不得出镇。回去吧。",
+          "next": "gr_02"
+        },
+        "gr_02": {
+          "type": "narration",
+          "text": "他认出了她，但什么都没说。"
+        }
+      }
+    },
+    "chapter_end_a": {
+      "title": "章末·路径A",
+      "start": "cea_01",
+      "nodes": {
+        "cea_01": {
+          "type": "narration",
+          "text": "她只带了那张平安符，还有腰间装了半壶水的葫芦。",
+          "next": "cea_02"
+        },
+        "cea_02": {
+          "type": "narration",
+          "text": "走出废庙的时候，她没有回头。",
+          "next": "cea_end"
+        },
+        "cea_end": {
+          "type": "event",
+          "event": "chapter_end_path_a"
+        }
+      }
+    },
+    "chapter_end_b": {
+      "title": "章末·路径B",
+      "start": "ceb_01",
+      "nodes": {
+        "ceb_01": {
+          "type": "narration",
+          "text": "一封没有署名的信。",
+          "next": "ceb_02"
+        },
+        "ceb_02": {
+          "type": "narration",
+          "text": "一碗早就凉透的饭。",
+          "next": "ceb_end"
+        },
+        "ceb_end": {
+          "type": "event",
           "event": "chapter_end_path_b"
         }
       }
+    },
+    "after_battle_coin": {
+      "title": "战斗后·顾飞白（铜钱）",
+      "start": "ab_01",
+      "nodes": {
+        "ab_01": {
+          "type": "narration",
+          "text": "她不知道自己是怎么赢的。手还在抖，腿也软，但她站着——妖已经化成一地黑灰，被夜风吹散了。",
+          "next": "ab_02"
+        },
+        "ab_02": {
+          "speaker": "顾飞白",
+          "text": "不错。",
+          "next": "ab_03"
+        },
+        "ab_03": {
+          "speaker": "苏云晚",
+          "text": "你是谁？",
+          "next": "ab_04"
+        },
+        "ab_04": {
+          "speaker": "顾飞白",
+          "text": "一个路过的人。在这里站了一会儿，看了场好戏。",
+          "next": "ab_05"
+        },
+        "ab_05": {
+          "speaker": "顾飞白",
+          "text": "你无灵根，却能御妖。你知道这意味着什么吗？",
+          "next": "ab_06"
+        },
+        "ab_06": {
+          "speaker": "苏云晚",
+          "text": "意味着什么？",
+          "next": "ab_07"
+        },
+        "ab_07": {
+          "speaker": "顾飞白",
+          "text": "意味着有人动了手脚。也意味着，你走的路，或许比那些五灵根的人更难——也更远。",
+          "next": "ab_08"
+        },
+        "ab_08": {
+          "speaker": "顾飞白",
+          "text": "跟我走。我知道一些事，或许对你有用。",
+          "next": "abc_coin_01"
+        },
+        "abc_coin_01": {
+          "type": "narration",
+          "text": "顾飞白的视线落在她手上，停了一下。",
+          "next": "abc_coin_02"
+        },
+        "abc_coin_02": {
+          "speaker": "顾飞白",
+          "text": "哪来的？",
+          "next": "abc_coin_03"
+        },
+        "abc_coin_03": {
+          "speaker": "苏云晚",
+          "text": "集市上一个老头给的。",
+          "next": "abc_coin_04"
+        },
+        "abc_coin_04": {
+          "type": "narration",
+          "text": "顾飞白沉默了两秒。",
+          "next": "abc_coin_05"
+        },
+        "abc_coin_05": {
+          "speaker": "顾飞白",
+          "text": "他还在这里。",
+          "next": "ab_choice"
+        },
+        "ab_choice": {
+          "type": "choice",
+          "text": "苏云晚抬起头看天。月亮已经出来了，大而圆。家里的灯这时候应该亮着，爹做的菜大概还热着。",
+          "choices": [
+            {
+              "text": "一起走",
+              "next": "ab_together_01"
+            },
+            {
+              "text": "先回去看爹",
+              "next": "ab_return_01"
+            }
+          ]
+        },
+        "ab_together_01": {
+          "speaker": "苏云晚",
+          "text": "好。",
+          "next": "ab_together_02"
+        },
+        "ab_together_02": {
+          "type": "narration",
+          "text": "她只带了那张平安符，还有腰间装了半壶水的葫芦。走出废庙的时候，她没有回头。",
+          "next": "ab_together_end"
+        },
+        "ab_together_end": {
+          "type": "event",
+          "event": "start_chapter_end_a"
+        },
+        "ab_return_01": {
+          "speaker": "苏云晚",
+          "text": "我得先回去。",
+          "next": "ab_return_02"
+        },
+        "ab_return_02": {
+          "speaker": "顾飞白",
+          "text": "也好。三日后，城西槐树林。不来，便算了。",
+          "next": "ab_return_03"
+        },
+        "ab_return_03": {
+          "type": "narration",
+          "text": "她回到家，灯还亮着，但爹不在。桌上压着一封信，字迹潦草，像是赶着写的。",
+          "next": "ab_return_end"
+        },
+        "ab_return_end": {
+          "type": "event",
+          "event": "return_home_final"
+        }
+      }
+    },
+    "inner_hall_enter": {
+      "title": "内殿·进入",
+      "start": "ihe_01",
+      "nodes": {
+        "ihe_01": {
+          "type": "narration",
+          "text": "内殿比外间更深，更冷。",
+          "next": "ihe_02"
+        },
+        "ihe_02": {
+          "type": "narration",
+          "text": "香案已空，神龛上什么都没有。",
+          "next": "ihe_03"
+        },
+        "ihe_03": {
+          "type": "narration",
+          "text": "只有正中那块碑，还立着。",
+          "next": "ihe_04"
+        },
+        "ihe_04": {
+          "type": "narration",
+          "text": "碑前趴着一只石皮蟾，大如磨盘，背壳灰白，纹路像是干涸的河床。它没有动，但眼睛开着。",
+          "next": "ihe_05"
+        },
+        "ihe_05": {
+          "type": "narration",
+          "text": "它看着苏云晚进来，就像看一粒尘埃落进水里。没有敌意，没有警惕。",
+          "next": "ihe_06"
+        },
+        "ihe_06": {
+          "type": "narration",
+          "text": "只是在那里。"
+        }
+      }
+    },
+    "stone_toad_approach": {
+      "title": "石皮蟾·阻挡",
+      "start": "sta_01",
+      "nodes": {
+        "sta_01": {
+          "type": "narration",
+          "text": "它动了。",
+          "next": "sta_02"
+        },
+        "sta_02": {
+          "type": "narration",
+          "text": "不是扑过来，就是挪了一步，挡在碑前。",
+          "next": "sta_03"
+        },
+        "sta_03": {
+          "type": "narration",
+          "text": "它不恨她，不怕她，甚至不在乎她。",
+          "next": "sta_04"
+        },
+        "sta_04": {
+          "type": "narration",
+          "text": "就像一道门槛，不会因为你是谁而让开。",
+          "next": "sta_05"
+        },
+        "sta_05": {
+          "speaker": "苏云晚",
+          "text": "……",
+          "next": "sta_06"
+        },
+        "sta_06": {
+          "type": "narration",
+          "text": "她握紧了手里的剑穗。"
+        }
+      }
+    },
+    "boss_room_enter": {
+      "title": "BOSS间·进入",
+      "start": "bre_01",
+      "nodes": {
+        "bre_01": {
+          "type": "narration",
+          "text": "最深处没有门，只有一道坍塌了一半的石拱。",
+          "next": "bre_02"
+        },
+        "bre_02": {
+          "type": "narration",
+          "text": "里面很暗，暗得像是把光也吞进去了。",
+          "next": "bre_03"
+        },
+        "bre_03": {
+          "type": "narration",
+          "text": "她站在石拱前，能感觉到里面有什么东西。",
+          "next": "bre_04"
+        },
+        "bre_04": {
+          "type": "narration",
+          "text": "不是声音，不是气息。是一种……注视。",
+          "next": "bre_05"
+        },
+        "bre_05": {
+          "type": "narration",
+          "text": "像是某个东西已经在等她很久了，等她走到这里，等她迈过这道门槛。",
+          "next": "bre_06"
+        },
+        "bre_06": {
+          "speaker": "苏云晚",
+          "text": "……进去吧。",
+          "next": "bre_07"
+        },
+        "bre_07": {
+          "type": "narration",
+          "text": "她低头，走了进去。"
+        }
+      }
+    },
+    "boss_phase2_start": {
+      "title": "BOSS·第二阶段",
+      "start": "bp2_01",
+      "nodes": {
+        "bp2_01": {
+          "type": "narration",
+          "text": "她挥出去，造成了伤害——",
+          "next": "bp2_02"
+        },
+        "bp2_02": {
+          "type": "narration",
+          "text": "但那道伤口转眼就合上了，像是水面被划开又重新平静。",
+          "next": "bp2_03"
+        },
+        "bp2_03": {
+          "type": "narration",
+          "text": "它看着她。",
+          "next": "bp2_04"
+        },
+        "bp2_04": {
+          "type": "narration",
+          "text": "不狂怒，不挣扎。只是看着她，像在等一粒沙子自己沉到水底。",
+          "next": "bp2_05"
+        },
+        "bp2_05": {
+          "speaker": "苏云晚",
+          "text": "……",
+          "next": "bp2_06"
+        },
+        "bp2_06": {
+          "type": "narration",
+          "text": "她感觉到手里的剑穗在颤。手心发烫——和第一次触碰那块石碑时一模一样的感觉。"
+        }
+      }
+    },
+    "boss_awakening": {
+      "title": "觉醒一击",
+      "start": "ba_01",
+      "nodes": {
+        "ba_01": {
+          "type": "narration",
+          "text": "第三次挥出去的时候，她什么都没有想。",
+          "next": "ba_02"
+        },
+        "ba_02": {
+          "type": "narration",
+          "text": "没想着赢，没想着灵根，没想着今天。",
+          "next": "ba_03"
+        },
+        "ba_03": {
+          "type": "narration",
+          "text": "就是——",
+          "next": "ba_04"
+        },
+        "ba_04": {
+          "type": "narration",
+          "text": "年年靠在她手心里的重量。",
+          "next": "ba_05"
+        },
+        "ba_05": {
+          "type": "narration",
+          "text": "大鱼叼着旧剑穗大摇大摆走开的背影。",
+          "next": "ba_06"
+        },
+        "ba_06": {
+          "type": "narration",
+          "text": "爹把那碗饭盛好，放在桌上，然后离开的背影。",
+          "next": "ba_07"
+        },
+        "ba_07": {
+          "type": "narration",
+          "text": "她什么都没想，只是挥出去。",
+          "next": "ba_08"
+        },
+        "ba_08": {
+          "type": "narration",
+          "text": "剑穗在黑暗里划出一道白光。"
+        }
+      }
+    },
+    "battle_loss": {
+      "title": "战败",
+      "start": "bl_01",
+      "nodes": {
+        "bl_01": {
+          "type": "narration",
+          "text": "地砖很冷。",
+          "next": "bl_02"
+        },
+        "bl_02": {
+          "type": "narration",
+          "text": "她倒下去的时候，脑子里忽然很安静。",
+          "next": "bl_03"
+        },
+        "bl_03": {
+          "type": "narration",
+          "text": "不知道为什么，想到了家里还开着的那盏灯。",
+          "next": "bl_04"
+        },
+        "bl_04": {
+          "type": "narration",
+          "text": "她慢慢撑起来。"
+        }
+      }
+    },
+    "transmission_array": {
+      "title": "传音阵",
+      "start": "ta_01",
+      "nodes": {
+        "ta_01": {
+          "type": "narration",
+          "text": "一块石盘，半埋在土里，阵纹已经干涸了。",
+          "next": "ta_02"
+        },
+        "ta_02": {
+          "type": "narration",
+          "text": "据说很久以前，这种阵法能让相隔数千里的两地听见彼此的声音。",
+          "next": "ta_03"
+        },
+        "ta_03": {
+          "type": "narration",
+          "text": "哪怕一处在终年温热的南国，一处在四季分明的北地。",
+          "next": "ta_04"
+        },
+        "ta_04": {
+          "type": "narration",
+          "text": "现在它只是块石头。",
+          "next": "ta_05"
+        },
+        "ta_05": {
+          "type": "narration",
+          "text": "石盘边缘有一道细小的划痕，像是有人曾经长久地坐在这里，用指甲慢慢刻下去的。只有一道。"
+        }
+      }
+    },
+    "sense_unlocked_hint": {
+      "title": "感应·初悟",
+      "start": "su_01",
+      "nodes": {
+        "su_01": {
+          "type": "narration",
+          "text": "某种东西松动了。她感觉得到——只是还说不清楚是什么。",
+          "next": "su_02"
+        },
+        "su_02": {
+          "type": "narration",
+          "text": "【感应·已领悟】",
+          "next": ""
+        }
+      }
+    },
+    "tally_marks": {
+      "title": "三百六十五道划痕",
+      "start": "tm_01",
+      "nodes": {
+        "tm_01": {
+          "type": "narration",
+          "text": "石柱底部刻着密密麻麻的痕迹。",
+          "next": "tm_02"
+        },
+        "tm_02": {
+          "type": "narration",
+          "text": "她蹲下来数了数。",
+          "next": "tm_03"
+        },
+        "tm_03": {
+          "type": "narration",
+          "text": "不多不少，三百六十五道。",
+          "next": "tm_04"
+        },
+        "tm_04": {
+          "type": "narration",
+          "text": "第一道和其他的不一样，浅很多，像是试探着刻的。后来的三百六十四道，越来越深。",
+          "next": "tm_05"
+        },
+        "tm_05": {
+          "type": "narration",
+          "text": "刻下它们的人，一定每天都来这里。也一定每天都在等着什么。",
+          "next": "tm_06"
+        },
+        "tm_06": {
+          "type": "narration",
+          "text": "也不知道，那件事最后等到了没有。",
+          "next": "tm_07"
+        },
+        "tm_07": {
+          "type": "narration",
+          "text": "忽然想起城南那块传音阵——石盘边缘，也有一道划痕。",
+          "next": "tm_08"
+        },
+        "tm_08": {
+          "type": "narration",
+          "text": "和这里第一道的深浅，像是同一只手刻的。"
+        }
+      }
+    },
+    "remnant_page_1": {
+      "title": "残页·一",
+      "start": "rp1_01",
+      "nodes": {
+        "rp1_01": {
+          "type": "narration",
+          "text": "一张折起来的纸片，夹在货架缝隙里。",
+          "next": "rp1_02"
+        },
+        "rp1_02": {
+          "type": "narration",
+          "text": "「天道是这世上最傲慢的锁，但总有人偏要去撞。」",
+          "next": "rp1_03"
+        },
+        "rp1_03": {
+          "type": "narration",
+          "text": "下面没有署名。墨迹有些晕开了，像是被什么打湿过。"
+        }
+      }
+    },
+    "remnant_page_2": {
+      "title": "残页·二",
+      "start": "rp2_01",
+      "nodes": {
+        "rp2_01": {
+          "type": "narration",
+          "text": "树洞里有一团东西，用布包着。",
+          "next": "rp2_02"
+        },
+        "rp2_02": {
+          "type": "narration",
+          "text": "展开来是一张残页，边缘烧焦了一半。",
+          "next": "rp2_03"
+        },
+        "rp2_03": {
+          "type": "narration",
+          "text": "「它看着我，像看一粒尘埃。但我知道，尘埃也能迷了它的眼。」",
+          "next": "rp2_04"
+        },
+        "rp2_04": {
+          "type": "narration",
+          "text": "剩下的部分烧掉了，看不见了。"
+        }
+      }
+    },
+    "remnant_page_3": {
+      "title": "残页·三",
+      "start": "rp3_01",
+      "nodes": {
+        "rp3_01": {
+          "type": "narration",
+          "text": "石缝里有张纸，已经很旧了。",
+          "next": "rp3_02"
+        },
+        "rp3_02": {
+          "type": "narration",
+          "text": "「我问天道：为何如此不公？天道没有回答。」",
+          "next": "rp3_03"
+        },
+        "rp3_03": {
+          "type": "narration",
+          "text": "「后来我明白了——它不是不回答，它只是没听见。」",
+          "next": "rp3_04"
+        },
+        "rp3_04": {
+          "type": "narration",
+          "text": "字迹很小，像是怕被人看见。"
+        }
+      }
+    },
+    "remnant_page_4": {
+      "title": "残页·四",
+      "start": "rp4_01",
+      "nodes": {
+        "rp4_01": {
+          "type": "narration",
+          "text": "碑文旁边的地上，压着一块碎石。",
+          "next": "rp4_02"
+        },
+        "rp4_02": {
+          "type": "narration",
+          "text": "碎石下面是一张纸。",
+          "next": "rp4_03"
+        },
+        "rp4_03": {
+          "type": "narration",
+          "text": "「那人走后，石碑裂了四块。后人把它们收拢，重新立起来。」",
+          "next": "rp4_04"
+        },
+        "rp4_04": {
+          "type": "narration",
+          "text": "「有人问：为什么要立？无人能答。」",
+          "next": "rp4_05"
+        },
+        "rp4_05": {
+          "type": "narration",
+          "text": "「也许，只是不想忘记。」"
+        }
+      }
+    },
+    "old_sword_tassel": {
+      "title": "旧剑穗",
+      "start": "ost_01",
+      "nodes": {
+        "ost_01": {
+          "type": "narration",
+          "text": "那段旧剑穗搁在柜台角落，是大鱼今天早上叼来的。",
+          "next": "ost_02"
+        },
+        "ost_02": {
+          "type": "narration",
+          "text": "颜色褪了大半，编织的手法略显笨拙，像是很久以前某个人学着做的，没有做好，但也没有丢掉。",
+          "next": "ost_03"
+        },
+        "ost_03": {
+          "type": "narration",
+          "text": "上面没有任何阵法波动。",
+          "next": "ost_04"
+        },
+        "ost_04": {
+          "type": "narration",
+          "text": "握在手里时，总觉得有一股温热。说不清是剑穗的，还是别的什么。"
+        }
+      }
+    },
+    "notice_board_before": {
+      "title": "公告栏",
+      "start": "nb1_n1",
+      "nodes": {
+        "nb1_n1": {
+          "type": "narration",
+          "text": "她凑近看了看，是太平宗的招募告示。",
+          "next": "nb1_n2"
+        },
+        "nb1_n2": {
+          "type": "narration",
+          "text": "「凡年满十四、未满二十五者，均可参与测试。五品及以上者，可获宗门入门资格。无灵根者，不在招募之列。」",
+          "next": "nb1_n3"
+        },
+        "nb1_n3": {
+          "type": "narration",
+          "text": "无灵根者，不在招募之列。她把这行字又看了一遍。"
+        }
+      }
+    },
+    "notice_board_after": {
+      "title": "公告栏",
+      "start": "nb2_n1",
+      "nodes": {
+        "nb2_n1": {
+          "type": "narration",
+          "text": "她凑近看了看，是太平宗的招募告示。",
+          "next": "nb2_n2"
+        },
+        "nb2_n2": {
+          "type": "narration",
+          "text": "「凡年满十四……无灵根者，不在招募之列。」",
+          "next": "nb2_n3"
+        },
+        "nb2_n3": {
+          "type": "narration",
+          "text": "告示还在那里。她这次没有再看最后那行字。"
+        }
+      }
+    },
+    "sword_tassel_hint": {
+      "title": "旧剑穗",
+      "start": "sth_01",
+      "nodes": {
+        "sth_01": {
+          "type": "narration",
+          "text": "口袋里的旧剑穗忽然有点烫手。",
+          "next": "sth_02"
+        },
+        "sth_02": {
+          "type": "narration",
+          "text": "她摸了摸它，没有说话。"
+        }
+      }
+    },
+    "vendor_a": {
+      "title": "糖葫芦摊·去程",
+      "start": "va_01",
+      "nodes": {
+        "va_01": {
+          "speaker": "摊贩",
+          "text": "糖葫芦，今儿新做的，甜着呢。",
+          "next": "va_02"
+        },
+        "va_02": {
+          "speaker": "苏云晚",
+          "text": "回来再买。",
+          "next": "va_03"
+        },
+        "va_03": {
+          "type": "narration",
+          "text": "摊贩笑了笑，没说话。"
+        }
+      }
+    },
+    "vendor_a_return": {
+      "title": "糖葫芦摊·回程",
+      "start": "var_01",
+      "nodes": {
+        "var_01": {
+          "type": "narration",
+          "text": "糖葫芦还摆着，摊贩正在招呼别人，没注意她。"
+        }
+      }
+    },
+    "vendor_b": {
+      "title": "香料摊·去程",
+      "start": "vb_01",
+      "nodes": {
+        "vb_01": {
+          "speaker": "摊贩",
+          "text": "姑娘，香料要吗？桂皮今儿刚到货，新鲜着呢。",
+          "next": "vb_02"
+        },
+        "vb_02": {
+          "speaker": "苏云晚",
+          "text": "来一包桂皮。",
+          "next": "vb_03"
+        },
+        "vb_03": {
+          "type": "narration",
+          "text": "她接过那包桂皮，揣进口袋，继续往广场走。",
+          "next": "vendor_b_event"
+        },
+        "vendor_b_event": {
+          "type": "event",
+          "event": "get_cinnamon"
+        }
+      }
+    },
+    "vendor_b_return": {
+      "title": "香料摊·回程",
+      "start": "vbr_01",
+      "nodes": {
+        "vbr_01": {
+          "type": "narration",
+          "text": "香料摊还开着。口袋里那包桂皮压着，她没有停步。"
+        }
+      }
+    },
+    "vendor_c": {
+      "title": "鸡鸭摊·去程",
+      "start": "vc_01",
+      "nodes": {
+        "vc_01": {
+          "type": "narration",
+          "text": "摊贩正忙着给鸡鸭称重，头也没抬。"
+        }
+      }
+    },
+    "vendor_c_return": {
+      "title": "鸡鸭摊·回程",
+      "start": "vcr_01",
+      "nodes": {
+        "vcr_01": {
+          "type": "narration",
+          "text": "鸡鸭摊已经收了一半，摊贩在盘点今天的进账，算盘打得很响。"
+        }
+      }
+    },
+    "night_vendor_shop": {
+      "title": "药婆·购买",
+      "start": "vendor_talk",
+      "nodes": {
+        "vendor_talk": {
+          "type": "dialogue",
+          "speaker": "药婆",
+          "text": "伤药、定神香、辟邪符。备着总没错。",
+          "next": "vendor_choice"
+        },
+        "vendor_choice": {
+          "type": "choice",
+          "text": "",
+          "choices": [
+            {
+              "text": "伤药——恢复30HP（10灵石）",
+              "event": "buy_heal_potion",
+              "next": "vendor_choice"
+            },
+            {
+              "text": "定神香——开局感应就绪（20灵石）",
+              "event": "buy_incense",
+              "next": "vendor_choice"
+            },
+            {
+              "text": "辟邪符——免疫一次中毒（15灵石）",
+              "event": "buy_talisman",
+              "next": "vendor_choice"
+            },
+            {
+              "text": "算了，不买。",
+              "next": ""
+            }
+          ]
+        }
+      }
+    },
+    "night_vendor_return": {
+      "title": "药婆·再次购买",
+      "start": "vendor_return_talk",
+      "nodes": {
+        "vendor_return_talk": {
+          "type": "dialogue",
+          "speaker": "药婆",
+          "text": "还要吗。",
+          "next": "vendor_return_choice"
+        },
+        "vendor_return_choice": {
+          "type": "choice",
+          "text": "",
+          "choices": [
+            {
+              "text": "伤药——恢复30HP（10灵石）",
+              "event": "buy_heal_potion",
+              "next": "vendor_return_choice"
+            },
+            {
+              "text": "定神香——开局感应就绪（20灵石）",
+              "event": "buy_incense",
+              "next": "vendor_return_choice"
+            },
+            {
+              "text": "辟邪符——免疫一次中毒（15灵石）",
+              "event": "buy_talisman",
+              "next": "vendor_return_choice"
+            },
+            {
+              "text": "算了，不买。",
+              "next": ""
+            }
+          ]
+        }
+      }
+    },
+    "well_heal": {
+      "title": "古井回血",
+      "start": "well_n1",
+      "nodes": {
+        "well_n1": {
+          "type": "narration",
+          "text": "井水很凉。她捧了一把，喝下去。",
+          "next": "well_n2"
+        },
+        "well_n2": {
+          "type": "narration",
+          "text": "干涸的气脉得到些许滋润。",
+          "next": "well_d1"
+        },
+        "well_d1": {
+          "type": "dialogue",
+          "speaker": "苏云晚",
+          "text": "……能撑住。",
+          "next": ""
+        }
+      }
     }
-
   }
 }
