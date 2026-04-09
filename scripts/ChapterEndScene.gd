@@ -6,14 +6,17 @@ extends Node2D
 ## 路径A的文字
 const TEXT_A_LINE1 := "她只带了那张平安符，还有腰间装了半壶水的葫芦。"
 const TEXT_A_LINE2 := "走出废庙的时候，她没有回头。"
+const TEXT_A_LINE3 := "身后，碎玉镇的灯火一盏一盏亮起来。"
 
 ## 路径B的文字
 const TEXT_B_LINE1 := "一封没有署名的信。"
 const TEXT_B_LINE2 := "一碗早就凉透的饭。"
+const TEXT_B_LINE3 := "第二天一早，她收拾好东西，锁了门。钥匙放在年年够不到的地方。"
 
 ## 动态创建的节点引用
 var _line1  : Label
 var _line2  : Label
+var _line3  : Label
 var _title  : Label
 var _font_regular : Font
 var _font_bold    : Font
@@ -59,6 +62,13 @@ func _ready() -> void:
 	_line2.add_theme_font_size_override("font_size", 18)
 	container.add_child(_line2)
 
+	_line3 = Label.new()
+	_line3.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_line3.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	_line3.add_theme_font_override("font", _font_regular)
+	_line3.add_theme_font_size_override("font_size", 18)
+	container.add_child(_line3)
+
 	## 章节标题间距大一点
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 40)
@@ -74,6 +84,7 @@ func _ready() -> void:
 	## 初始化文字为空
 	_line1.text = ""
 	_line2.text = ""
+	_line3.text = ""
 	_title.text = ""
 
 	await get_tree().process_frame
@@ -84,14 +95,18 @@ func _play_ending() -> void:
 	## 根据GameData.chapter_end_path判断走哪条路径
 	var line1_text := TEXT_A_LINE1
 	var line2_text := TEXT_A_LINE2
+	var line3_text := TEXT_A_LINE3
 	if GameData.chapter_end_path == "b":
 		line1_text = TEXT_B_LINE1
 		line2_text = TEXT_B_LINE2
+		line3_text = TEXT_B_LINE3
 
 	## 逐行显示
 	await _show_line(_line1, line1_text)
 	await get_tree().create_timer(0.5).timeout
 	await _show_line(_line2, line2_text)
+	await get_tree().create_timer(1.0).timeout
+	await _show_line(_line3, line3_text)
 	await get_tree().create_timer(1.5).timeout
 
 	## 淡入显示章节标题
@@ -136,8 +151,31 @@ func _play_ending() -> void:
 		1.5
 	).set_ease(Tween.EASE_IN_OUT)
 	await fade_tween.finished
-	await get_tree().create_timer(1.0).timeout
-	get_tree().quit()
+	await get_tree().create_timer(1.5).timeout
+
+	## 第二章预告
+	var preview := Label.new()
+	preview.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	preview.add_theme_color_override("font_color", Color(0.6, 0.55, 0.5, 0.0))
+	preview.add_theme_font_override("font", _font_regular)
+	preview.add_theme_font_size_override("font_size", 13)
+	preview.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	preview.offset_top = -80.0
+	preview.text = "第二章·藏锋　——　敬请期待"
+	_canvas.add_child(preview)
+	var preview_tween := create_tween()
+	preview_tween.tween_property(
+		preview,
+		"theme_override_colors/font_color:a",
+		0.7,
+		1.5
+	).set_ease(Tween.EASE_IN_OUT)
+	await preview_tween.finished
+	await get_tree().create_timer(3.0).timeout
+
+	## 回到主菜单（而非直接退出）
+	UIManager.on_battle_end()
+	SceneTransition.change_scene("res://scenes/MainMenuScene.tscn")
 
 
 ## 逐字显示一行文字

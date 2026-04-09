@@ -26,6 +26,7 @@ GameData="*res://scripts/GameData.gd"
 DialogueManager="*res://scripts/DialogueManager.gd"
 SceneTransition="*uid://5sgp8k2em81h"
 UIManager="*res://scripts/UIManager.gd"
+VirtualJoystick="*res://scripts/VirtualJoystick.gd"
 
 [display]
 

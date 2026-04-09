@@ -246,6 +246,9 @@ func _process(delta: float) -> void:
 	## 检测回家触发（story_phase==3时走回杂货铺自动触发）
 	if GameData.story_phase == 3 and _initialized:
 		_check_return_home_trigger()
+	## 夜行氛围旁白（经过榕树/古井时自动触发，一次性）
+	if GameData.night_triggered and _initialized:
+		_check_night_walk_triggers()
 	## 气泡计时器倒计
 	if _bubble_timer > 0.0:
 		_bubble_timer -= delta
@@ -547,8 +550,17 @@ func _enter_scene(entrance: String) -> void:
 		"tea":
 			SceneTransition.change_scene("res://scenes/TeaScene.tscn")
 		"temple":
+			## 夜晚首次进废庙：播放入口氛围旁白
+			if GameData.night_triggered \
+					and not GameData.triggered_events.has("temple_entrance_night"):
+				GameData.triggered_events.append("temple_entrance_night")
+				DialogueManager.start_scene("temple_entrance_night")
+				await DialogueManager.dialogue_ended
+				if not is_inside_tree():
+					return
 			## 进入废庙前保存：废庙内战斗不保存，以此为最后存档点
 			GameData.last_scene = ""
+			GameData.saved_player_position = Vector2.ZERO
 			GameData.save_to_file("auto")
 			SceneTransition.change_scene("res://scenes/TempleScene.tscn")
 
@@ -809,6 +821,7 @@ func _on_event_triggered(event_name: String) -> void:
 				_show_bubble("买下了。", _player.global_position + Vector2(0, -48))
 			else:
 				_show_bubble("灵石不够……", _player.global_position + Vector2(0, -48))
+			UIManager.refresh_hp()
 			DialogueManager.finish_event()
 
 		"buy_incense":
@@ -817,6 +830,7 @@ func _on_event_triggered(event_name: String) -> void:
 				_show_bubble("买下了。", _player.global_position + Vector2(0, -48))
 			else:
 				_show_bubble("灵石不够……", _player.global_position + Vector2(0, -48))
+			UIManager.refresh_hp()
 			DialogueManager.finish_event()
 
 		"buy_talisman":
@@ -825,6 +839,7 @@ func _on_event_triggered(event_name: String) -> void:
 				_show_bubble("买下了。", _player.global_position + Vector2(0, -48))
 			else:
 				_show_bubble("灵石不够……", _player.global_position + Vector2(0, -48))
+			UIManager.refresh_hp()
 			DialogueManager.finish_event()
 
 		_:
@@ -853,10 +868,9 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			## test第一段结束，phase推进已移到test_stone
 			pass
 		"test_stone":
-			## 测灵石对话结束，推进phase到3
+			## 测灵石对话结束，推进phase到3（跳过phase 2，走set_phase接口）
 			if GameData.story_phase == 1:
-				GameData.story_phase = 3
-				GameData.story_phase_changed.emit(3)
+				GameData.set_phase(3)
 			## 记录测验师已触发，读取其自身配置的after对话，不硬编码字符串
 			var examiner = get_node_or_null("NPCLayer/NPC_Examiner")
 			if examiner:
@@ -957,6 +971,27 @@ func _check_return_home_trigger() -> void:
 	if _in_range(pg, Vector2i(6, 11)):
 		GameData.triggered_events.append("light_still_on")
 		DialogueManager.start_scene("light_still_on")
+
+
+## 夜行氛围旁白：经过榕树/古井时自动触发，一次性
+func _check_night_walk_triggers() -> void:
+	if DialogueManager.is_active:
+		return
+	var pg := Vector2i(
+		int(_player.global_position.x / TILE_SIZE),
+		int(_player.global_position.y / TILE_SIZE))
+	## 榕树格(17,16)
+	if not GameData.triggered_events.has("night_walk_tree"):
+		if _in_range(pg, Vector2i(17, 16)):
+			GameData.triggered_events.append("night_walk_tree")
+			DialogueManager.start_scene("night_walk_tree")
+			return
+	## 古井格(22,17)
+	if not GameData.triggered_events.has("night_walk_well"):
+		if _in_range(pg, Vector2i(22, 17)):
+			GameData.triggered_events.append("night_walk_well")
+			DialogueManager.start_scene("night_walk_well")
+			return
 
 
 ## 夜晚时隐藏所有NPC，完整移除视觉、碰撞、交互

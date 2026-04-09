@@ -111,7 +111,7 @@ position = Vector2(640, 928)
 npc_name = "守卫"
 dialogue_scene_id = "guard"
 body_color = Color(0.4, 0.4, 0.5, 1)
-dialogue_scene_id_after = "guard"
+dialogue_scene_id_after = "guard_return"
 
 [node name="NPC_Examiner" parent="NPCLayer" unique_id=1153897598 instance=ExtResource("2")]
 position = Vector2(1024, 224)

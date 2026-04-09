@@ -120,6 +120,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _player_in_exit:
 		GameData.last_scene = "tea"
+		GameData.saved_player_position = Vector2.ZERO
 		GameData.save_to_file("auto")
 		SceneTransition.change_scene("res://scenes/TownScene.tscn")
 		get_viewport().set_input_as_handled()

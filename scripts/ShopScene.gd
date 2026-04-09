@@ -65,6 +65,10 @@ func _ready() -> void:
 			_start_morning_flow()
 		3:
 			_start_return_home_flow()
+		4:
+			## phase 4（BOSS战后、章末前）：正常进入但不触发任何流程
+			## 玩家理论上不会在此phase进入ShopScene，防御性处理
+			UIManager.show_main_hud()
 		5:
 			_start_letter_flow()
 		_:
@@ -264,6 +268,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			## 正常离开，保存存档
 			GameData.last_scene = "shop"
+			GameData.saved_player_position = Vector2.ZERO
 			GameData.save_to_file("auto")
 			SceneTransition.change_scene("res://scenes/TownScene.tscn")
 		get_viewport().set_input_as_handled()
@@ -434,7 +439,14 @@ func _trigger_night_and_leave() -> void:
 	await tween.finished
 	## 画面已全黑，直接把SceneTransition遮罩设为不透明，跳过重复淡出
 	SceneTransition.set_overlay_opaque()
-	## 标记夜晚已触发，切回TownScene
+	## 标记夜晚已触发
 	GameData.night_triggered = true
 	GameData.last_scene = "shop"
+	## 夜晚出门氛围旁白（黑屏上播放，一次性）
+	if not GameData.triggered_events.has("night_exit"):
+		GameData.triggered_events.append("night_exit")
+		DialogueManager.start_scene("night_exit")
+		await DialogueManager.dialogue_ended
+		if not is_inside_tree():
+			return
 	SceneTransition.change_scene("res://scenes/TownScene.tscn")

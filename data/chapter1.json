@@ -272,6 +272,16 @@
         "ab_01": {
           "type": "narration",
           "text": "她不知道自己是怎么赢的。手还在抖，腿也软，但她站着——妖已经化成一地黑灰，被夜风吹散了。",
+          "next": "ab_01b"
+        },
+        "ab_01b": {
+          "type": "narration",
+          "text": "她回过头，看见墙角坐着一个人。衣襟上有酒渍，腰间挂着一把没有鞘的剑。",
+          "next": "ab_01c"
+        },
+        "ab_01c": {
+          "type": "narration",
+          "text": "他没有站起来。只是抬了抬眼皮，像是刚睡醒。",
           "next": "ab_02"
         },
         "ab_02": {
@@ -281,12 +291,17 @@
         },
         "ab_03": {
           "speaker": "苏云晚",
-          "text": "你是谁？",
+          "text": "你什么时候在这里的？",
           "next": "ab_04"
         },
         "ab_04": {
           "speaker": "顾飞白",
-          "text": "一个路过的人。在这里站了一会儿，看了场好戏。",
+          "text": "比你早。",
+          "next": "ab_04b"
+        },
+        "ab_04b": {
+          "type": "narration",
+          "text": "他的目光在她手上的剑穗上停了一下，又移开了。像是认出了什么，又像是什么都没看见。",
           "next": "ab_05"
         },
         "ab_05": {
@@ -560,12 +575,12 @@
         },
         "rh_03": {
           "type": "narration",
-          "text": "桌上摆着一碗饭，一碗汤，碗边还冒着热气。",
+          "text": "桌上摆着一碗饭，一碗汤，碗边还冒着热气。碗筷摆了两副，但第二副没有动过。",
           "next": "rh_04"
         },
         "rh_04": {
           "type": "narration",
-          "text": "爹走之前把饭盛好了。",
+          "text": "他从一开始就没打算留下来吃。",
           "next": "rh_05"
         },
         "rh_05": {
@@ -589,6 +604,11 @@
           "next": "rh_note_03"
         },
         "rh_note_03": {
+          "type": "narration",
+          "text": "她低头看了看手里的剑穗。它确实在发热——但爹是怎么知道的？",
+          "next": "rh_note_04"
+        },
+        "rh_note_04": {
           "type": "narration",
           "text": "她把那张纸条叠起来，放进口袋。"
         }
@@ -650,7 +670,12 @@
         },
         "dm_05": {
           "type": "narration",
-          "text": "大鱼没有回头，尾巴扫了扫空气。"
+          "text": "大鱼没有回头，尾巴扫了扫空气。",
+          "next": "dm_06"
+        },
+        "dm_06": {
+          "type": "narration",
+          "text": "剑穗旧得很，穗子边缘磨出了毛。但穗绳上的结——扎得很紧，不像是丢掉的东西。"
         }
       }
     },
@@ -1519,6 +1544,16 @@
           "next": "owr_03"
         },
         "owr_03": {
+          "type": "narration",
+          "text": "他的目光落在她腰间的剑穗上，停了一下。",
+          "next": "owr_03b"
+        },
+        "owr_03b": {
+          "speaker": "老江湖",
+          "text": "你手上那个穗子……算了，不说了。",
+          "next": "owr_03c"
+        },
+        "owr_03c": {
           "speaker": "老江湖",
           "text": "你爹当年，也是这副表情。",
           "next": "owr_04"
@@ -1591,6 +1626,16 @@
         "ab_01": {
           "type": "narration",
           "text": "她不知道自己是怎么赢的。手还在抖，腿也软，但她站着——妖已经化成一地黑灰，被夜风吹散了。",
+          "next": "ab_01b"
+        },
+        "ab_01b": {
+          "type": "narration",
+          "text": "她回过头，看见墙角坐着一个人。衣襟上有酒渍，腰间挂着一把没有鞘的剑。",
+          "next": "ab_01c"
+        },
+        "ab_01c": {
+          "type": "narration",
+          "text": "他没有站起来。只是抬了抬眼皮，像是刚睡醒。",
           "next": "ab_02"
         },
         "ab_02": {
@@ -1600,12 +1645,17 @@
         },
         "ab_03": {
           "speaker": "苏云晚",
-          "text": "你是谁？",
+          "text": "你什么时候在这里的？",
           "next": "ab_04"
         },
         "ab_04": {
           "speaker": "顾飞白",
-          "text": "一个路过的人。在这里站了一会儿，看了场好戏。",
+          "text": "比你早。",
+          "next": "ab_04b"
+        },
+        "ab_04b": {
+          "type": "narration",
+          "text": "他的目光在她手上的剑穗上停了一下，又移开了。像是认出了什么，又像是什么都没看见。",
           "next": "ab_05"
         },
         "ab_05": {
@@ -1651,6 +1701,11 @@
         "abc_coin_05": {
           "speaker": "顾飞白",
           "text": "他还在这里。",
+          "next": "abc_coin_06"
+        },
+        "abc_coin_06": {
+          "type": "narration",
+          "text": "他说这句话的时候，手指碰了一下腰间的剑柄，又放下了。",
           "next": "ab_choice"
         },
         "ab_choice": {
@@ -1799,6 +1854,11 @@
         "bre_05": {
           "type": "narration",
           "text": "像是某个东西已经在等她很久了，等她走到这里，等她迈过这道门槛。",
+          "next": "bre_05b"
+        },
+        "bre_05b": {
+          "type": "narration",
+          "text": "她隐约闻到一股很淡的酒气。不像妖气，更像是……有人在某个角落里坐了很久。",
           "next": "bre_06"
         },
         "bre_06": {
@@ -1879,6 +1939,11 @@
         "ba_06": {
           "type": "narration",
           "text": "爹把那碗饭盛好，放在桌上，然后离开的背影。",
+          "next": "ba_06b"
+        },
+        "ba_06b": {
+          "type": "narration",
+          "text": "还有那张便条上的字——「别怕。」",
           "next": "ba_07"
         },
         "ba_07": {
@@ -1892,8 +1957,108 @@
         }
       }
     },
+    "battle_loss_wolf": {
+      "title": "战败·幽影狼",
+      "start": "blw_01",
+      "nodes": {
+        "blw_01": {
+          "type": "narration",
+          "text": "黑暗里好像有很多双眼睛。",
+          "next": "blw_02"
+        },
+        "blw_02": {
+          "type": "narration",
+          "text": "她摔在地上，手心的剑穗滑出去了。",
+          "next": "blw_03"
+        },
+        "blw_03": {
+          "type": "narration",
+          "text": "爹说过，怕就对了，怕说明你还活着。",
+          "next": "blw_04"
+        },
+        "blw_04": {
+          "type": "narration",
+          "text": "她把剑穗捡起来。"
+        }
+      }
+    },
+    "battle_loss_toad": {
+      "title": "战败·石皮蟾",
+      "start": "blt_01",
+      "nodes": {
+        "blt_01": {
+          "type": "narration",
+          "text": "嘴里全是土腥味。",
+          "next": "blt_02"
+        },
+        "blt_02": {
+          "type": "narration",
+          "text": "它不追了，只是蹲在那里，看都不看她。",
+          "next": "blt_03"
+        },
+        "blt_03": {
+          "type": "narration",
+          "text": "连它都懒得杀她——这比被杀了还难受。",
+          "next": "blt_04"
+        },
+        "blt_04": {
+          "type": "narration",
+          "text": "她又站起来了。"
+        }
+      }
+    },
+    "battle_loss_boss_p1": {
+      "title": "战败·虚形魇·第一阶段",
+      "start": "blb1_01",
+      "nodes": {
+        "blb1_01": {
+          "type": "narration",
+          "text": "它没有用力，只是轻轻推了一下。",
+          "next": "blb1_02"
+        },
+        "blb1_02": {
+          "type": "narration",
+          "text": "她就倒了。像一片叶子被风吹落。",
+          "next": "blb1_03"
+        },
+        "blb1_03": {
+          "type": "narration",
+          "text": "手心还是烫的。剑穗还在发烫——它在等她。",
+          "next": "blb1_04"
+        },
+        "blb1_04": {
+          "type": "narration",
+          "text": "她咬着牙爬起来。"
+        }
+      }
+    },
+    "battle_loss_boss_p2": {
+      "title": "战败·虚形魇·第二阶段",
+      "start": "blb2_01",
+      "nodes": {
+        "blb2_01": {
+          "type": "narration",
+          "text": "白光没有来。",
+          "next": "blb2_02"
+        },
+        "blb2_02": {
+          "type": "narration",
+          "text": "她等了很久，等那个松动的东西再往前一步。但它停了。",
+          "next": "blb2_03"
+        },
+        "blb2_03": {
+          "type": "narration",
+          "text": "好近——只差一点就够到了。",
+          "next": "blb2_04"
+        },
+        "blb2_04": {
+          "type": "narration",
+          "text": "她把手按在地上，手指掐进砖缝里。"
+        }
+      }
+    },
     "battle_loss": {
-      "title": "战败",
+      "title": "战败·通用",
       "start": "bl_01",
       "nodes": {
         "bl_01": {

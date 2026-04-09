@@ -97,6 +97,13 @@ func advance_phase() -> void:
 	print("GameData: story_phase推进到 ", story_phase)
 
 
+## 跳转到指定阶段（用于需要跳过中间phase的场景，如测灵石 1→3）
+func set_phase(target: int) -> void:
+	story_phase = target
+	story_phase_changed.emit(story_phase)
+	print("GameData: story_phase设置为 ", story_phase)
+
+
 ## 仅供Debug使用，强制设置story_phase到指定值并发出信号
 func debug_set_phase(target: int) -> void:
 	story_phase = target

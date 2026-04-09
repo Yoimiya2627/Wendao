@@ -49,6 +49,7 @@ const SKILL_ORDER := ["charge", "bite", "sense"]
 const MOOD_TEXTS := {
 	0: "今天去测灵根。\n爹说不管测出什么，\n记得回来吃饭。",
 	1: "去广场看看吧。\n听说太平宗今年来人了。",
+	2: "没测出来。\n回家吧。",
 	3: "回来了。没测出来。\n镇子还是那个镇子。",
 	4: "废庙里有什么。\n旧剑穗烫手，\n爹说别怕，门会开的。",
 	5: "走出来了。\n不知道接下来去哪。",
@@ -565,6 +566,10 @@ func _refresh_hp() -> void:
 
 ## 根据story_phase刷新心绪文字
 func _refresh_mood(phase: int) -> void:
+	## phase 3 + 夜晚触发后：心绪应切换为废庙相关（而非回程感慨）
+	if phase == 3 and GameData.night_triggered:
+		_mood_text.text = MOOD_TEXTS[4]
+		return
 	## 找到最接近且不超过当前phase的key
 	var best_key := 0
 	for key in MOOD_TEXTS.keys():

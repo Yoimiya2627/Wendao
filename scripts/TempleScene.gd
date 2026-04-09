@@ -72,8 +72,7 @@ var _near_door_back_inner: bool = false
 var _near_door_back_boss: bool = false
 
 ## 内殿/BOSS间首次进入标志（触发一次性氛围旁白）
-var _inner_hall_entered: bool = false
-var _boss_room_entered: bool = false
+## _inner_hall_entered / _boss_room_entered 已迁移至 GameData.triggered_events 持久化
 
 ## 石皮蟾战前旁白是否已触发
 var _toad_approach_triggered: bool = false
@@ -702,8 +701,21 @@ func _switch_room(target_room: String) -> void:
 	_near_toad = false
 
 
+## 防止战斗触发重入（await期间body_entered可能再次触发）
+var _wolf_battle_pending: bool = false
+
 ## 触发小怪战斗（不推进story_phase）
 func _trigger_wolf_battle(wolf_id: String) -> void:
+	if _wolf_battle_pending:
+		return
+	_wolf_battle_pending = true
+	## 首次遭遇妖兽：播放氛围旁白后再进战斗
+	if not GameData.triggered_events.has("monster_approach"):
+		GameData.triggered_events.append("monster_approach")
+		DialogueManager.start_scene("monster_approach")
+		await DialogueManager.dialogue_ended
+		if not is_inside_tree():
+			return
 	GameData.current_enemy_id = wolf_id
 	GameData.current_enemy_data = WOLF_DATA.duplicate()
 	GameData.last_player_position = _player.global_position
@@ -879,8 +891,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _near_door_inner and _current_room == "main":
 		if GameData.stones_read[1] and GameData.stones_read[2]:
 			_switch_room("inner")
-			if not _inner_hall_entered:
-				_inner_hall_entered = true
+			if not GameData.triggered_events.has("inner_hall_entered"):
+				GameData.triggered_events.append("inner_hall_entered")
 				await get_tree().process_frame
 				DialogueManager.start_scene("inner_hall_enter")
 		get_viewport().set_input_as_handled()
@@ -895,8 +907,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		var toad_done: bool = GameData.temple_dungeon_state.get("toad_defeated", false)
 		if GameData.stones_read[3] and toad_done:
 			_switch_room("boss")
-			if not _boss_room_entered:
-				_boss_room_entered = true
+			if not GameData.triggered_events.has("boss_room_entered"):
+				GameData.triggered_events.append("boss_room_entered")
 				await get_tree().process_frame
 				DialogueManager.start_scene("boss_room_enter")
 		get_viewport().set_input_as_handled()
@@ -915,7 +927,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _check_all_stones_read() -> void:
-	if GameData.stones_read[0] and GameData.stones_read[1] and GameData.stones_read[2] and GameData.stones_read[3]:
+	var boss_done: bool = GameData.temple_dungeon_state.get("boss_defeated", false)
+	if GameData.stones_read[0] and GameData.stones_read[1] and GameData.stones_read[2] and GameData.stones_read[3] and not boss_done:
 		_monolith.show()
 		## 四块碑文全读完，启用石碑感应区
 		var monolith_area = get_node_or_null("Monolith/Area2D")

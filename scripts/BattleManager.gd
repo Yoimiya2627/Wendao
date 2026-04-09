@@ -286,6 +286,8 @@ func _do_player_quixue() -> void:
 	player.hp -= self_dmg
 	_log("%s 淬血，自损 %d HP！（当前 %d/%d HP）" % [
 		player.char_name, self_dmg, player.hp, player.max_hp])
+	if self_dmg < 10:
+		_log("   （气血不足，淬血自损被压制到 %d 点）" % self_dmg)
 
 	if not player.is_alive():
 		_check_battle_end()

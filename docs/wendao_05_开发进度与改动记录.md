@@ -1243,3 +1243,218 @@ scripts/BattleUI.gd        开局延迟+ENEMY_TURN分支删除
 1. 虚拟摇杆 + Android适配
 2. 美术资源替换
 3. 背景音乐和音效
+
+---
+
+## 第十七版（2026-04-09）
+
+### 主题：战斗演出效果 + 虚拟摇杆 + 测试员BUG修复（7项）
+
+### 新增功能
+
+**1. 战斗演出效果（BattleUI.gd）**
+- 受伤面板闪红：玩家/敌人受伤时对应 Panel 闪红 0.08s → 0.25s 缓出恢复
+- 屏幕震动：单次受伤 ≥15 点时 UI 根节点随机抖动 6 次
+- HP 条平滑过渡：0.3s EASE_OUT 缓动，替代瞬间跳变
+- 觉醒全屏白光：0.12s 闪白 → 0.3s 维持 → 0.8s 消退，配合屏幕震动
+- 统一行动入口 `_execute_action()`：记录 HP → 执行 → 检测伤害差值 → 触发演出
+
+**2. 虚拟摇杆（VirtualJoystick.gd，AutoLoad 单例）**
+- PC 端自动隐藏（零开销），Android 端显示
+- 左侧摇杆：触屏拖动控制移动，通过 Input.action_press/release 注入，Player.gd 零改动
+- 右下角互动按钮（模拟 E 键）+ 菜单按钮（模拟 ESC）
+- 战斗/对话/ESC 菜单期间自动隐藏并释放输入
+- 支持多点触控（event.index 区分触摸点）
+
+### BUG修复（7项）
+
+**BUG-1：茶馆/杂货铺存档后读档出生位置错误**
+- 现象：茶馆存档 → 读档 → 出门后出现在杂货铺门口（而非茶馆门口）
+- 根因：ESC 菜单存档记录了室内坐标（saved_player_position），场景离开时的自动存档没有清除该值，TownScene 用室内坐标作为大地图出生点
+- 修复：TeaScene / ShopScene / TownScene（进废庙前）离开时存档前清除 saved_player_position
+
+**BUG-2：药婆购买后灵石UI不刷新**
+- 现象：有 16 灵石，买了伤药成功但左上角仍显示 16，再买提示"灵石不够"
+- 根因：buy_heal_potion / buy_incense / buy_talisman 三个事件处理器没有调用 UIManager.refresh_hp()
+- 修复：三个购买分支都加 UIManager.refresh_hp()
+
+**BUG-3：心绪面板夜晚不更新**
+- 现象：夜晚准备去废庙时，心绪仍显示"回来了。没测出来。镇子还是那个镇子。"
+- 根因：MOOD_TEXTS 只按 story_phase 选择，phase 3 没有区分夜晚前后；缺少 phase 2 条目
+- 修复：_refresh_mood() 增加 night_triggered 差分（phase 3 + 夜晚 → 显示废庙相关心绪）；补充 phase 2 心绪
+
+**BUG-4：内殿/BOSS间对话重复触发**
+- 现象：出废庙再进来，进入内殿或 BOSS 间时入场对话重新播放
+- 根因：_inner_hall_entered / _boss_room_entered 是脚本局部变量，每次进场景重置为 false
+- 修复：迁移至 GameData.triggered_events 持久化
+
+**BUG-5：打完BOSS后重读碑文导致石碑重新出现**
+- 现象：BOSS 击败后出废庙再进 → 读 Stone4 → BOSS 间石碑重新出现
+- 根因：_check_all_stones_read() 无条件调用 _monolith.show()，不检查 boss_defeated
+- 修复：增加 boss_defeated 判断，已击败时不再显示石碑
+
+**BUG-6：战斗演出 tween 堆叠/位置漂移**
+- 现象：连续受伤时 HP 条抖动、闪红恢复到错误颜色、屏幕震动后 UI 位置偏移
+- 根因：HP tween 堆叠、_flash_panel 捕获中间态颜色、_shake_screen 捕获偏移中的位置
+- 修复：HP tween 新建前 kill 旧的；闪红恢复到固定 Color.WHITE；震动位置只记录一次 + kill 旧 tween
+
+**BUG-7：虚拟摇杆按钮只发 press 不发 release**
+- 现象：按互动/菜单按钮后，按键在 Input 系统中永久保持"按下"状态
+- 修复：button_up 信号连接释放事件
+
+### 体验优化
+
+**淬血低血量提示**
+- 当自损被压制（< 10 HP）时，战斗日志额外提示："（气血不足，淬血自损被压制到 X 点）"
+- 帮助玩家理解淬血不会自杀的保底机制
+
+### 文件修改记录（第十七版）
+
+```
+scripts/BattleUI.gd          战斗演出（闪红/震动/HP缓动/白光）
+                             tween堆叠修复
+                             _execute_action统一入口
+scripts/BattleManager.gd     淬血低血量日志提示
+scripts/VirtualJoystick.gd   新增：虚拟摇杆AutoLoad
+scripts/TempleScene.gd       内殿/BOSS间对话持久化
+                             石碑重现修复
+scripts/TownScene.gd         药婆购买UI刷新
+                             进废庙存档清坐标
+scripts/TeaScene.gd          离开时存档清坐标
+scripts/ShopScene.gd         离开时存档清坐标
+scripts/UIManager.gd         心绪夜晚差分 + phase 2 补充
+project.godot                注册VirtualJoystick AutoLoad
+```
+
+### 当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | 无变化 |
+| 链路二 测灵广场 | ✅ | 无变化 |
+| 链路三 回家流程 | ✅ | 存档坐标修复 |
+| 链路四 废庙流程 | ✅ | 对话持久化 + 石碑修复 |
+| 链路五 章末流程 | ✅ | 无变化 |
+| 主菜单 | ✅ | 无变化 |
+| ESC系统菜单 | ✅ | 无变化 |
+
+### 待完成任务（按优先级）
+
+1. 美术资源替换
+2. 背景音乐和音效
+
+> 注：存档系统已完成四文件隔离（auto/manual_1/manual_2/crossroad）+ 主菜单选档，无需重构。
+
+---
+
+## 第十八版（2026-04-10）
+
+### 主题：叙事深化 + 伏笔串联 + 全局审查修复
+
+### 一、叙事内容改动
+
+**1. 战斗失败独白差分（4版）**
+- 新增 `battle_loss_wolf`：幽影狼（恐惧→捡起剑穗）
+- 新增 `battle_loss_toad`：石皮蟾（挫败→不服）
+- 新增 `battle_loss_boss_p1`：虚形魇第一阶段（被碾压→剑穗在等她）
+- 新增 `battle_loss_boss_p2`：虚形魇第二阶段（"白光没有来"→差一点就够到了）
+- BattleUI.gd：`_get_battle_loss_scene()` 根据 enemy_id + boss_phase2 自动选择对应独白
+
+**2. 苏明伏笔加强（return_home）**
+- rh_03：碗筷摆了两副，第二副没动过
+- rh_04：改为"他从一开始就没打算留下来吃"
+- rh_note_03：新增"她低头看了看手里的剑穗。它确实在发热——但爹是怎么知道的？"
+
+**3. 剑穗伏笔串联**
+- `dayu_morning` 加 dm_06："穗绳上的结扎得很紧，不像是丢掉的东西。"
+- `boss_awakening` 加 ba_06b："还有那张便条上的字——「别怕。」"
+- `old_wanderer_return` 加 owr_03/owr_03b：老江湖看到剑穗欲言又止
+
+**4. 顾飞白出场重写**
+- `boss_room_enter` 加 bre_05b：BOSS间酒气暗示（"有人在某个角落里坐了很久"）
+- `after_battle` + `after_battle_coin`：重写出场（墙角/没有鞘的剑/"比你早"/看剑穗认出又移开）
+- 铜钱版加 abc_coin_06："他说这句话的时候，手指碰了一下腰间的剑柄，又放下了。"
+
+**5. 章末画面补完（ChapterEndScene.gd）**
+- 路径A加第三行："身后，碎玉镇的灯火一盏一盏亮起来。"
+- 路径B加第三行："第二天一早，她收拾好东西，锁了门。钥匙放在年年够不到的地方。"
+- 悬念钩子后新增："第二章·藏锋　——　敬请期待"淡入
+- `get_tree().quit()` 改为回主菜单
+
+**6. 夜行氛围链路接入（5个原孤立场景）**
+- `night_exit`：ShopScene 夜晚黑屏后、切场景前播放
+- `night_walk_tree`：TownScene 经过榕树格(17,16)自动触发
+- `night_walk_well`：TownScene 经过古井格(22,17)自动触发
+- `temple_entrance_night`：TownScene 进废庙时播放，await 结束后再切场景
+- `monster_approach`：TempleScene 首次触碰幽影狼前播放
+
+### 二、BUG修复（4项）
+
+**BUG-1：guard_return 守卫对话未切换**
+- 现象：测灵回来后守卫对话无变化
+- 根因：TownScene.tscn 中 `dialogue_scene_id_after = "guard"`（和 before 一样）
+- 修复：改为 `"guard_return"`
+
+**BUG-2：ShopScene phase==4 fallthrough**
+- 现象：phase 4 时进杂货铺会触发 morning 流程
+- 根因：match 无 phase 4 分支，落入 `_:` 默认执行 morning
+- 修复：加 `4:` 分支，只显示 HUD 不触发流程
+
+**BUG-3：story_phase 直接赋值破坏封装**
+- 现象：TownScene test_stone 处 `GameData.story_phase = 3` 绕过了 advance_phase()
+- 修复：GameData.gd 新增 `set_phase(target)` 公开接口；TownScene 改用 `GameData.set_phase(3)`
+
+**BUG-4：BOSS第二阶段旁白期间按钮竞态**
+- 现象：boss_phase2_started 的 await 挂起后，turn_changed 同步开启按钮，旁白期间玩家可点击
+- 根因：`_on_boss_phase2_started()` 的 await 让出控制权，`_on_turn_changed(PLAYER_TURN)` 重新启用按钮
+- 修复：`_on_turn_changed()` 检查 `DialogueManager.is_active`，对话进行中不启用按钮
+
+### 三、防御性修复（2项）
+
+**BUG-5：TownScene 进废庙 await 后缺安全检查**
+- 位置：`_enter_scene("temple")` 中 await dialogue_ended 后
+- 修复：加 `if not is_inside_tree(): return`
+
+**BUG-6：TempleScene 幽影狼信号重入**
+- 现象：monster_approach await 期间玩家离开再进入，body_entered 再次触发 _trigger_wolf_battle
+- 修复：加 `_wolf_battle_pending` 重入锁
+
+### 文件修改记录（第十八版）
+
+```
+data/chapter1.json           战斗失败独白×4
+                             return_home碗筷/剑穗伏笔
+                             dayu_morning剑穗细节
+                             boss_awakening便条闪回
+                             old_wanderer_return剑穗欲言又止
+                             boss_room_enter酒气暗示
+                             after_battle/after_battle_coin出场重写+铜钱细节
+scripts/BattleUI.gd          失败独白选择逻辑
+                             BOSS旁白按钮竞态修复
+scripts/BattleManager.gd     淬血低血量日志
+scripts/ChapterEndScene.gd   路径A/B第三行+第二章预告+回主菜单
+scripts/TownScene.gd         夜行氛围触发(tree/well/temple)
+                             story_phase改用set_phase()
+                             进废庙await安全检查
+scripts/TempleScene.gd       monster_approach触发+重入锁
+scripts/ShopScene.gd         night_exit触发+phase4分支
+scripts/GameData.gd          新增set_phase()接口
+scenes/TownScene.tscn        guard_return配置修复
+```
+
+### 当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | 剑穗伏笔加强 |
+| 链路二 测灵广场 | ✅ | set_phase封装 |
+| 链路三 回家流程 | ✅ | 碗筷/便条伏笔 |
+| 链路四 废庙流程 | ✅ | 顾飞白重写+失败独白+夜行氛围+竞态修复 |
+| 链路五 章末流程 | ✅ | 路径A/B补完+第二章预告 |
+| 主菜单 | ✅ | 章末回主菜单 |
+| ESC系统菜单 | ✅ | 无变化 |
+
+### 待完成任务（按优先级）
+
+1. 美术资源替换
+2. 背景音乐和音效

@@ -32,6 +32,22 @@ var _skill_menu: Control = null
 ## BOSS第二阶段是否已触发旁白
 var _phase2_dialogue_done: bool = false
 
+## 演出用：记录行动前的HP，用于检测伤害并触发视觉效果
+var _prev_player_hp: int = 0
+var _prev_enemy_hp: int = 0
+
+## 全屏白光遮罩（觉醒演出用）
+var _white_overlay: ColorRect = null
+
+## 演出用：缓存 tween 引用，防止堆叠
+var _player_hp_tween: Tween = null
+var _enemy_hp_tween: Tween = null
+var _shake_tween: Tween = null
+
+## 屏幕震动原始位置（只在第一次震动前记录）
+var _original_pos: Vector2 = Vector2.ZERO
+var _original_pos_saved: bool = false
+
 
 func _ready() -> void:
 	## 通知UIManager进入战斗，隐藏常驻UI
@@ -54,6 +70,15 @@ func _ready() -> void:
 	defend_button.text = "感应"
 
 	_show_battle_ui(true)
+
+	## 创建全屏白光遮罩（初始透明，觉醒时闪白）
+	_white_overlay = ColorRect.new()
+	_white_overlay.name = "WhiteOverlay"
+	_white_overlay.color = Color(1.0, 1.0, 1.0, 0.0)
+	_white_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_white_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_white_overlay)
+
 	_start_battle()
 
 
@@ -81,7 +106,8 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			if not is_inside_tree():
 				return
 			SceneTransition.change_scene("res://scenes/TempleScene.tscn")
-		"battle_loss":
+		"battle_loss", "battle_loss_wolf", "battle_loss_toad", \
+		"battle_loss_boss_p1", "battle_loss_boss_p2":
 			## 失败独白结束，切回废庙安全坐标
 			UIManager.on_battle_end()
 			await get_tree().create_timer(0.5).timeout
@@ -127,17 +153,27 @@ func _refresh_player_hp() -> void:
 	var p: Character = GameData.player
 	player_name_label.text  = p.char_name
 	player_hp_bar.max_value = p.max_hp
-	player_hp_bar.value     = p.hp
 	player_hp_label.text    = "HP: %d / %d" % [p.hp, p.max_hp]
 	player_hp_bar.modulate  = Color(1.0, 0.3, 0.3) if float(p.hp) / p.max_hp < 0.3 else Color.WHITE
+	## HP条平滑过渡（杀掉旧 tween 防止堆叠）
+	if _player_hp_tween and _player_hp_tween.is_valid():
+		_player_hp_tween.kill()
+	_player_hp_tween = create_tween()
+	_player_hp_tween.tween_property(player_hp_bar, "value", float(p.hp), 0.3)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 
 func _refresh_enemy_hp() -> void:
 	enemy_name_label.text  = _enemy.char_name
 	enemy_hp_bar.max_value = _enemy.max_hp
-	enemy_hp_bar.value     = _enemy.hp
 	enemy_hp_label.text    = "HP: %d / %d" % [_enemy.hp, _enemy.max_hp]
 	enemy_hp_bar.modulate  = Color(1.0, 0.3, 0.3) if float(_enemy.hp) / _enemy.max_hp < 0.3 else Color.WHITE
+	## HP条平滑过渡（杀掉旧 tween 防止堆叠）
+	if _enemy_hp_tween and _enemy_hp_tween.is_valid():
+		_enemy_hp_tween.kill()
+	_enemy_hp_tween = create_tween()
+	_enemy_hp_tween.tween_property(enemy_hp_bar, "value", float(_enemy.hp), 0.3)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 
 ## 统一刷新双方HP（敌方行动结束后调用）
@@ -152,15 +188,13 @@ func _refresh_all_hp() -> void:
 
 func _on_attack_pressed() -> void:
 	_close_skill_menu()
-	_battle.player_action(BattleManager.ActionType.ATTACK)
-	_refresh_all_hp()
+	_execute_action(BattleManager.ActionType.ATTACK)
 
 
 ## 道具按钮：使用伤药
 func _on_item_pressed() -> void:
 	_close_skill_menu()
-	_battle.player_action(BattleManager.ActionType.USE_POTION)
-	_refresh_all_hp()
+	_execute_action(BattleManager.ActionType.USE_POTION)
 
 
 ## 刷新道具按钮状态：文字、可用性
@@ -181,8 +215,7 @@ func _on_defend_pressed() -> void:
 	if not _is_sense_unlocked():
 		log_text.append_text("[color=gray]【 混沌灵根尚未感应到法则……需先阅读碑文。】[/color]\n")
 		return
-	_battle.player_action(BattleManager.ActionType.SENSE)
-	_refresh_all_hp()
+	_execute_action(BattleManager.ActionType.SENSE)
 
 
 # ── 技能子菜单系统 ───────────────────────────────────────────
@@ -263,15 +296,13 @@ func _create_skill_btn(
 
 
 func _on_charge_pressed() -> void:
-	_battle.player_action(BattleManager.ActionType.CHARGE)
-	_refresh_all_hp()
+	_execute_action(BattleManager.ActionType.CHARGE)
 
 
 func _on_quixue_pressed() -> void:
 	if not _is_quixue_unlocked():
 		return
-	_battle.player_action(BattleManager.ActionType.BITE)
-	_refresh_all_hp()
+	_execute_action(BattleManager.ActionType.BITE)
 
 
 # ── 技能解锁条件 ─────────────────────────────────────────────
@@ -289,7 +320,11 @@ func _is_sense_unlocked() -> bool:
 
 func _on_turn_changed(state: BattleManager.TurnState) -> void:
 	var is_player_turn := state == BattleManager.TurnState.PLAYER_TURN
-	_set_buttons_disabled(not is_player_turn)
+	## 对话进行中（BOSS旁白等）不开启按钮，防止竞态
+	if is_player_turn and DialogueManager.is_active:
+		_set_buttons_disabled(true)
+	else:
+		_set_buttons_disabled(not is_player_turn)
 	_refresh_all_hp()
 
 
@@ -329,6 +364,9 @@ func _on_battle_ended(player_won: bool) -> void:
 		## 立即恢复满血（独白播放期间视觉上她已经"站起来了"）
 		GameData.player.hp = GameData.player.max_hp
 		_refresh_player_hp()
+		## 保存敌人ID用于选择失败独白（清空前缓存）
+		var defeated_by := GameData.current_enemy_id
+		var was_boss_p2 := _battle._boss_phase2 if _battle else false
 		## 记录安全坐标和战场状态（在播独白之前就写入，防止对话期间异常）
 		GameData.battle_won = false
 		var safe_pos := _get_safe_respawn_pos()
@@ -338,7 +376,9 @@ func _on_battle_ended(player_won: bool) -> void:
 		await get_tree().create_timer(0.8).timeout
 		if not is_inside_tree():
 			return
-		DialogueManager.start_scene("battle_loss")
+		## 根据敌人类型选择差分失败独白
+		var loss_scene := _get_battle_loss_scene(defeated_by, was_boss_p2)
+		DialogueManager.start_scene(loss_scene)
 
 
 ## BOSS第二阶段触发：锁定按钮，播放旁白
@@ -403,14 +443,19 @@ func _on_ready_for_awakening() -> void:
 	)
 
 
-## 觉醒一击触发：播放觉醒独白，结束后切场景
+## 觉醒一击触发：全屏白光 + 播放觉醒独白，结束后切场景
 func _on_awakening_triggered() -> void:
 	_set_buttons_disabled(true)
 	_close_skill_menu()
+	## 全屏白光演出
+	_flash_white()
+	_shake_screen()
 	log_text.append_text(
 		"\n[color=gold]【 混沌灵根，觉醒。】[/color]\n")
-	## 播放觉醒独白，旁白结束后_on_dialogue_ended处理切场景
-	await get_tree().process_frame
+	## 等白光到达峰值后再播独白
+	await get_tree().create_timer(0.5).timeout
+	if not is_inside_tree():
+		return
 	DialogueManager.start_scene("boss_awakening")
 
 
@@ -445,6 +490,83 @@ func _get_safe_respawn_pos() -> Vector2:
 			return Vector2(240, -370)
 		_:
 			return Vector2(32, 270)
+
+
+## 根据敌人类型和BOSS阶段选择失败独白场景
+func _get_battle_loss_scene(enemy_id: String, boss_p2: bool) -> String:
+	if enemy_id == "boss":
+		return "battle_loss_boss_p2" if boss_p2 else "battle_loss_boss_p1"
+	if enemy_id.begins_with("wolf"):
+		return "battle_loss_wolf"
+	if enemy_id == "toad":
+		return "battle_loss_toad"
+	return "battle_loss"
+
+
+# ── 战斗演出 ─────────────────────────────────────────────────
+
+## 统一行动入口：记录HP → 执行行动 → 检测伤害 → 触发演出 → 刷新HP
+func _execute_action(action_type: BattleManager.ActionType) -> void:
+	_prev_player_hp = GameData.player.hp
+	_prev_enemy_hp = _enemy.hp
+
+	_battle.player_action(action_type)
+
+	## 检测伤害并触发对应演出
+	var player_took_dmg := GameData.player.hp < _prev_player_hp
+	var enemy_took_dmg := _enemy.hp < _prev_enemy_hp
+	var player_dmg_amount := _prev_player_hp - GameData.player.hp
+
+	if enemy_took_dmg:
+		_flash_panel($EnemyPanel, Color(1.0, 0.2, 0.2))
+	if player_took_dmg:
+		_flash_panel($PlayerPanel, Color(1.0, 0.2, 0.2))
+		if player_dmg_amount >= 15:
+			_shake_screen()
+
+	_refresh_all_hp()
+
+
+## 面板闪红：短暂变色后恢复到白色（不捕获当前色，防止连续闪红时恢复到中间状态）
+func _flash_panel(panel: Control, flash_color: Color) -> void:
+	var tw := create_tween()
+	tw.tween_property(panel, "modulate", flash_color, 0.08)
+	tw.tween_property(panel, "modulate", Color.WHITE, 0.25)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+
+
+## 屏幕震动：整个UI根节点抖动
+func _shake_screen() -> void:
+	## 只在第一次记录原始位置，防止震动中再次调用时捕获偏移值
+	if not _original_pos_saved:
+		_original_pos = position
+		_original_pos_saved = true
+	## 杀掉旧震动 tween，防止多个同时运行导致位置漂移
+	if _shake_tween and _shake_tween.is_valid():
+		_shake_tween.kill()
+		position = _original_pos
+	_shake_tween = create_tween()
+	for i in range(6):
+		var offset := Vector2(randf_range(-8, 8), randf_range(-6, 6))
+		_shake_tween.tween_property(self, "position", _original_pos + offset, 0.04)
+	_shake_tween.tween_property(self, "position", _original_pos, 0.04)
+
+
+## 全屏白光闪烁（觉醒一击演出）
+func _flash_white() -> void:
+	if _white_overlay == null or not is_instance_valid(_white_overlay):
+		return
+	_white_overlay.color = Color(1.0, 1.0, 1.0, 0.0)
+	_white_overlay.show()
+	var tw := create_tween()
+	## 快速闪白
+	tw.tween_property(_white_overlay, "color:a", 0.9, 0.12)\
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	## 维持片刻
+	tw.tween_interval(0.3)
+	## 缓慢消退
+	tw.tween_property(_white_overlay, "color:a", 0.0, 0.8)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
 
 
 ## 切换战斗UI四个面板的可见性
