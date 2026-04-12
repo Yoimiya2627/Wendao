@@ -1,0 +1,268 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+《问道》—— 项目完整介绍（供 AI 协作使用）
+最后更新：2026-04-13  当前版本：第二十二版
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【一、项目基本信息】
+
+名称：《问道》
+类型：回合制文字冒险 RPG（修仙主题）
+引擎：Godot 4.6（GDScript）
+目录：E:/wendao
+平台目标：PC + Android
+Git 仓库：https://github.com/1486807398/Wendao.git
+当前主分支：main，最新提交 4a6f771
+
+代码规范：
+- 所有注释使用中文
+- 私有变量以 _ 开头
+- AutoLoad 单例不继承 Node 以外的类
+- 对话数据与代码完全分离（JSON 驱动）
+
+
+【二、世界观与叙事概要】
+
+主角：苏云晚，碎玉镇普通民女，家中有爹（苏明）、猫（年年）、弟弟（大鱼）
+核心性格：对修仙/命运/生死无所谓，心里只有家。她的"破防"不是情绪外露，是被生活小细节拉回。
+第一章主线："测灵失败 → 偶遇废庙妖兽 → 强行觉醒混沌灵根 → 击败虚形魇 → 离开碎玉镇"
+
+关键伏笔（均已埋入对话）：
+- 苏明提前知晓剑穗发热（便条：别怕）
+- 顾飞白凭剑穗认出苏云晚，随即移开视线
+- 老江湖看到剑穗欲言又止
+- 母亲形象：围裙久不穿，碗筷第二副从未动过
+
+章末路径分支：
+- 路径A：测灵结束直接离开，独自走出废庙，身后碎玉镇灯火亮起
+- 路径B：寄居铺子期间看父亲来信，收拾好东西锁门离开
+
+
+【三、游戏流程（五条链路）】
+
+链路一：Morning 流程（ShopScene → TownScene）
+- 苏云晚在杂货铺起床 → 猫咪互动 → 针线篓互动 → 出门
+- 测灵广场：两段式测灵（选石头感应 → 石台测灵） → 失败
+
+链路二：测灵广场（TownScene）
+- test_stone 场景：感应古石，旁白收尾"回家。"
+- 去程 NPC 对话：算命摊、大妈们、挑水工、狗、守卫、茶馆等
+
+链路三：回家流程（TownScene → ShopScene → TownScene夜晚）
+- 返回杂货铺：回家对话、便条、剑穗伏笔
+- 猫咪安慰 / 弟弟安慰两条路
+- 夜晚出门：夜行氛围链路（榕树旁白 → 古井旁白 → 废庙入口旁白）
+
+链路四：废庙流程（TempleScene）
+- 五房间结构：入口大厅 / 左厢房 / 右厢房 / 内殿 / BOSS间
+- 四块碑文，阅读数影响剑穗视觉等级（0-4 级）
+- 幽影狼×2（普通战斗） / 石皮蟾（普通战斗）
+- 虚形魇（BOSS）：两阶段，P2 锁血 + 模糊预告机制
+- 觉醒：第三回合触发"——挥出去。"按钮，全屏白光 + 混沌灵根觉醒
+
+链路五：章末（ChapterEndScene → 主菜单）
+- 黑底白字逐行显示路径 A/B 文字
+- 章节标题"第一章·问道"淡入
+- 悬念钩子："有人动了手脚。那个人，认识你。"
+- 第二章预告："第二章·藏锋——敬请期待"
+- 返回主菜单
+
+
+【四、技术架构】
+
+▌AutoLoad 单例（加载顺序重要）
+
+GameData       — 全局数据，存读档，story_phase 状态机
+DialogueManager — 对话系统驱动，JSON 解析，事件信号
+SceneTransition — 场景切换（黑屏淡入淡出）+ BGM 自动播放
+UIManager      — 主 HUD（HP条/心绪/背包/技能）+ ESC菜单 + 设置持久化
+AudioManager   — BGM crossfade + SFX 对象池 + 对话 BGM 闪避
+VirtualJoystick — 移动端虚拟摇杆（PC端零开销）
+
+▌场景脚本
+
+scenes/MainMenuScene.tscn   — 主菜单（继续/读档/新游戏/退出）
+scenes/TownScene.tscn       — 碎玉镇大地图（主要剧情触发点）
+scenes/ShopScene.tscn       — 杂货铺（起点/章末路径B）
+scenes/TeaScene.tscn        — 茶馆（NPC区）
+scenes/TempleScene.tscn     — 废庙（战斗+碑文+BOSS）
+scenes/BattleScene.tscn     — 战斗场景容器
+scripts/BattleUI.gd         — 战斗 UI 逻辑（嵌入 BattleScene）
+scenes/ChapterEndScene.tscn — 章末演出
+
+▌战斗系统
+
+文件：BattleManager.gd + BattleUI.gd + scripts/Character.gd
+
+机制：
+- 回合制，每回合玩家先选择，然后按先手顺序双方同时结算
+- 先手判断：boss/石皮蟾 = 敌方先手；幽影狼 = 玩家先手
+- 四个操作：攻击 / 蓄势（下一击×2破甲）/ 淬血（自损≥10HP，造成ATK×1.5+失血×0.5真实伤害）/ 感应（感知道纹预判）
+- 消耗品：伤药/定神香/辟邪符（购于药婆商人）
+- BOSS专属：P2锁血（剩20HP后不再减少） + 模糊（下回合生效，预告制）+ 侵蚀吸血
+
+玩家初始属性：HP 60, ATK 12, DEF 3
+
+▌对话系统
+
+文件：DialogueManager.gd + DialogueBox.gd + data/chapter1.json
+
+节点类型：narration（旁白）/ dialogue（对话）/ choice（选项）/ event（触发事件）
+场景数：85个（第一章）
+驱动方式：JSON 场景 ID → start_scene(id) → event_triggered 信号 → 各场景脚本处理
+
+▌存档系统
+
+文件类型：user://save_auto.json / save_manual_1.json / save_manual_2.json / save_crossroad.json
+存档内容：story_phase / player stats / triggered_events / gold / stones_read / last_player_position 等
+设置文件：user://settings.json（字号/文字速度/BGM音量/SFX音量）
+
+▌音频系统
+
+文件：AudioManager.gd
+BGM：crossfade 切换 / 对话 duck 40% / 别名映射表
+SFX：8个播放器对象池 / 音调微扰防机械重复感
+
+BGM 别名映射：
+  battle_normal → temple_boss（普通战斗）
+  awakening     → chapter_end（觉醒演出复用章末钢琴）
+
+BGM 覆盖（11首）：
+  main_menu / town_day / town_night / tea_house / temple_explore
+  shop_morning / shop_return / temple_boss / battle_boss_p1
+  battle_boss_p2 / chapter_end
+
+SFX（15个）：
+  attack_hit / attack_critical / charge / quixue / sense / enemy_hurt
+  player_hurt / victory / defeat / gold_gain / item_get / awakening_flash
+  dialogue_advance / button_click / door_open
+
+
+【五、关键数据字段（GameData）】
+
+story_phase       : int   — 核心状态机（0=清晨 1=测灵 2=回家 3=夜晚 4=废庙 5=章末）
+chapter_end_path  : String — "a" 或 "b"
+triggered_events  : Array — 持久化事件标记（NPC消失/对话切换/入场旁白等）
+stones_read       : Array[bool] — 4块碑文阅读状态
+unlocked_old_items: Array — 旧物列表（sword_tassel/letter/bowl/charm等）
+temple_dungeon_state : Dictionary — 妖兽击败状态（wolf1_defeated等）
+gold              : int
+night_triggered   : bool — 是否进入夜晚流程
+battle_won        : bool — 最近一次战斗结果
+current_enemy_id  : String — 当前/最近战斗的敌人ID
+
+
+【六、NPC 系统】
+
+文件：NPC.gd（基类）+ 各场景 .tscn 中配置
+
+关键属性：
+  dialogue_scene_id       — 主对话场景ID
+  dialogue_scene_id_after — story_phase >= 3 后切换为此ID
+  required_phase          — 最低触发阶段（-1=不限）
+  is_triggered            — 是否已触发（持久化到 triggered_events）
+
+持久化机制：
+  disappear()           — 写入 "npc_state_{scene}_{name}_gone"
+  restore_state()       — 读取 gone / triggered 状态，场景 _ready() 调用
+  interact() is_triggered — 首次触发后写入 "{savekey}_triggered"
+
+
+【七、当前版本状态（v22）】
+
+所有五条链路：✅ 完整可测
+主菜单：✅  ESC系统菜单：✅  音频系统：✅
+
+已完成：
+  ✅ 完整剧情（第一章，85个对话场景）
+  ✅ 回合制战斗系统（含BOSS两阶段+觉醒演出）
+  ✅ 存档/读档（四文件隔离）
+  ✅ 主菜单（含读档选档界面）
+  ✅ ESC系统菜单（存档/设置/返回主菜单）
+  ✅ 完整音频系统（11首BGM + 15个SFX）
+  ✅ 虚拟摇杆（Android适配）
+  ✅ 剑穗视觉成长（5等级，碑文联动，两场景同步）
+  ✅ 战斗教学引导（首次战斗叙事式教学）
+  ✅ 字号/文字速度/音量设置持久化
+  ✅ 22轮全局代码审查修复（信号泄漏/竞态/防御性修复等）
+
+待完成：
+  ⬜ 美术资源替换（当前全色块占位）
+  ⬜ 字号设置面板 UI（信号已就绪，缺UI入口）
+  ⬜ 已读跳过功能
+
+
+【八、代码文件清单】
+
+scripts/
+  AudioManager.gd     — BGM/SFX全局管理，crossfade，对话duck
+  BattleManager.gd    — 回合制战斗逻辑，信号驱动
+  BattleUI.gd         — 战斗UI，演出效果，战斗剑穗
+  Character.gd        — 角色基类（class_name Character）
+  ChapterEndScene.gd  — 章末演出，逐字显示
+  DialogueBox.gd      — 对话框渲染，选项按钮，字号适配
+  DialogueManager.gd  — 对话驱动器（AutoLoad），JSON解析，force_stop
+  GameData.gd         — 全局数据（AutoLoad），存读档，set_phase()
+  MainMenuScene.gd    — 主菜单逻辑
+  NPC.gd              — NPC基类，消失/触发持久化
+  Player.gd           — 玩家移动，NPC交互检测，剑穗视觉
+  SceneTransition.gd  — 场景切换（AutoLoad），is_transitioning只读属性
+  ShopScene.gd        — 杂货铺流程（morning/return/letter）
+  TeaScene.gd         — 茶馆
+  TempleScene.gd      — 废庙（五房间+碑文+妖兽+BOSS）
+  ThemeManager.gd     — 主题管理（色调）
+  TownScene.gd        — 碎玉镇大地图（核心剧情枢纽）
+  UIManager.gd        — 主HUD+ESC菜单+设置（AutoLoad），in_battle/esc_open只读
+  VirtualJoystick.gd  — 虚拟摇杆（AutoLoad），移动端专用
+
+data/
+  chapter1.json       — 第一章全部对话数据（85场景，2500+行）
+
+assets/audio/
+  bgm/  — 11首BGM（.ogg/.mp3）
+  sfx/  — 15个SFX（.wav）
+
+scenes/
+  BattleScene.tscn / ChapterEndScene.tscn / DialogueBox.tscn
+  InkWashOverlay.tscn / MainMenuScene.tscn / NPC.tscn
+  Player.tscn / ShopScene.tscn / TeaScene.tscn
+  TempleScene.tscn / TownScene.tscn
+
+
+【九、注意事项（给接手的AI）】
+
+1. 代码注释全部用中文，变量/函数名用英文
+2. story_phase 只能通过 GameData.set_phase(n) 修改，不能直接赋值
+3. BGM 在 BattleScene / TownScene / ShopScene 由各场景脚本管理（含条件分支）；
+   TeaScene / TempleScene / MainMenuScene 由 SceneTransition._auto_play_bgm() 统一触发
+4. 对话系统通过 event_triggered 信号与场景解耦；
+   各场景在 _on_event_triggered() 函数中处理具体事件
+5. NPC 状态（消失/对话切换）全部持久化到 triggered_events，
+   场景 _ready() 需要调用 restore_state_from_save()
+6. 场景切换前 SceneTransition 会自动调用 DialogueManager.force_stop()，
+   防止 is_active 跨场景残留
+7. AudioManager 对话 duck 机制：对话开始自动压低 BGM 到 40%，对话结束 1.5s 后恢复
+8. GDScript lambda 多行时必须先赋变量再传入函数，
+   直接内嵌在括号里会导致"Unindent doesn't match"解析错误
+9. Godot 导入文件（.import）需要打开编辑器扫描才会自动生成，
+   新增音频文件后需要开一次 Godot 编辑器
+10. 所有 await 之后必须检查 is_inside_tree()，防止节点被释放后继续执行
+
+
+【十、版本历史简表】
+
+v1-v9   基础框架（角色数据/战斗系统/对话系统/存档）
+v10     主菜单、reset_to_default、Bug修复（NPC持久化/串档）
+v11     ESC系统菜单
+v12     UIManager 类型推断 Bug 修复
+v13     第一轮测试员反馈 Bug 修复（12条）
+v14     基础UI三件套（HP条/心绪/旧物背包）+ 功法栏
+v15     道心值系统移除 + 性格重塑（咬牙→淬血）
+v16     回合制重构（双方同回合结算）+ BOSS模糊修复
+v17     战斗演出（闪红/震动/白光）+ 虚拟摇杆 + 7个Bug修复
+v18     叙事深化（破防瞬间×5 + 顾飞白重写 + 章末补完）+ 4个Bug修复
+v19     苏云晚破防瞬间×5 + 剑穗视觉成长 + 战斗教学引导
+v20     AudioManager框架 + 字号同步 + 战斗剑穗 + 设置持久化 + 7个Bug修复
+v21     全局代码审查（19个Bug修复，信号泄漏/竞态/BOSS吸血/章末崩溃）
+v22     BGM资源接入（11首全覆盖）+ 音频系统修复×6 + 代码规范解耦 + JSON清理
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
