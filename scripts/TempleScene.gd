@@ -99,6 +99,7 @@ func _ready() -> void:
 	DialogueManager.event_triggered.connect(_on_event_triggered)
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	_connect_stone_areas()
+	## BGM 由 SceneTransition._auto_play_bgm() 统一触发（SCENE_BGM_MAP["TempleScene"]）
 
 	## 碑文位置分配：
 	## Stone1→入口大厅，Stone2→左厢房，Stone3→右厢房，Stone4→内殿
@@ -182,6 +183,15 @@ func _ready() -> void:
 	_setup_toad()
 	_update_inner_door_lock()
 	_setup_temple_hidden_interacts()
+	## 读档直接进入TempleScene时（不经过TownScene），确保主HUD显示
+	UIManager.show_main_hud()
+
+
+func _exit_tree() -> void:
+	if DialogueManager.event_triggered.is_connected(_on_event_triggered):
+		DialogueManager.event_triggered.disconnect(_on_event_triggered)
+	if DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.disconnect(_on_dialogue_ended)
 
 
 func _process(_delta: float) -> void:
@@ -922,6 +932,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	## 出口：按E离开废庙
 	if _player_in_exit:
 		GameData.last_scene = "temple"
+		GameData.save_to_file("auto")
 		SceneTransition.change_scene("res://scenes/TownScene.tscn")
 		get_viewport().set_input_as_handled()
 

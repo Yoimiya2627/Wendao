@@ -5,9 +5,26 @@ extends CanvasLayer
 
 const FADE_DURATION := 0.3
 
+## 场景根节点名称 → [BGM文件名, 淡入时长] 映射表
+## 只登记 BGM 固定不变的场景；含条件分支的场景自行管理：
+##   TownScene   : 白天/夜晚分差，由场景脚本判断
+##   ShopScene   : story_phase 决定 BGM，由场景脚本判断
+##   BattleScene : boss 阶段动态切换，由 BattleUI 管理
+##   ChapterEndScene: play_bgm_once（不循环），由场景脚本管理
+const SCENE_BGM_MAP: Dictionary = {
+	"MainMenuScene" : ["main_menu",      1.5],
+	"TeaScene"      : ["tea_house",      1.5],
+	"TempleScene"   : ["temple_explore", 1.5],
+}
+
 var _overlay: ColorRect
 var _tween: Tween
 var _is_transitioning := false
+
+## 公开只读属性：外部模块（如 Player）通过此属性查询切换状态，
+## 避免直接访问 _is_transitioning 造成耦合
+var is_transitioning: bool:
+	get: return _is_transitioning
 
 
 func _ready() -> void:
@@ -30,8 +47,15 @@ func change_scene(path: String) -> void:
 		return
 	_is_transitioning = true
 
+	## 切场景前强制终止对话，防止 DialogueManager.is_active 跨场景残留导致玩家卡死
+	DialogueManager.force_stop()
+
 	# 淡出：画面变黑
 	await _fade(1.0)
+
+	## 二次 force_stop：淡出期间旧场景的 _process 可能因状态变更
+	## 而自动触发新对话（如 TownScene 的夜行旁白），导致 is_active 残留
+	DialogueManager.force_stop()
 
 	# 切换场景
 	var err := get_tree().change_scene_to_file(path)
@@ -43,7 +67,13 @@ func change_scene(path: String) -> void:
 		return
 
 	# 等待新场景完成初始化再淡入
+	# 两帧等待：change_scene_to_file 内部用 call_deferred 换场景，
+	# 第一帧可能在旧场景帧尾触发，第二帧确保新场景 _ready() 已执行完毕
 	await get_tree().process_frame
+	await get_tree().process_frame
+
+	# 根据映射表自动播放 BGM（不在表中的场景自行管理）
+	_auto_play_bgm()
 
 	# 淡入：遮罩消失
 	await _fade(0.0)
@@ -56,6 +86,9 @@ func _fade(target_alpha: float) -> void:
 	if _tween:
 		_tween.kill()
 	_tween = create_tween()
+	## TWEEN_PAUSE_PROCESS：无论游戏是否暂停、节点process_mode如何，tween始终运行
+	## 防止 finished 信号因暂停/帧异常而永久挂起，导致 _is_transitioning 无法重置
+	_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	_tween.tween_property(_overlay, "modulate:a", target_alpha, FADE_DURATION)\
 		.set_ease(Tween.EASE_IN_OUT)\
 		.set_trans(Tween.TRANS_SINE)
@@ -65,3 +98,14 @@ func _fade(target_alpha: float) -> void:
 ## 将遮罩直接设为完全不透明（供ShopScene夜晚渐变衔接使用）
 func set_overlay_opaque() -> void:
 	_overlay.modulate.a = 1.0
+
+
+## 根据当前场景名称查表播放 BGM
+## 不在 SCENE_BGM_MAP 中的场景静默跳过，由其自身脚本处理
+func _auto_play_bgm() -> void:
+	var scene := get_tree().current_scene
+	if scene == null:
+		return
+	if SCENE_BGM_MAP.has(scene.name):
+		var entry: Array = SCENE_BGM_MAP[scene.name]
+		AudioManager.play_bgm(entry[0], entry[1])

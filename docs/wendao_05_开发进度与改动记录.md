@@ -1458,3 +1458,385 @@ scenes/TownScene.tscn        guard_return配置修复
 
 1. 美术资源替换
 2. 背景音乐和音效
+
+---
+
+## 第十九版（2026-04-11）
+
+### 主题：苏云晚性格刻画 + 剑穗视觉成长 + 战斗教学引导
+
+### 一、苏云晚破防瞬间（5处）
+
+核心设计思路：她的"破防"不是情绪外露，是被生活的小细节拉回。她对修仙、命运、生死都无所谓，但偶尔会想起家里的某个具体细节。
+
+**1. test_stone 加 ts_05b**
+> "她想，今天可以早点回家吃饭了。"
+- 测灵失败的瞬间，她真实的反应不是失望，是"可以早点回家"。揭示她对测灵的根本态度。
+
+**2. boss_phase2_start 加 bp2_05b**
+> "她想，桌上那两副碗筷，应该早就凉了吧。"
+- BOSS 锁血时，她想的不是怎么赢，是家里桌上那两副没动过的碗筷。
+- 呼应 return_home 的细节"碗筷摆了两副，第二副没有动过"。
+
+**3. battle_loss_boss_p2 加 blb2_03b**
+> "她想，年年今晚没人喂了。"
+- 生死边缘，她想的不是命，是猫。
+
+**4. light_still_on 加 ls_02**
+> "她加快了脚步。"
+- 看到家的灯还亮着，她不说话，加快脚步。动作代替情绪。
+
+**5. return_home 加 rh_05b（妈妈伏笔加强）**
+> "她看了一眼那件围裙。已经很久了，谁都没有再穿过它。"
+- 把模糊的氛围细节变成明确的母亲指向。
+
+### 二、剑穗视觉成长（Player.gd）
+
+**实现机制：**
+- Player 节点动态创建 SwordTasselVisual（Polygon2D 组合，位置 16,8 z_index=2）
+- 外层菱形光晕 + 内层矩形剑穗主体
+- 检测 `unlocked_old_items` 判断是否显示
+- 检测 `stones_read` 数量（0-4）决定颜色等级：
+  - 0 块：暗棕，无光晕
+  - 1 块：泛红，15% 光晕
+  - 2 块：泛金，30% 光晕
+  - 3 块：明亮，50% 光晕
+  - 4 块：金白，75% 光晕
+- 0.6s EASE_OUT tween 缓动到目标颜色
+- 防御性设计：tween 缓存防堆叠 / 场景切换首次直接赋值不跳变
+
+### 三、战斗教学引导
+
+**新增 tutorial_first_battle 场景**（5个旁白节点），融入叙事的引导：
+> "她第一次和妖兽对峙。手心出汗。"
+> "脑子里却很清楚——"
+> "〔攻击〕是直来直去；〔技能〕里藏着「蓄势」和「淬血」，一个先收着再放，一个以血换伤。"
+> "至于〔感应〕——她还看不见。那是道纹的事，她现在还摸不到。"
+> "她试着深呼吸。"
+
+**触发机制：**
+- BattleUI.\_start_battle() 检查 triggered_events.has("tutorial_first_battle")
+- 首次进入战斗时，setup 完成后播放教学旁白，旁白结束后再开始第一回合
+
+**关键设计**：教学只介绍当前能用的技能（蓄势/淬血），明确说"感应还看不见"——避免玩家点击禁用按钮的困惑，同时埋下后续解锁的伏笔。
+
+### 四、自检发现并修复的问题
+
+| 问题 | 修复 |
+|------|------|
+| 教学旁白宣称"感应"可用，但首战未解锁 | 改为"她还看不见" |
+| ColorRect 在 Node2D 下渲染层级问题 | 改用 Polygon2D |
+| 场景切换剑穗颜色跳变 | 第一次设置直接赋值，不用 tween |
+| 剑穗 Tween 堆叠 | 缓存 tween 引用，新建前 kill |
+| 剑穗位置在 Body 内部被覆盖 | 移到右侧外缘(16,8) z_index=2 |
+
+### 文件修改记录（第十九版）
+
+```
+data/chapter1.json           破防5处+教学场景
+                             tutorial_first_battle新增
+                             ts_05b/bp2_05b/blb2_03b/ls_02/rh_05b
+scripts/Player.gd            剑穗视觉成长（Polygon2D）
+                             stones_read 联动光晕
+scripts/BattleUI.gd          首次战斗触发教学旁白
+```
+
+### 当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | 无变化 |
+| 链路二 测灵广场 | ✅ | 加破防瞬间 |
+| 链路三 回家流程 | ✅ | 妈妈伏笔加强 |
+| 链路四 废庙流程 | ✅ | 战斗教学+破防瞬间+剑穗视觉 |
+| 链路五 章末流程 | ✅ | 无变化 |
+| 主菜单 | ✅ | 无变化 |
+| ESC系统菜单 | ✅ | 无变化 |
+
+### 待完成任务（按优先级）
+
+1. 战斗中剑穗视觉同步（BattleScene 加剑穗节点）
+2. AudioManager 框架（BGM + 音效）
+3. 设置菜单（文字速度/已读跳过/字号）
+4. 美术资源替换
+
+---
+
+## 第二十版（2026-04-12）
+
+### 一、Bug 修复（7个）
+
+| 问题 | 修复位置 | 说明 |
+|------|----------|------|
+| BOSS第二阶段按钮竞态开启 | `BattleUI.gd` | `_on_boss_phase2_started()` 与 `turn_changed` 信号之间存在一帧竞态窗口，旁白未接管前按钮已重新开启。新增 `_phase2_in_progress` 标志，旁白接管前持续锁定按钮 |
+| 战败瞬间血条跳满 | `BattleUI.gd` | 战败回调中 `GameData.player.hp` 恢复满值后立即调用了 `_refresh_player_hp()`，导致血条在死亡画面闪回满格。移除即时刷新，让血条停留在 0 直到下一场景 |
+| 镇子入口判定失效 | `TownScene.gd` | `ENTRANCE_RANGE` 为 0 时，从商铺/茶馆/废庙返回带 1 格偏移的生成点脱离了入口范围，玩家偶现卡在门口。改为 1 |
+| 榕树/古井触发偶发失效 | `TownScene.gd` | 精确格匹配导致玩家站在相邻格时触发失败。改为 ±1 容差（`abs(pg.x - tx) <= 1 and abs(pg.y - ty) <= 1`） |
+| 跨场景对话残留锁死战斗按钮 | `DialogueManager.gd` | 场景切换时 `is_active` 未被清除，进入战斗场景后 `_on_turn_changed` 误判对话进行中，按钮永久锁死。新增 `force_stop()` 方法，`SceneTransition` 切场景前调用 |
+| `.name` 属性 StringName 类型拼接报错 | `NPC.gd` / `GameData.gd` / `UIManager.gd` | 部分节点的 `.name` 返回 StringName，字符串拼接时触发隐式类型错误。统一加 `String()` 强转 |
+| ESC 设置面板被裁剪 | `UIManager.gd` | 设置项增多后底部按钮超出面板边界。`_esc_panel.offset_top` 从 `-140` 调整为 `-180` |
+
+### 二、新增功能
+
+**AudioManager（新文件 `scripts/AudioManager.gd`）**
+- 全局单例，管理 BGM 和 SFX 播放
+- BGM 支持淡入淡出（`play_bgm(id, fade_in)` / `stop_bgm(fade_out)`），同一曲目重复调用不重启
+- SFX 即发即忘（`play_sfx(id)`）
+- 各场景已接入的 BGM：`main_menu` / `town_day` / `town_night` / `shop_morning` / `shop_return` / `temple_explore` / `battle_normal` / `battle_boss_p1` / `battle_boss_p2` / `awakening` / `chapter_end`
+- 战斗音效：`attack_hit` / `charge` / `quixue` / `sense` / `item_get` / `enemy_hurt` / `player_hurt` / `victory` / `defeat` / `gold_gain` / `awakening_flash`
+
+**字号缩放实时同步**
+- `UIManager.gd` 新增 `font_scale_changed(scale_factor: float)` 信号
+- `DialogueBox.gd` 和 `BattleUI.gd` 监听该信号，设置面板调整字号时立即刷新，无需重启场景
+
+**战斗中剑穗视觉（`BattleUI.gd`）**
+- 在 `PlayerPanel` 右上角动态创建 Polygon2D 剑穗，反映当前 `stones_read` 等级
+- 5 级颜色（暗棕→泛红→泛金→明亮→金白），0.6s EASE_OUT tween 缓动
+- 觉醒触发时剑穗爆发：内核变白，光晕菱形放大至 3.5x，先于全屏白光作为光源
+- 挂在 PlayerPanel 子树内，渲染层级不会盖过 DialogueBox
+
+**设置持久化（`UIManager.gd`）**
+- 新增 `load_settings_from_file()` / `save_settings_to_file()`
+- 字号、文字速度、音量等设置跨会话保留
+
+### 三、文件修改记录（第二十版）
+
+```
+scripts/AudioManager.gd      新增：全局音频管理单例
+scripts/ThemeManager.gd      新增：主题管理器
+scripts/BattleUI.gd          bug修复×2（竞态/血条）+ 战斗剑穗视觉 + 全流程BGM/SFX + 字号同步
+scripts/DialogueManager.gd   新增 force_stop() 方法
+scripts/DialogueBox.gd       字号信号监听
+scripts/Player.gd            世界场景剑穗视觉（已含 v19 内容，本版完善）
+scripts/UIManager.gd         bug修复×2（类型转换/面板高度）+ 字号信号 + 设置持久化
+scripts/NPC.gd               StringName 类型转换 bug 修复
+scripts/GameData.gd          StringName 类型转换 bug 修复
+scripts/TownScene.gd         bug修复×2（入口范围/触发容差）+ 昼夜BGM + 玩家坐标恢复
+scripts/ShopScene.gd         各阶段 BGM 接入
+scripts/TempleScene.gd       temple_explore BGM
+scripts/MainMenuScene.gd     main_menu BGM
+scripts/ChapterEndScene.gd   chapter_end BGM + 字号适配
+scripts/SceneTransition.gd   切场景前调用 DialogueManager.force_stop()
+```
+
+### 四、当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | BGM接入，无其他变化 |
+| 链路二 测灵广场 | ✅ | 无变化 |
+| 链路三 回家流程 | ✅ | 昼夜BGM切换 |
+| 链路四 废庙流程 | ✅ | 战斗BGM/SFX全接入，剑穗视觉同步，竞态bug修复 |
+| 链路五 章末流程 | ✅ | chapter_end BGM |
+| 主菜单 | ✅ | main_menu BGM |
+| ESC系统菜单 | ✅ | 面板高度修复，设置持久化 |
+
+### 五、待完成任务（按优先级）
+
+1. 美术资源替换（BGM/SFX 实际音频文件）
+2. 字号设置面板 UI（当前信号已就绪，缺 UI 入口）
+3. 已读跳过功能（文字速度/跳过按钮）
+
+---
+
+## 第二十一版（2026-04-12）—— 全局代码审查与修复
+
+### 审查范围
+
+| 扫描项 | 数量 |
+|--------|------|
+| GDScript 脚本 | 19 个，约 8000 行，逐文件完整阅读 |
+| tscn 场景文件 | 10 个，交叉验证所有节点路径 |
+| chapter1.json 对话数据 | 87 个场景，自动化链路验证 |
+| project.godot | AutoLoad 顺序 + 输入映射 |
+| 交叉验证 | start_scene 引用 × 事件处理 × DialogueBox 实例化 |
+
+### 一、Bug 修复（19个）
+
+**高危：跨场景信号泄漏（6个）**
+
+| 文件 | 修复 |
+|------|------|
+| `ShopScene.gd` | 新增 `_exit_tree()`，断开 `DialogueManager.event_triggered` + `dialogue_ended` |
+| `TeaScene.gd` | 新增 `_exit_tree()`，断开 `DialogueManager.event_triggered` |
+| `TempleScene.gd` | 新增 `_exit_tree()`，断开 `DialogueManager.event_triggered` + `dialogue_ended` |
+| `TownScene.gd` | 新增 `_exit_tree()`，断开 `DialogueManager.event_triggered` + `dialogue_ended` |
+| `BattleUI.gd` | `_exit_tree()` 补充断开 `UIManager.font_scale_changed` |
+| `DialogueBox.gd` | 新增 `_exit_tree()`，断开 `UIManager.font_scale_changed` + 三个 `DialogueManager` 信号 |
+
+**中危：逻辑/安全问题（8个）**
+
+| 文件 | 修复 |
+|------|------|
+| `Player.gd` | 新增 `_exit_tree()`，kill 并清空 `_sword_tassel_tween`，防止离树后 Tween 访问已释放节点 |
+| `AudioManager.gd` | Tween 有效性检查从 `is_valid()` 改为 `is_running()`（2 处），修复已完成 Tween 被误判为有效的问题 |
+| `BattleUI.gd` | `_refresh_battle_tassel()` 加联合 null 检查（node + core + glow），防止初始化异常时崩溃 |
+| `BattleUI.gd` | 觉醒按钮点击回调先 `disabled = true` 再 `queue_free()`，防止同帧二次触发 |
+| `GameData.gd` | `load_data()` 玩家核心字段从 `data["key"]` 改为 `data.get("key", default)`，旧版/损坏存档降级而非崩溃 |
+| `DialogueBox.gd` | `_show_choices()` 无按钮时 fallback 到 `continue_hint`，防止空选项面板卡死玩家 |
+| `BattleManager.gd` | BOSS 侵蚀吸血从固定 `var steal = 15` 改为 `min(15, player.hp)`，修复玩家仅剩 10HP 时 BOSS 凭空多恢复 5HP |
+| `ChapterEndScene.gd` | 11 处 `await` 后补充 `is_inside_tree()` 检查，章末画面按 ESC→返回主菜单不再崩溃 |
+
+**低危：防御性增强（3个）**
+
+| 文件 | 修复 |
+|------|------|
+| `TownScene.gd` | `_wait_for_transition()` while 循环内加 `is_inside_tree()` 防护 |
+| `TownScene.tscn` | `EnterHintLabel` rect 从 0×0 改为 120×20，修复 `horizontal_alignment = CENTER` 无效的问题 |
+| `chapter1.json` | 删除 `morning` 场景孤立节点 `m_06`（m_05 直接跳 m_07，m_06 不可达） |
+
+### 二、文件修改记录（第二十一版）
+
+```
+scripts/ShopScene.gd         +_exit_tree 信号断开
+scripts/TeaScene.gd          +_exit_tree 信号断开
+scripts/TempleScene.gd       +_exit_tree 信号断开
+scripts/TownScene.gd         +_exit_tree 信号断开 + _wait_for_transition 防护
+scripts/BattleUI.gd          +font_scale信号断开 + 剑穗null检查 + 觉醒按钮防重复
+scripts/DialogueBox.gd       +_exit_tree 信号断开 + choices空面板防护
+scripts/Player.gd            +_exit_tree tween清理
+scripts/AudioManager.gd      tween判定 is_valid→is_running
+scripts/GameData.gd          load_data 防御性读取
+scripts/BattleManager.gd     BOSS侵蚀吸血量修正
+scripts/ChapterEndScene.gd   11处await安全检查
+scenes/TownScene.tscn        EnterHintLabel尺寸修正
+data/chapter1.json           删除morning.m_06孤立节点
+```
+
+### 三、审查确认项（无问题）
+
+- project.godot AutoLoad 加载顺序符合依赖关系 ✅
+- 输入映射全部使用 Godot 内置 action ✅
+- 所有 `@onready` / `$Path` / `get_node_or_null` 路径与 tscn 节点树匹配 ✅
+- 所有 CollisionShape2D 均有 shape 赋值 ✅
+- 所有 `start_scene()` 引用的 scene_id 在 JSON 中存在 ✅
+- chapter1.json 87 个场景链路完整，无死链 ✅
+- 12 个事件全部有脚本处理（含默认兜底）✅
+- 需要对话的场景均有 DialogueBox 实例 ✅
+
+### 四、当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | 无变化 |
+| 链路二 测灵广场 | ✅ | 无变化 |
+| 链路三 回家流程 | ✅ | 无变化 |
+| 链路四 废庙流程 | ✅ | BOSS侵蚀吸血修正 |
+| 链路五 章末流程 | ✅ | await安全检查 |
+| 主菜单 | ✅ | 无变化 |
+| ESC系统菜单 | ✅ | 无变化 |
+
+### 五、待完成任务（按优先级）
+
+1. 美术资源替换（BGM/SFX 实际音频文件）
+2. 字号设置面板 UI（当前信号已就绪，缺 UI 入口）
+3. 已读跳过功能（文字速度/跳过按钮）
+
+---
+
+## 第二十二版（2026-04-13）—— BGM 资源接入 + 音频系统修复 + 全局规范整理
+
+### 一、BGM 资源接入（11 首全覆盖）
+
+将 11 首 BGM 文件（`.ogg` / `.mp3`）添加至 `assets/audio/bgm/`，并在 `AudioManager.gd` 配置别名映射，实现所有场景 BGM 零死角覆盖。
+
+**BGM 文件 → 使用场景对照表**
+
+| BGM 名称 | 文件 | 使用场景 |
+|----------|------|----------|
+| `main_menu` | main_menu.ogg | 主菜单 |
+| `town_day` | town_day.ogg | 小镇白天 |
+| `town_night` | town_night.ogg | 小镇夜晚 |
+| `tea_house` | tea_house.ogg | 茶馆 |
+| `temple_explore` | temple_explore.ogg | 废庙探索 |
+| `shop_morning` | shop_morning.ogg | 杂货铺清晨（独立文件，移除旧别名） |
+| `shop_return` | shop_return.ogg | 杂货铺回程/后续 |
+| `battle_normal` → `temple_boss` | temple_boss.mp3 | 普通战斗（别名复用） |
+| `battle_boss_p1` | battle_boss_p1.ogg | BOSS 战第一阶段 |
+| `battle_boss_p2` | battle_boss_p2.mp3 | BOSS 战第二阶段 |
+| `awakening` → `chapter_end` | chapter_end.ogg | 觉醒演出（别名复用，情绪延续到章末） |
+| `chapter_end` | chapter_end.ogg | 章节结尾 |
+
+**`AudioManager.gd` BGM_ALIAS 变更：**
+- 删除旧别名 `shop_morning → town_day`（shop_morning.ogg 已独立提供）
+- 新增 `battle_normal → temple_boss`（普通战斗复用古刹 boss 曲，紧张/压迫层次）
+- 新增 `awakening → chapter_end`（觉醒独白与章末钢琴情绪延续，AudioManager 同名不重启逻辑自动衔接）
+
+### 二、音频系统 Bug 修复（6 个）
+
+| # | 文件 | 问题 | 修复 |
+|---|------|------|------|
+| 1 | `AudioManager.gd` | `set_bgm_volume()` 同时覆盖两个播放器 volume_db，crossfade 期间旧播放器音量弹跳 | 改为只更新 `_active_bgm_player` |
+| 2 | `AudioManager.gd` | `play_bgm()` 切换时 `_duck_tween` 残留干扰新播放器 | 入口处 kill duck tween |
+| 3 | `AudioManager.gd` | crossfade chain 回调在极端时序下可能 stop 掉已切换为活跃的新播放器 | 回调加 `if old_player != _active_bgm_player` 安全判断（lambda 独立变量规避 GDScript 缩进解析问题） |
+| 4 | `AudioManager.gd` | `fade_bgm_to()` 与 `_duck_tween` 同时运行时争抢 volume_db | `fade_bgm_to()` 中 kill duck tween |
+| 5 | `BattleUI.gd` | 普通战斗胜利 `stop_bgm(1.0)` 后等待 1.5s，产生约 0.5s 无 BGM 静默窗口 | 改为 `fade_bgm_to(0.0, 1.5)`，渐弱与等待时间对齐 |
+| 6 | `BattleUI.gd` | 战斗失败 `stop_bgm(1.0)` 完全停止，独白期间无背景音乐 | 改为 `fade_bgm_to(0.15, 1.0)`，保留 15% 音量作为氛围底色 |
+
+### 三、代码规范修复（私有变量访问解耦）
+
+**补充公开只读属性，消除模块间对私有变量的直接访问：**
+
+| 文件 | 新增属性 | 调用方 |
+|------|----------|--------|
+| `SceneTransition.gd` | `is_transitioning: bool` | `Player.gd` |
+| `UIManager.gd` | `in_battle: bool` | `VirtualJoystick.gd` |
+| `UIManager.gd` | `esc_open: bool` | `VirtualJoystick.gd` |
+
+### 四、防御性与补全修复（5 个）
+
+| # | 文件 | 修复内容 |
+|---|------|----------|
+| 1 | `ShopScene.gd` | `match` 默认分支 `_:` 不再触发 morning 流程，只显示 HUD + BGM，防异常 phase 重播对话 |
+| 2 | `TempleScene.gd` | `_ready()` 末尾加 `UIManager.show_main_hud()`，读档直接进入废庙时 HUD 正常显示 |
+| 3 | `TempleScene.gd` | 离开废庙前补 `GameData.save_to_file("auto")`，防崩溃丢失古刹内进度 |
+| 4 | `NPC.gd` | `interact()` 末尾补 `is_triggered` 持久化写入，修复 `restore_state_from_save()` 的 `_triggered` key 有读无写问题 |
+| 5 | `NPC.gd` | NPC after 对话切换逻辑保持 `story_phase >= 3`（phase 4/5 实际路径不经过 TownScene NPC，宽容判定更安全） |
+
+### 五、chapter1.json 清理（2 处）
+
+| 项目 | 处理 |
+|------|------|
+| 删除 `chapter_end_a` / `chapter_end_b` 场景 | 两个场景完全不可达（无任何 `start_scene` 调用），内部 event `chapter_end_path_a/b` 无处理程序，属于早期设计遗留死场景；ChapterEndScene.gd 已硬编码文字，JSON 中此两场景无意义 |
+| `sense_unlocked_hint.su_02` 删去 `"next": ""` | 与其他结尾节点风格统一（不写 next 与写空字符串行为完全相同） |
+
+### 六、文件修改记录（第二十二版）
+
+```
+scripts/AudioManager.gd      BGM_ALIAS 更新（3处）
+                             set_bgm_volume 只更新活跃播放器
+                             play_bgm 入口 kill duck tween
+                             crossfade chain 回调安全判断（lambda 变量化）
+                             fade_bgm_to kill duck tween
+scripts/BattleUI.gd          普通胜利 fade_bgm_to(0.0, 1.5)
+                             战斗失败 fade_bgm_to(0.15, 1.0)
+scripts/SceneTransition.gd   新增 is_transitioning 只读属性
+scripts/Player.gd            改用 SceneTransition.is_transitioning
+scripts/UIManager.gd         新增 in_battle / esc_open 只读属性
+scripts/VirtualJoystick.gd   改用 UIManager.in_battle / esc_open
+scripts/ShopScene.gd         默认分支防御性修复
+scripts/TempleScene.gd       show_main_hud + 离开时存档
+scripts/NPC.gd               interact() 补写 is_triggered 持久化
+data/chapter1.json           删除 chapter_end_a / chapter_end_b 死场景
+                             su_02 删去 "next": ""
+assets/audio/bgm/            新增 11 首 BGM 文件
+```
+
+### 七、当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | 无变化 |
+| 链路二 测灵广场 | ✅ | 无变化 |
+| 链路三 回家流程 | ✅ | 无变化 |
+| 链路四 废庙流程 | ✅ | TempleScene HUD 修复 + 存档补全 |
+| 链路五 章末流程 | ✅ | 无变化 |
+| 主菜单 | ✅ | 无变化 |
+| ESC系统菜单 | ✅ | 无变化 |
+| 音频系统 | ✅ | 11 首 BGM 全覆盖，crossfade 竞态修复 |
+
+### 八、待完成任务（按优先级）
+
+1. 美术资源替换
+2. 字号设置面板 UI（信号已就绪，缺 UI 入口）
+3. 已读跳过功能

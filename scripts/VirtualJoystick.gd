@@ -42,9 +42,9 @@ func _process(_delta: float) -> void:
 	if not _is_mobile:
 		return
 	## 战斗/对话/ESC菜单期间隐藏
-	var should_hide := UIManager._in_battle \
+	var should_hide := UIManager.in_battle \
 		or DialogueManager.is_active \
-		or UIManager._esc_open
+		or UIManager.esc_open
 	_joystick_base.visible = not should_hide
 	_btn_interact.visible = not should_hide
 	_btn_menu.visible = not should_hide

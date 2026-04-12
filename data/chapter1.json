@@ -66,12 +66,7 @@
         },
         "m_05": {
           "type": "narration",
-          "text": "后院传来一声响，大鱼从柜台后面跳出来，叼起地上的一段旧剑穗，往她脚边一放，然后大摇大摆地走开了。",
-          "next": "m_06"
-        },
-        "m_06": {
-          "speaker": "苏云晚",
-          "text": "你从哪捡来的破东西。",
+          "text": "后院传来一声响。大鱼又在倒腾什么。",
           "next": "m_07"
         },
         "m_07": {
@@ -197,6 +192,11 @@
         "ts_05": {
           "type": "narration",
           "text": "口袋里的旧剑穗硌着手。",
+          "next": "ts_05b"
+        },
+        "ts_05b": {
+          "type": "narration",
+          "text": "她想，今天可以早点回家吃饭了。",
           "next": "ts_06"
         },
         "ts_06": {
@@ -535,7 +535,12 @@
       "nodes": {
         "ls_01": {
           "type": "narration",
-          "text": "灯还亮着。"
+          "text": "灯还亮着。",
+          "next": "ls_02"
+        },
+        "ls_02": {
+          "type": "narration",
+          "text": "她加快了脚步。"
         }
       }
     },
@@ -586,6 +591,11 @@
         "rh_05": {
           "type": "narration",
           "text": "灶台边挂着一件旧围裙，不是爹的，也不是她的，洗得发白，已经很久没人动过了。",
+          "next": "rh_05b"
+        },
+        "rh_05b": {
+          "type": "narration",
+          "text": "她看了一眼那件围裙。已经很久了，谁都没有再穿过它。",
           "next": "rh_end"
         },
         "rh_end": {
@@ -1579,46 +1589,6 @@
         }
       }
     },
-    "chapter_end_a": {
-      "title": "章末·路径A",
-      "start": "cea_01",
-      "nodes": {
-        "cea_01": {
-          "type": "narration",
-          "text": "她只带了那张平安符，还有腰间装了半壶水的葫芦。",
-          "next": "cea_02"
-        },
-        "cea_02": {
-          "type": "narration",
-          "text": "走出废庙的时候，她没有回头。",
-          "next": "cea_end"
-        },
-        "cea_end": {
-          "type": "event",
-          "event": "chapter_end_path_a"
-        }
-      }
-    },
-    "chapter_end_b": {
-      "title": "章末·路径B",
-      "start": "ceb_01",
-      "nodes": {
-        "ceb_01": {
-          "type": "narration",
-          "text": "一封没有署名的信。",
-          "next": "ceb_02"
-        },
-        "ceb_02": {
-          "type": "narration",
-          "text": "一碗早就凉透的饭。",
-          "next": "ceb_end"
-        },
-        "ceb_end": {
-          "type": "event",
-          "event": "chapter_end_path_b"
-        }
-      }
-    },
     "after_battle_coin": {
       "title": "战斗后·顾飞白（铜钱）",
       "start": "ab_01",
@@ -1899,6 +1869,11 @@
         "bp2_05": {
           "speaker": "苏云晚",
           "text": "……",
+          "next": "bp2_05b"
+        },
+        "bp2_05b": {
+          "type": "narration",
+          "text": "她想，桌上那两副碗筷，应该早就凉了吧。",
           "next": "bp2_06"
         },
         "bp2_06": {
@@ -2049,11 +2024,46 @@
         "blb2_03": {
           "type": "narration",
           "text": "好近——只差一点就够到了。",
+          "next": "blb2_03b"
+        },
+        "blb2_03b": {
+          "type": "narration",
+          "text": "她想，年年今晚没人喂了。",
           "next": "blb2_04"
         },
         "blb2_04": {
           "type": "narration",
           "text": "她把手按在地上，手指掐进砖缝里。"
+        }
+      }
+    },
+    "tutorial_first_battle": {
+      "title": "战斗引导",
+      "start": "tfb_01",
+      "nodes": {
+        "tfb_01": {
+          "type": "narration",
+          "text": "她第一次和妖兽对峙。手心出汗。",
+          "next": "tfb_02"
+        },
+        "tfb_02": {
+          "type": "narration",
+          "text": "脑子里却很清楚——",
+          "next": "tfb_03"
+        },
+        "tfb_03": {
+          "type": "narration",
+          "text": "〔攻击〕是直来直去；〔技能〕里藏着「蓄势」和「淬血」，一个先收着再放，一个以血换伤。",
+          "next": "tfb_04"
+        },
+        "tfb_04": {
+          "type": "narration",
+          "text": "至于〔感应〕——她还看不见。那是道纹的事，她现在还摸不到。",
+          "next": "tfb_05"
+        },
+        "tfb_05": {
+          "type": "narration",
+          "text": "她试着深呼吸。"
         }
       }
     },
@@ -2123,8 +2133,7 @@
         },
         "su_02": {
           "type": "narration",
-          "text": "【感应·已领悟】",
-          "next": ""
+          "text": "【感应·已领悟】"
         }
       }
     },

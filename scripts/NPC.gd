@@ -39,9 +39,9 @@ func hide_name_label() -> void:
 
 ## 获取全局唯一的 NPC 状态 Key（场景名+节点名，防止跨场景同名NPC冲突）
 func _get_save_key() -> String:
-	var scene_name: String = get_tree().current_scene.name \
+	var scene_name: String = String(get_tree().current_scene.name) \
 		if get_tree() and get_tree().current_scene else "unknown"
-	return "npc_state_" + scene_name + "_" + name
+	return "npc_state_" + scene_name + "_" + String(name)
 
 
 ## 完整消失：隐藏视觉、禁用碰撞体、禁用交互区，并持久化消失状态到GameData
@@ -98,3 +98,11 @@ func interact() -> void:
 	if GameData.story_phase >= 3 and not dialogue_scene_id_after.is_empty():
 		scene_id = dialogue_scene_id_after
 	DialogueManager.start_scene(scene_id)
+
+	## 持久化 is_triggered：首次触发后写入 triggered_events，
+	## restore_state_from_save() 在下次加载时会据此切换 dialogue_scene_id
+	if not is_triggered and not dialogue_scene_id_after.is_empty():
+		is_triggered = true
+		var key := _get_save_key() + "_triggered"
+		if not GameData.triggered_events.has(key):
+			GameData.triggered_events.append(key)

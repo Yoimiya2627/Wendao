@@ -82,10 +82,19 @@ var _skill_open   : bool = false
 ## 战斗中是否隐藏主UI
 var _in_battle    : bool = false
 
+## 公开只读属性：外部模块（如 VirtualJoystick）查询战斗状态
+var in_battle: bool:
+	get: return _in_battle
+
+## 字号缩放变化信号（设置面板调整时触发，DialogueBox等监听）
+signal font_scale_changed(scale_factor: float)
+
 
 func _ready() -> void:
 	## 确保UIManager在游戏暂停状态下仍能响应ESC输入
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	## 加载设置（音量、文字速度等）
+	load_settings_from_file()
 	_build_ui()
 	_refresh_mood(GameData.story_phase)
 	_refresh_hp()
@@ -199,9 +208,9 @@ func _build_hp_panel() -> void:
 	_hp_panel.position      = Vector2(8.0, 8.0)
 
 	var style := StyleBoxFlat.new()
-	style.bg_color              = Color(0.06, 0.04, 0.04, 0.88)
+	style.bg_color              = ThemeManager.COLOR_PANEL_BG
 	style.border_width_bottom   = 1
-	style.border_color          = Color(0.40, 0.32, 0.24, 0.6)
+	style.border_color          = ThemeManager.COLOR_PANEL_BORDER
 	style.corner_radius_top_left     = 4
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_right = 4
@@ -214,7 +223,7 @@ func _build_hp_panel() -> void:
 	_hp_name.text     = "苏云晚"
 	_hp_name.position = Vector2(8.0, 4.0)
 	_hp_name.add_theme_font_size_override("font_size", 13)
-	_hp_name.add_theme_color_override("font_color", Color(0.85, 0.80, 0.72, 1.0))
+	_hp_name.add_theme_color_override("font_color", ThemeManager.COLOR_ACCENT_GOLD)
 	_hp_panel.add_child(_hp_name)
 
 	## 数字Label
@@ -242,7 +251,7 @@ func _build_hp_panel() -> void:
 	_gold_text = Label.new()
 	_gold_text.position = Vector2(8.0, 54.0)
 	_gold_text.add_theme_font_size_override("font_size", 12)
-	_gold_text.add_theme_color_override("font_color", Color(0.85, 0.75, 0.40, 1.0))
+	_gold_text.add_theme_color_override("font_color", ThemeManager.COLOR_ACCENT_GOLD)
 	_hp_panel.add_child(_gold_text)
 
 
@@ -257,9 +266,9 @@ func _build_mood_panel() -> void:
 	_mood_panel.offset_bottom = 180.0
 
 	var style := StyleBoxFlat.new()
-	style.bg_color    = Color(0.06, 0.04, 0.04, 0.82)
+	style.bg_color    = ThemeManager.COLOR_PANEL_BG
 	style.border_width_bottom = 1
-	style.border_color        = Color(0.40, 0.32, 0.24, 0.5)
+	style.border_color        = ThemeManager.COLOR_PANEL_BORDER
 	style.corner_radius_top_left     = 4
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_right = 4
@@ -277,7 +286,7 @@ func _build_mood_panel() -> void:
 
 	## 分隔线
 	var sep := ColorRect.new()
-	sep.color    = Color(0.40, 0.32, 0.24, 0.4)
+	sep.color    = Color(ThemeManager.COLOR_TEXT_WARM.r, ThemeManager.COLOR_TEXT_WARM.g, ThemeManager.COLOR_TEXT_WARM.b, 0.3)
 	sep.position = Vector2(8.0, 24.0)
 	sep.size     = Vector2(164.0, 1.0)
 	_mood_panel.add_child(sep)
@@ -287,8 +296,8 @@ func _build_mood_panel() -> void:
 	_mood_text.position      = Vector2(10.0, 30.0)
 	_mood_text.size          = Vector2(160.0, 140.0)
 	_mood_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_mood_text.add_theme_font_size_override("font_size", 13)
-	_mood_text.add_theme_color_override("font_color", Color(0.85, 0.80, 0.72, 1.0))
+	_mood_text.add_theme_font_size_override("font_size", 16)
+	_mood_text.add_theme_color_override("font_color", ThemeManager.COLOR_TEXT_SECONDARY)
 	_mood_panel.add_child(_mood_text)
 
 
@@ -306,22 +315,8 @@ func _build_bag() -> void:
 	_bag_button.offset_right  = -8.0
 	_bag_button.offset_bottom = -8.0
 
-	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color  = Color(0.10, 0.08, 0.06, 0.90)
-	btn_style.border_width_top    = 1
-	btn_style.border_width_bottom = 1
-	btn_style.border_width_left   = 1
-	btn_style.border_width_right  = 1
-	btn_style.border_color        = Color(0.45, 0.36, 0.24, 0.8)
-	btn_style.corner_radius_top_left     = 4
-	btn_style.corner_radius_top_right    = 4
-	btn_style.corner_radius_bottom_right = 4
-	btn_style.corner_radius_bottom_left  = 4
-	_bag_button.add_theme_stylebox_override("normal",   btn_style)
-	_bag_button.add_theme_stylebox_override("hover",    btn_style)
-	_bag_button.add_theme_stylebox_override("pressed",  btn_style)
+	## 囊按钮风格由 ThemeManager 全局主题提供，不再本地覆盖
 	_bag_button.add_theme_font_size_override("font_size", 14)
-	_bag_button.add_theme_color_override("font_color", Color(0.85, 0.78, 0.65, 1.0))
 	_bag_button.pressed.connect(_toggle_bag)
 	_canvas.add_child(_bag_button)
 
@@ -336,12 +331,12 @@ func _build_bag() -> void:
 	_bag_panel.offset_bottom = -56.0
 
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color  = Color(0.07, 0.05, 0.04, 0.93)
+	panel_style.bg_color  = ThemeManager.COLOR_PANEL_BG
 	panel_style.border_width_top    = 1
 	panel_style.border_width_bottom = 1
 	panel_style.border_width_left   = 1
 	panel_style.border_width_right  = 1
-	panel_style.border_color        = Color(0.45, 0.36, 0.24, 0.7)
+	panel_style.border_color        = ThemeManager.COLOR_PANEL_BORDER
 	panel_style.corner_radius_top_left     = 4
 	panel_style.corner_radius_top_right    = 4
 	panel_style.corner_radius_bottom_right = 4
@@ -359,7 +354,7 @@ func _build_bag() -> void:
 
 	## 分隔线
 	var sep2 := ColorRect.new()
-	sep2.color    = Color(0.40, 0.32, 0.24, 0.4)
+	sep2.color    = Color(0.95, 0.90, 0.75, 0.3)
 	sep2.position = Vector2(8.0, 26.0)
 	sep2.size     = Vector2(188.0, 1.0)
 	_bag_panel.add_child(sep2)
@@ -374,22 +369,7 @@ func _build_bag() -> void:
 		slot.size     = Vector2(58.0, 58.0)
 		slot.clip_text = true
 
-		var slot_style := StyleBoxFlat.new()
-		slot_style.bg_color    = Color(0.10, 0.08, 0.07, 0.9)
-		slot_style.border_width_top    = 1
-		slot_style.border_width_bottom = 1
-		slot_style.border_width_left   = 1
-		slot_style.border_width_right  = 1
-		slot_style.border_color        = Color(0.35, 0.28, 0.20, 0.6)
-		slot_style.corner_radius_top_left     = 3
-		slot_style.corner_radius_top_right    = 3
-		slot_style.corner_radius_bottom_right = 3
-		slot_style.corner_radius_bottom_left  = 3
-		slot.add_theme_stylebox_override("normal",  slot_style)
-		slot.add_theme_stylebox_override("hover",   slot_style)
-		slot.add_theme_stylebox_override("pressed", slot_style)
 		slot.add_theme_font_size_override("font_size", 12)
-		slot.add_theme_color_override("font_color", Color(0.85, 0.78, 0.65, 1.0))
 
 		var idx := i
 		slot.pressed.connect(func(): _on_slot_pressed(idx))
@@ -398,7 +378,7 @@ func _build_bag() -> void:
 
 	## 描述区分隔线
 	var sep3 := ColorRect.new()
-	sep3.color    = Color(0.40, 0.32, 0.24, 0.4)
+	sep3.color    = Color(0.95, 0.90, 0.75, 0.3)
 	sep3.position = Vector2(8.0, 168.0)
 	sep3.size     = Vector2(188.0, 1.0)
 	_bag_panel.add_child(sep3)
@@ -430,22 +410,8 @@ func _build_skill_panel() -> void:
 	_skill_button.offset_right  = -52.0
 	_skill_button.offset_bottom = -8.0
 
-	var btn_style := StyleBoxFlat.new()
-	btn_style.bg_color  = Color(0.10, 0.08, 0.06, 0.90)
-	btn_style.border_width_top    = 1
-	btn_style.border_width_bottom = 1
-	btn_style.border_width_left   = 1
-	btn_style.border_width_right  = 1
-	btn_style.border_color        = Color(0.45, 0.36, 0.24, 0.8)
-	btn_style.corner_radius_top_left     = 4
-	btn_style.corner_radius_top_right    = 4
-	btn_style.corner_radius_bottom_right = 4
-	btn_style.corner_radius_bottom_left  = 4
-	_skill_button.add_theme_stylebox_override("normal",   btn_style)
-	_skill_button.add_theme_stylebox_override("hover",    btn_style)
-	_skill_button.add_theme_stylebox_override("pressed",  btn_style)
+	## 悟按钮风格由 ThemeManager 全局主题提供，不再本地覆盖
 	_skill_button.add_theme_font_size_override("font_size", 14)
-	_skill_button.add_theme_color_override("font_color", Color(0.85, 0.78, 0.65, 1.0))
 	_skill_button.pressed.connect(_toggle_skill_panel)
 	_canvas.add_child(_skill_button)
 
@@ -459,12 +425,12 @@ func _build_skill_panel() -> void:
 	_skill_panel.offset_bottom = -56.0
 
 	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color  = Color(0.07, 0.05, 0.04, 0.93)
+	panel_style.bg_color  = ThemeManager.COLOR_PANEL_BG
 	panel_style.border_width_top    = 1
 	panel_style.border_width_bottom = 1
 	panel_style.border_width_left   = 1
 	panel_style.border_width_right  = 1
-	panel_style.border_color        = Color(0.45, 0.36, 0.24, 0.7)
+	panel_style.border_color        = ThemeManager.COLOR_PANEL_BORDER
 	panel_style.corner_radius_top_left     = 4
 	panel_style.corner_radius_top_right    = 4
 	panel_style.corner_radius_bottom_right = 4
@@ -492,22 +458,6 @@ func _build_skill_panel() -> void:
 		slot.size      = Vector2(188.0, 46.0)
 		slot.clip_text = true
 		slot.add_theme_font_size_override("font_size", 13)
-		slot.add_theme_color_override("font_color", Color(0.85, 0.78, 0.65, 1.0))
-
-		var slot_style := StyleBoxFlat.new()
-		slot_style.bg_color    = Color(0.10, 0.08, 0.07, 0.9)
-		slot_style.border_width_top    = 1
-		slot_style.border_width_bottom = 1
-		slot_style.border_width_left   = 1
-		slot_style.border_width_right  = 1
-		slot_style.border_color        = Color(0.35, 0.28, 0.20, 0.6)
-		slot_style.corner_radius_top_left     = 3
-		slot_style.corner_radius_top_right    = 3
-		slot_style.corner_radius_bottom_right = 3
-		slot_style.corner_radius_bottom_left  = 3
-		slot.add_theme_stylebox_override("normal",  slot_style)
-		slot.add_theme_stylebox_override("hover",   slot_style)
-		slot.add_theme_stylebox_override("pressed", slot_style)
 
 		var idx := i
 		slot.pressed.connect(func(): _on_skill_slot_pressed(idx))
@@ -515,7 +465,7 @@ func _build_skill_panel() -> void:
 		_skill_slots.append(slot)
 
 	var sep2 := ColorRect.new()
-	sep2.color    = Color(0.40, 0.32, 0.24, 0.4)
+	sep2.color    = Color(0.95, 0.90, 0.75, 0.3)
 	sep2.position = Vector2(8.0, 194.0)
 	sep2.size     = Vector2(188.0, 1.0)
 	_skill_panel.add_child(sep2)
@@ -682,6 +632,10 @@ func _on_slot_pressed(index: int) -> void:
 var _esc_panel         : Panel   = null
 var _esc_open          : bool    = false
 
+## 公开只读属性：外部模块（如 VirtualJoystick）查询 ESC 菜单状态
+var esc_open: bool:
+	get: return _esc_open
+
 ## 确认面板（覆盖存档 / 返回主菜单 共用）
 var _esc_confirm_panel : Panel  = null
 var _esc_confirm_mode  : String = ""  ## "overwrite_1" / "overwrite_2" / "return_menu"
@@ -691,7 +645,7 @@ var _last_saved_hash   : int    = 0  ## 最后一次存档时的数据Hash，用
 func _input(event: InputEvent) -> void:
 	## 主菜单场景不响应ESC
 	var scene = get_tree().current_scene
-	if scene and scene.name == "MainMenuScene":
+	if scene and String(scene.name) == "MainMenuScene":
 		return
 	## 监听ESC键
 	if event.is_action_pressed("ui_cancel"):
@@ -710,7 +664,7 @@ func _can_save_in_current_scene() -> bool:
 	var scene = get_tree().current_scene
 	if scene == null:
 		return false
-	var scene_name: String = scene.name
+	var scene_name: String = String(scene.name)
 	if scene_name == "TempleScene" or scene_name == "BattleScene":
 		return false
 	## 对话进行中不允许存档
@@ -732,19 +686,19 @@ func _open_esc_menu() -> void:
 	_esc_panel.grow_horizontal   = Control.GROW_DIRECTION_BOTH
 	_esc_panel.grow_vertical     = Control.GROW_DIRECTION_BOTH
 	_esc_panel.offset_left   = -140.0
-	_esc_panel.offset_top    = -140.0
+	_esc_panel.offset_top    = -180.0
 	_esc_panel.offset_right  = 140.0
-	_esc_panel.offset_bottom = 140.0
+	_esc_panel.offset_bottom = 180.0
 	## 菜单自身必须设为ALWAYS，否则paused后无法响应输入
 	_esc_panel.process_mode  = Node.PROCESS_MODE_ALWAYS
 
 	var style := StyleBoxFlat.new()
-	style.bg_color            = Color(0.05, 0.04, 0.03, 0.96)
+	style.bg_color            = ThemeManager.COLOR_PANEL_BG
 	style.border_width_top    = 1
 	style.border_width_bottom = 1
 	style.border_width_left   = 1
 	style.border_width_right  = 1
-	style.border_color        = Color(0.45, 0.36, 0.24, 0.8)
+	style.border_color        = ThemeManager.COLOR_PANEL_BORDER
 	style.corner_radius_top_left     = 4
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_right = 4
@@ -767,7 +721,7 @@ func _open_esc_menu() -> void:
 
 	## 分隔线
 	var sep := ColorRect.new()
-	sep.color    = Color(0.40, 0.32, 0.24, 0.4)
+	sep.color    = Color(0.95, 0.90, 0.75, 0.3)
 	sep.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	sep.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	sep.offset_top    = 38.0
@@ -782,9 +736,9 @@ func _open_esc_menu() -> void:
 	vbox.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	vbox.grow_vertical   = Control.GROW_DIRECTION_BOTH
 	vbox.offset_left   = -110.0
-	vbox.offset_top    = -60.0
+	vbox.offset_top    = -110.0
 	vbox.offset_right  = 110.0
-	vbox.offset_bottom = 110.0
+	vbox.offset_bottom = 150.0
 	vbox.alignment     = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 10)
 	_esc_panel.add_child(vbox)
@@ -812,6 +766,11 @@ func _open_esc_menu() -> void:
 		no_save_label.add_theme_color_override("font_color", Color(0.50, 0.45, 0.38, 0.8))
 		vbox.add_child(no_save_label)
 
+	## 设置按钮（始终显示）
+	var btn_settings := _create_esc_btn("设置")
+	btn_settings.pressed.connect(_open_settings_panel)
+	vbox.add_child(btn_settings)
+
 	## 返回主菜单按钮（始终显示）
 	var btn_menu := _create_esc_btn("返回主菜单")
 	btn_menu.pressed.connect(_on_esc_return_menu_pressed)
@@ -823,6 +782,7 @@ func _close_esc_menu() -> void:
 	if not _esc_open:
 		return
 	_close_esc_confirm()
+	_close_settings_panel()  ## 同步关闭设置面板，防止状态泄漏
 	if is_instance_valid(_esc_panel):
 		_esc_panel.queue_free()
 		_esc_panel = null
@@ -830,29 +790,13 @@ func _close_esc_menu() -> void:
 	_update_pause_state()
 
 
-## 创建ESC菜单统一风格按钮
+## 创建ESC菜单统一风格按钮（风格由 ThemeManager 全局主题提供）
 func _create_esc_btn(label: String) -> Button:
 	var btn := Button.new()
 	btn.text                = label
 	btn.custom_minimum_size = Vector2(200, 40)
 	btn.process_mode        = Node.PROCESS_MODE_ALWAYS
 	btn.add_theme_font_size_override("font_size", 16)
-	btn.add_theme_color_override("font_color", Color(0.90, 0.85, 0.75, 1.0))
-
-	var style := StyleBoxFlat.new()
-	style.bg_color            = Color(0.10, 0.08, 0.06, 0.85)
-	style.border_width_top    = 1
-	style.border_width_bottom = 1
-	style.border_width_left   = 1
-	style.border_width_right  = 1
-	style.border_color        = Color(0.40, 0.32, 0.22, 0.6)
-	style.corner_radius_top_left     = 3
-	style.corner_radius_top_right    = 3
-	style.corner_radius_bottom_right = 3
-	style.corner_radius_bottom_left  = 3
-	btn.add_theme_stylebox_override("normal",  style)
-	btn.add_theme_stylebox_override("hover",   style)
-	btn.add_theme_stylebox_override("pressed", style)
 	return btn
 
 
@@ -910,6 +854,15 @@ func _on_esc_return_menu_pressed() -> void:
 
 
 func _do_return_menu() -> void:
+	## 强制重置背包/功法面板状态，防止 _bag_open/_skill_open 残留导致主菜单卡死
+	if _bag_open:
+		_bag_open = false
+		if is_instance_valid(_bag_panel):
+			_bag_panel.hide()
+	if _skill_open:
+		_skill_open = false
+		if is_instance_valid(_skill_panel):
+			_skill_panel.hide()
 	_close_esc_menu()
 	SceneTransition.change_scene("res://scenes/MainMenuScene.tscn")
 
@@ -932,12 +885,12 @@ func _build_esc_confirm(msg_text: String, mode: String) -> void:
 	_esc_confirm_panel.process_mode  = Node.PROCESS_MODE_ALWAYS
 
 	var style := StyleBoxFlat.new()
-	style.bg_color            = Color(0.06, 0.04, 0.04, 0.98)
+	style.bg_color            = ThemeManager.COLOR_PANEL_BG
 	style.border_width_top    = 1
 	style.border_width_bottom = 1
 	style.border_width_left   = 1
 	style.border_width_right  = 1
-	style.border_color        = Color(0.50, 0.38, 0.24, 0.9)
+	style.border_color        = ThemeManager.COLOR_PANEL_BORDER
 	style.corner_radius_top_left     = 4
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_right = 4
@@ -1006,3 +959,243 @@ func _on_esc_confirm_ok() -> void:
 
 func _update_saved_hash() -> void:
 	_last_saved_hash = JSON.stringify(GameData.save_data()).hash()
+
+
+# ══════════════════════════════════════════════════════
+# 设置面板（挂在ESC菜单的"设置"子项）
+# ══════════════════════════════════════════════════════
+
+const SETTINGS_FILE := "user://settings.json"
+
+## 设置项默认值
+var text_speed: int = 1     ## 0=慢 1=中 2=快
+var font_scale: int = 1     ## 0=小 1=中 2=大
+var dialogue_skip: bool = false  ## 已读对话快进
+
+var _settings_panel: Panel = null
+
+
+func load_settings_from_file() -> void:
+	if not FileAccess.file_exists(SETTINGS_FILE):
+		return
+	var file := FileAccess.open(SETTINGS_FILE, FileAccess.READ)
+	if file == null:
+		return
+	var content := file.get_as_text()
+	file.close()
+	var json := JSON.new()
+	if json.parse(content) != OK:
+		return
+	var data: Dictionary = json.data
+	text_speed    = int(data.get("text_speed", text_speed))
+	font_scale    = int(data.get("font_scale", font_scale))
+	dialogue_skip = bool(data.get("dialogue_skip", dialogue_skip))
+	## 把音量注入 AudioManager（统一由本文件管理设置文件）
+	if data.has("bgm_volume"):
+		AudioManager.set_bgm_volume(float(data["bgm_volume"]))
+	if data.has("sfx_volume"):
+		AudioManager.set_sfx_volume(float(data["sfx_volume"]))
+
+
+func save_settings_to_file() -> void:
+	## 合并 AudioManager 的音量设置一起写入
+	var data := {
+		"text_speed": text_speed,
+		"font_scale": font_scale,
+		"dialogue_skip": dialogue_skip,
+		"bgm_volume": AudioManager.bgm_volume,
+		"sfx_volume": AudioManager.sfx_volume,
+	}
+	var file := FileAccess.open(SETTINGS_FILE, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string(JSON.stringify(data, "\t"))
+	file.close()
+
+
+## 打开设置面板
+func _open_settings_panel() -> void:
+	if is_instance_valid(_settings_panel):
+		return
+
+	_settings_panel = Panel.new()
+	_settings_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_settings_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_settings_panel.grow_vertical   = Control.GROW_DIRECTION_BOTH
+	_settings_panel.offset_left   = -180.0
+	_settings_panel.offset_top    = -200.0
+	_settings_panel.offset_right  = 180.0
+	_settings_panel.offset_bottom = 200.0
+	_settings_panel.process_mode  = Node.PROCESS_MODE_ALWAYS
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.078, 0.051, 0.149, 0.96)
+	sb.border_color = Color(0.95, 0.90, 0.75, 0.7)
+	sb.set_border_width_all(1)
+	sb.set_corner_radius_all(2)
+	_settings_panel.add_theme_stylebox_override("panel", sb)
+	_canvas.add_child(_settings_panel)
+
+	## 标题（居中于面板宽度 360px）
+	var title := Label.new()
+	title.text = "── 设  置 ──"
+	title.position = Vector2(0.0, 12.0)
+	title.size     = Vector2(360.0, 26.0)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_color_override("font_color", Color(0.95, 0.90, 0.75, 1.0))
+	_settings_panel.add_child(title)
+
+	var vbox := VBoxContainer.new()
+	vbox.position = Vector2(24.0, 44.0)
+	vbox.size = Vector2(312.0, 332.0)
+	vbox.add_theme_constant_override("separation", 14)
+	_settings_panel.add_child(vbox)
+
+	## 文字速度
+	_add_settings_row(vbox, "文字速度", ["慢", "中", "快"], text_speed,
+		func(idx):
+			text_speed = idx
+			save_settings_to_file())
+
+	## 字号大小
+	_add_settings_row(vbox, "字号大小", ["小", "中", "大"], font_scale,
+		func(idx):
+			font_scale = idx
+			save_settings_to_file()
+			apply_font_scale())
+
+	## 对话快进
+	var skip_idx: int = 1 if dialogue_skip else 0
+	_add_settings_row(vbox, "已读对话快进", ["关", "开"], skip_idx,
+		func(idx):
+			dialogue_skip = (idx == 1)
+			save_settings_to_file())
+
+	## 分隔线
+	var sep := ColorRect.new()
+	sep.color = Color(0.95, 0.90, 0.75, 0.3)
+	sep.custom_minimum_size = Vector2(0, 1)
+	vbox.add_child(sep)
+
+	## BGM 音量
+	_add_volume_row(vbox, "背景音乐", AudioManager.bgm_volume,
+		func(v):
+			AudioManager.set_bgm_volume(v)
+			save_settings_to_file())
+
+	## SFX 音量
+	_add_volume_row(vbox, "音       效", AudioManager.sfx_volume,
+		func(v):
+			AudioManager.set_sfx_volume(v)
+			save_settings_to_file())
+
+	## 关闭按钮
+	var btn_close := Button.new()
+	btn_close.text = "关  闭"
+	btn_close.custom_minimum_size = Vector2(120, 36)
+	btn_close.position = Vector2(120.0, 350.0)
+	btn_close.pressed.connect(_close_settings_panel)
+	_settings_panel.add_child(btn_close)
+
+
+## 添加一个三段切换的设置行
+func _add_settings_row(parent: VBoxContainer, label_text: String,
+		options: Array, current_idx: int, on_change: Callable) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	parent.add_child(row)
+
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.custom_minimum_size = Vector2(110, 0)
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_color_override("font_color", Color(0.95, 0.90, 0.75, 1.0))
+	row.add_child(lbl)
+
+	var btn_group: Array[Button] = []
+	for i in options.size():
+		var btn := Button.new()
+		btn.text = options[i]
+		btn.custom_minimum_size = Vector2(50, 28)
+		btn.toggle_mode = true
+		btn.button_pressed = (i == current_idx)
+		row.add_child(btn)
+		btn_group.append(btn)
+
+	## 互斥逻辑（用 bind 显式传 idx，避免 GDScript for-var 闭包捕获歧义）
+	for i in btn_group.size():
+		var btn := btn_group[i]
+		btn.pressed.connect(_on_settings_btn_pressed.bind(i, btn_group, on_change))
+
+
+## 设置三段切换按钮的统一回调（idx 通过 bind 传入，避免闭包歧义）
+func _on_settings_btn_pressed(idx: int, btn_group: Array, on_change: Callable) -> void:
+	for j in btn_group.size():
+		btn_group[j].button_pressed = (j == idx)
+	on_change.call(idx)
+	AudioManager.play_sfx("button_click")
+
+
+## 添加音量滑条行
+func _add_volume_row(parent: VBoxContainer, label_text: String,
+		current_value: float, on_change: Callable) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	parent.add_child(row)
+
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.custom_minimum_size = Vector2(110, 0)
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_color_override("font_color", Color(0.95, 0.90, 0.75, 1.0))
+	row.add_child(lbl)
+
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 1.0
+	slider.step = 0.05
+	slider.value = current_value
+	slider.custom_minimum_size = Vector2(160, 24)
+	row.add_child(slider)
+
+	var pct_label := Label.new()
+	pct_label.text = "%d%%" % roundi(current_value * 100)
+	pct_label.custom_minimum_size = Vector2(40, 0)
+	pct_label.add_theme_font_size_override("font_size", 12)
+	pct_label.add_theme_color_override("font_color", Color(0.83, 0.66, 0.34, 1.0))
+	row.add_child(pct_label)
+
+	slider.value_changed.connect(func(v):
+		pct_label.text = "%d%%" % roundi(v * 100)
+		on_change.call(v))
+
+
+## 获取当前字号缩放系数（对话框等可调用）
+## 0=小(0.85x), 1=中(1.0x), 2=大(1.20x)
+func get_font_scale_factor() -> float:
+	match font_scale:
+		0:  return 0.85
+		1:  return 1.0
+		2:  return 1.20
+		_:  return 1.0
+
+
+## 应用字号缩放：触发 font_scale_changed 信号让监听的 UI 组件自行刷新
+func apply_font_scale() -> void:
+	font_scale_changed.emit(get_font_scale_factor())
+
+
+func _close_settings_panel() -> void:
+	if is_instance_valid(_settings_panel):
+		_settings_panel.queue_free()
+		_settings_panel = null
+
+
+## 获取当前文字速度对应的逐字间隔（供DialogueBox使用）
+func get_dialogue_char_interval() -> float:
+	match text_speed:
+		0:  return 0.06   ## 慢
+		1:  return 0.03   ## 中
+		2:  return 0.01   ## 快
+		_:  return 0.03

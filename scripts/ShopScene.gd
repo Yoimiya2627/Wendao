@@ -56,23 +56,34 @@ var _night_leave_triggered : bool = false
 func _ready() -> void:
 	_exit_hint.hide()
 	_interact_hint.hide()
-	_player.global_position = _spawn_point.global_position
+	## 优先恢复手动存档时的玩家坐标，否则用默认 SpawnPoint
+	if GameData.saved_player_position != Vector2.ZERO:
+		_player.global_position = GameData.saved_player_position
+		GameData.saved_player_position = Vector2.ZERO
+	else:
+		_player.global_position = _spawn_point.global_position
 	_setup_camera()
 
 	## 根据story_phase决定走哪条流程
 	match GameData.story_phase:
 		0:
 			_start_morning_flow()
+			AudioManager.play_bgm("shop_morning")
 		3:
 			_start_return_home_flow()
+			AudioManager.play_bgm("shop_return")
 		4:
 			## phase 4（BOSS战后、章末前）：正常进入但不触发任何流程
 			## 玩家理论上不会在此phase进入ShopScene，防御性处理
 			UIManager.show_main_hud()
+			AudioManager.play_bgm("shop_return")
 		5:
 			_start_letter_flow()
+			AudioManager.play_bgm("shop_return")
 		_:
-			_start_morning_flow()
+			## 防御性兜底：非预期phase不触发任何流程，只显示HUD+BGM
+			UIManager.show_main_hud()
+			AudioManager.play_bgm("shop_morning")
 
 	## 连接出口区域信号
 	_exit_area.body_entered.connect(_on_exit_body_entered)
@@ -98,6 +109,13 @@ func _ready() -> void:
 	if GameData.story_phase >= 1:
 		UIManager.show_main_hud()
 		UIManager.refresh_all_data()
+
+
+func _exit_tree() -> void:
+	if DialogueManager.event_triggered.is_connected(_on_event_triggered):
+		DialogueManager.event_triggered.disconnect(_on_event_triggered)
+	if DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.disconnect(_on_dialogue_ended)
 
 
 # ══════════════════════════════════════════════════════

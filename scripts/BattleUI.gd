@@ -31,6 +31,8 @@ var _skill_menu: Control = null
 
 ## BOSS第二阶段是否已触发旁白
 var _phase2_dialogue_done: bool = false
+## BOSS第二阶段旁白是否正在进行（防止turn_changed信号在旁白启动前竞态开启按钮）
+var _phase2_in_progress: bool = false
 
 ## 演出用：记录行动前的HP，用于检测伤害并触发视觉效果
 var _prev_player_hp: int = 0
@@ -38,6 +40,11 @@ var _prev_enemy_hp: int = 0
 
 ## 全屏白光遮罩（觉醒演出用）
 var _white_overlay: ColorRect = null
+
+## 战斗中的剑穗视觉（同步 stones_read 状态）
+var _battle_tassel_node: Node2D = null
+var _battle_tassel_glow: Polygon2D = null
+var _battle_tassel_core: Polygon2D = null
 
 ## 演出用：缓存 tween 引用，防止堆叠
 var _player_hp_tween: Tween = null
@@ -53,6 +60,12 @@ func _ready() -> void:
 	## 通知UIManager进入战斗，隐藏常驻UI
 	UIManager.on_battle_start()
 	_set_buttons_disabled(true)
+
+	## 监听字号变化（设置菜单调整时实时刷新战斗日志）
+	if UIManager and UIManager.has_signal("font_scale_changed"):
+		if not UIManager.font_scale_changed.is_connected(_on_font_scale_changed):
+			UIManager.font_scale_changed.connect(_on_font_scale_changed)
+		_apply_font_scale_to_log(UIManager.get_font_scale_factor())
 
 	## 主按钮连接
 	attack_button.pressed.connect(_on_attack_pressed)
@@ -79,6 +92,9 @@ func _ready() -> void:
 	_white_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_white_overlay)
 
+	## 战斗中的剑穗视觉（玩家面板右上角，反映 stones_read 等级）
+	_setup_battle_tassel()
+
 	_start_battle()
 
 
@@ -88,6 +104,9 @@ func _exit_tree() -> void:
 		DialogueManager.dialogue_ended.disconnect(_on_dialogue_ended)
 	if DialogueManager.event_triggered.is_connected(_on_event_triggered):
 		DialogueManager.event_triggered.disconnect(_on_event_triggered)
+	if UIManager and UIManager.has_signal("font_scale_changed") \
+			and UIManager.font_scale_changed.is_connected(_on_font_scale_changed):
+		UIManager.font_scale_changed.disconnect(_on_font_scale_changed)
 
 
 # ── 对话链控制 ────────────────────────────────────────────────
@@ -97,6 +116,7 @@ func _on_dialogue_ended(scene_id: String) -> void:
 	match scene_id:
 		"boss_phase2_start":
 			## 第二阶段旁白结束，恢复战斗按钮
+			_phase2_in_progress = false
 			_set_buttons_disabled(false)
 		"boss_awakening":
 			## 觉醒独白结束，胜利切场景
@@ -140,10 +160,34 @@ func _start_battle() -> void:
 	_battle.setup(GameData.player, _enemy)
 	_refresh_all_hp()
 
+	## 战斗 BGM：BOSS战和普通战分开
+	if GameData.current_enemy_id == "boss":
+		AudioManager.play_bgm("battle_boss_p1")
+	else:
+		AudioManager.play_bgm("battle_normal")
+
+	## 首次战斗：播放教学旁白（融入叙事，非弹窗）
+	if not GameData.triggered_events.has("tutorial_first_battle"):
+		GameData.triggered_events.append("tutorial_first_battle")
+		print("BattleUI: 播放教学旁白")
+		await get_tree().create_timer(0.5).timeout
+		if not is_inside_tree() or _battle == null:
+			return
+		DialogueManager.start_scene("tutorial_first_battle")
+		await DialogueManager.dialogue_ended
+		if not is_inside_tree() or _battle == null:
+			return
+	else:
+		print("BattleUI: 教学已触发，跳过")
+
+	## DEBUG: 检查 is_active 是否残留
+	print("BattleUI: 开局延迟前 is_active=%s" % DialogueManager.is_active)
+
 	## 开局延迟：让玩家看到满状态画面后再开始第一个回合
 	await get_tree().create_timer(1.0).timeout
 	if not is_inside_tree() or _battle == null:
 		return
+	print("BattleUI: 调用 turn_start, is_active=%s" % DialogueManager.is_active)
 	_battle.turn_start()
 
 
@@ -320,8 +364,11 @@ func _is_sense_unlocked() -> bool:
 
 func _on_turn_changed(state: BattleManager.TurnState) -> void:
 	var is_player_turn := state == BattleManager.TurnState.PLAYER_TURN
-	## 对话进行中（BOSS旁白等）不开启按钮，防止竞态
-	if is_player_turn and DialogueManager.is_active:
+	## DEBUG
+	print("_on_turn_changed: state=%s is_active=%s phase2=%s" % [
+		state, DialogueManager.is_active, _phase2_in_progress])
+	## 对话进行中，或phase2旁白尚未启动（_phase2_in_progress防竞态窗口）不开启按钮
+	if is_player_turn and (DialogueManager.is_active or _phase2_in_progress):
 		_set_buttons_disabled(true)
 	else:
 		_set_buttons_disabled(not is_player_turn)
@@ -349,10 +396,13 @@ func _on_battle_ended(player_won: bool) -> void:
 		if GameData.current_enemy_id == "boss":
 			return
 		## 普通胜利（幽影狼/石皮蟾）
+		AudioManager.play_sfx("victory")
+		AudioManager.fade_bgm_to(0.0, 1.5)
 		var loot_gold := 8 if GameData.current_enemy_id.begins_with("wolf") else 18
 		log_text.append_text(
 			"\n[color=gold]【 获得 %d 灵石。】[/color]\n" % loot_gold)
 		GameData.gain_gold(loot_gold)
+		AudioManager.play_sfx("gold_gain")
 		GameData.battle_won = true
 		await get_tree().create_timer(1.5).timeout
 		if not is_inside_tree():
@@ -361,9 +411,12 @@ func _on_battle_ended(player_won: bool) -> void:
 		SceneTransition.change_scene("res://scenes/TempleScene.tscn")
 	else:
 		_set_buttons_disabled(true)
-		## 立即恢复满血（独白播放期间视觉上她已经"站起来了"）
+		## 战败音效 + 战斗BGM压低至15%作为独白氛围底色，切场景时由新BGM crossfade替换
+		AudioManager.play_sfx("defeat")
+		AudioManager.fade_bgm_to(0.15, 1.0)
+		## 数据层恢复满血（供下个场景读取），但不立即刷新UI——
+		## 让玩家先看到死亡瞬间的血条停留在0，避免"死亡的瞬间血条突然回满"的视觉穿帮
 		GameData.player.hp = GameData.player.max_hp
-		_refresh_player_hp()
 		## 保存敌人ID用于选择失败独白（清空前缓存）
 		var defeated_by := GameData.current_enemy_id
 		var was_boss_p2 := _battle._boss_phase2 if _battle else false
@@ -383,8 +436,11 @@ func _on_battle_ended(player_won: bool) -> void:
 
 ## BOSS第二阶段触发：锁定按钮，播放旁白
 func _on_boss_phase2_started() -> void:
+	_phase2_in_progress = true
 	_set_buttons_disabled(true)
 	_close_skill_menu()
+	## BGM 切换为第二阶段（绝望/低沉）
+	AudioManager.play_bgm("battle_boss_p2", 2.0)
 	## 播放第二阶段旁白，旁白结束后_on_dialogue_ended恢复按钮
 	await get_tree().process_frame
 	DialogueManager.start_scene("boss_phase2_start")
@@ -436,8 +492,9 @@ func _on_ready_for_awakening() -> void:
 		.set_trans(Tween.TRANS_SINE)
 	await tween_in.finished
 
-	## 点击后执行觉醒
+	## 点击后执行觉醒（先禁用防止同帧二次触发，queue_free是延迟释放）
 	awaken_btn.pressed.connect(func():
+		awaken_btn.disabled = true
 		awaken_btn.queue_free()
 		_battle.execute_awakening()
 	)
@@ -447,6 +504,11 @@ func _on_ready_for_awakening() -> void:
 func _on_awakening_triggered() -> void:
 	_set_buttons_disabled(true)
 	_close_skill_menu()
+	## 觉醒 BGM + 闪光音效
+	AudioManager.stop_bgm(0.3)
+	AudioManager.play_sfx("awakening_flash")
+	## 剑穗爆发（先于全屏白光，作为光源）
+	_battle_tassel_awaken_burst()
 	## 全屏白光演出
 	_flash_white()
 	_shake_screen()
@@ -456,6 +518,8 @@ func _on_awakening_triggered() -> void:
 	await get_tree().create_timer(0.5).timeout
 	if not is_inside_tree():
 		return
+	## 觉醒独白配乐
+	AudioManager.play_bgm_once("awakening", 1.0)
 	DialogueManager.start_scene("boss_awakening")
 
 
@@ -510,6 +574,19 @@ func _execute_action(action_type: BattleManager.ActionType) -> void:
 	_prev_player_hp = GameData.player.hp
 	_prev_enemy_hp = _enemy.hp
 
+	## 行动音效（按钮点击的反馈）
+	match action_type:
+		BattleManager.ActionType.ATTACK:
+			AudioManager.play_sfx("attack_hit")
+		BattleManager.ActionType.CHARGE:
+			AudioManager.play_sfx("charge")
+		BattleManager.ActionType.BITE:
+			AudioManager.play_sfx("quixue")
+		BattleManager.ActionType.SENSE:
+			AudioManager.play_sfx("sense")
+		BattleManager.ActionType.USE_POTION:
+			AudioManager.play_sfx("item_get")
+
 	_battle.player_action(action_type)
 
 	## 检测伤害并触发对应演出
@@ -519,8 +596,10 @@ func _execute_action(action_type: BattleManager.ActionType) -> void:
 
 	if enemy_took_dmg:
 		_flash_panel($EnemyPanel, Color(1.0, 0.2, 0.2))
+		AudioManager.play_sfx("enemy_hurt")
 	if player_took_dmg:
 		_flash_panel($PlayerPanel, Color(1.0, 0.2, 0.2))
+		AudioManager.play_sfx("player_hurt")
 		if player_dmg_amount >= 15:
 			_shake_screen()
 
@@ -550,6 +629,101 @@ func _shake_screen() -> void:
 		var offset := Vector2(randf_range(-8, 8), randf_range(-6, 6))
 		_shake_tween.tween_property(self, "position", _original_pos + offset, 0.04)
 	_shake_tween.tween_property(self, "position", _original_pos, 0.04)
+
+
+## 字号变化回调：刷新战斗日志字号
+func _on_font_scale_changed(scale_factor: float) -> void:
+	_apply_font_scale_to_log(scale_factor)
+
+
+## 应用字号到战斗日志 RichTextLabel
+func _apply_font_scale_to_log(scale_factor: float) -> void:
+	var base_size: int = 14
+	var new_size: int = int(round(base_size * scale_factor))
+	if log_text:
+		log_text.add_theme_font_size_override("normal_font_size", new_size)
+
+
+## 创建战斗中的剑穗视觉（挂在 PlayerPanel 内，确保不盖过 DialogueBox）
+func _setup_battle_tassel() -> void:
+	## 不显示给没有剑穗的玩家
+	if not ("sword_tassel" in GameData.unlocked_old_items):
+		return
+	_battle_tassel_node = Node2D.new()
+	_battle_tassel_node.name = "BattleSwordTassel"
+	## PlayerPanel 局部坐标：宽560 高160，剑穗放在右上角
+	_battle_tassel_node.position = Vector2(520, 30)
+	## 挂在 PlayerPanel 子树内，渲染层级跟随面板（不会盖过 DialogueBox）
+	$PlayerPanel.add_child(_battle_tassel_node)
+
+	## 外层菱形光晕
+	_battle_tassel_glow = Polygon2D.new()
+	_battle_tassel_glow.polygon = PackedVector2Array([
+		Vector2(0, -18), Vector2(15, 0), Vector2(0, 18), Vector2(-15, 0)
+	])
+	_battle_tassel_glow.color = Color(0.95, 0.85, 0.55, 0.0)
+	_battle_tassel_node.add_child(_battle_tassel_glow)
+
+	## 内核（细长的剑穗）
+	_battle_tassel_core = Polygon2D.new()
+	_battle_tassel_core.polygon = PackedVector2Array([
+		Vector2(-3, -10), Vector2(3, -10), Vector2(3, 10), Vector2(-3, 10)
+	])
+	_battle_tassel_core.color = Color(0.45, 0.30, 0.20, 1.0)
+	_battle_tassel_node.add_child(_battle_tassel_core)
+
+	## 立即刷新到正确状态（不缓动）
+	_refresh_battle_tassel(true)
+
+
+## 同步剑穗视觉到当前感应等级
+## instant: true 表示直接赋值不用缓动
+func _refresh_battle_tassel(instant: bool = false) -> void:
+	if _battle_tassel_node == null or _battle_tassel_core == null or _battle_tassel_glow == null:
+		return
+	var glow_level: int = 0
+	for v in GameData.stones_read:
+		if v:
+			glow_level += 1
+
+	var core_colors := [
+		Color(0.45, 0.30, 0.20, 1.0),
+		Color(0.65, 0.45, 0.25, 1.0),
+		Color(0.85, 0.65, 0.35, 1.0),
+		Color(0.95, 0.80, 0.45, 1.0),
+		Color(1.00, 0.92, 0.65, 1.0),
+	]
+	var glow_alphas := [0.0, 0.20, 0.40, 0.60, 0.85]
+	var idx: int = clamp(glow_level, 0, 4)
+	var target_core: Color = core_colors[idx]
+	var target_glow: Color = Color(0.95, 0.85, 0.55, glow_alphas[idx])
+
+	if instant:
+		_battle_tassel_core.color = target_core
+		_battle_tassel_glow.color = target_glow
+		return
+
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_battle_tassel_core, "color", target_core, 0.6)\
+		.set_ease(Tween.EASE_OUT)
+	tw.tween_property(_battle_tassel_glow, "color", target_glow, 0.6)\
+		.set_ease(Tween.EASE_OUT)
+
+
+## 觉醒一击时剑穗爆发：从中心向外扩散白光
+func _battle_tassel_awaken_burst() -> void:
+	if _battle_tassel_node == null:
+		return
+	## 内核变成纯白
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(_battle_tassel_core, "color", Color(1, 1, 1, 1), 0.3)
+	## 光晕菱形迅速放大并保持高亮
+	tw.tween_property(
+		_battle_tassel_glow, "scale", Vector2(3.5, 3.5), 0.5
+	).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(
+		_battle_tassel_glow, "color", Color(1, 1, 1, 0.95), 0.3
+	)
 
 
 ## 全屏白光闪烁（觉醒一击演出）
