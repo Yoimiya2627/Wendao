@@ -1905,3 +1905,42 @@ scripts/TownScene.gd    _enter_scene() + _wait_for_transition() 两处
 1. 美术资源替换
 2. 字号设置面板 UI（信号已就绪，缺 UI 入口）
 3. 已读跳过功能
+
+---
+
+## 第二十四版（2026-04-13）—— 对话快进接入
+
+### 改动内容
+
+**`DialogueBox.gd` — `_start_typing()` 接入 `dialogue_skip` 开关**
+
+`UIManager.dialogue_skip` 变量、存读档、设置面板 UI 在第二十版已全部实现，
+但 `_start_typing()` 从未读取该开关，导致快进功能实际无效。
+
+修复：在 `_start_typing()` 中新增一个分支，当 `UIManager.dialogue_skip == true` 时直接调用 `_finish_typing()`，跳过逐字动画立即显示全部文字。玩家仍需手动按确认/点击推进每个节点。
+
+```
+if UIManager and UIManager.dialogue_skip:
+    _finish_typing()   ## 立即显示，跳过逐字动画
+```
+
+**字号调节状态确认**：经代码审查，字号调节功能在第二十版已完整实现——设置面板有三段切换 UI，`apply_font_scale()` 触发信号，`DialogueBox._ready()` 读取初始值，信号链路完整。待办项可标记为已完成。
+
+### 文件修改记录
+
+```
+scripts/DialogueBox.gd   _start_typing() 新增 dialogue_skip 分支（3行）
+docs/...记录.md          更新版本记录
+```
+
+### 当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 所有链路 | ✅ | 无变化 |
+| 对话快进 | ✅ | 已接入，设置面板"已读对话快进"开关现在生效 |
+| 字号调节 | ✅ | 确认已完整实现（第二十版） |
+
+### 待完成任务（按优先级）
+
+1. 美术资源替换

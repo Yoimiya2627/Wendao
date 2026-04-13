@@ -254,6 +254,9 @@ func _start_typing(text: String) -> void:
 	if _total_chars == 0:
 		# 无文字（纯事件节点路过），直接完成
 		_on_typing_finished()
+	elif UIManager and UIManager.dialogue_skip:
+		# 快进模式开启：立即显示全部文字，跳过逐字动画
+		_finish_typing()
 	else:
 		dialogue_text.visible_characters = 0
 		_is_typing = true
