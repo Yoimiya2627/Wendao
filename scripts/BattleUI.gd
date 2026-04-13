@@ -162,9 +162,9 @@ func _start_battle() -> void:
 
 	## 战斗 BGM：BOSS战和普通战分开
 	if GameData.current_enemy_id == "boss":
-		AudioManager.play_bgm("battle_boss_p1")
+		AudioManager.play_bgm("battle_boss_p1", 3.0)
 	else:
-		AudioManager.play_bgm("battle_normal")
+		AudioManager.play_bgm("battle_normal", 3.0)
 
 	## 首次战斗：播放教学旁白（融入叙事，非弹窗）
 	if not GameData.triggered_events.has("tutorial_first_battle"):

@@ -222,6 +222,8 @@ func _ready() -> void:
 			## 旁白已触发但未拿铜钱：切换为铜钱对话
 			ft_npc_ready.dialogue_scene_id = "fortune_teller_coin"
 			ft_npc_ready.is_triggered = false
+	## 香料摊回程文案按是否买过桂皮动态切换
+	_sync_vendor_b_return_dialogue()
 	## 读档后全量同步UI（HP条+背包+心绪面板）
 	UIManager.refresh_all_data()
 	## BGM：白天/夜晚分差
@@ -832,6 +834,7 @@ func _on_event_triggered(event_name: String) -> void:
 
 		"get_cinnamon":
 			UIManager.add_item("cinnamon")
+			_sync_vendor_b_return_dialogue()
 			DialogueManager.finish_event()
 
 		"buy_heal_potion":
@@ -866,6 +869,16 @@ func _on_event_triggered(event_name: String) -> void:
 			DialogueManager.finish_event()
 
 
+func _sync_vendor_b_return_dialogue() -> void:
+	var vendor_b = get_node_or_null("NPCLayer/NPC_Vendor_B")
+	if vendor_b == null:
+		return
+	if "cinnamon" in GameData.unlocked_old_items:
+		vendor_b.dialogue_scene_id_after = "vendor_b_return"
+	else:
+		vendor_b.dialogue_scene_id_after = "vendor_b_return_no_cinnamon"
+
+
 ## 处理完整对话场景结束
 func _on_dialogue_ended(scene_id: String) -> void:
 	match scene_id:
@@ -875,6 +888,9 @@ func _on_dialogue_ended(scene_id: String) -> void:
 				GameData.advance_phase()
 		"market":
 			## 老婆婆神秘消失，使用disappear()完整移除
+			GameData.got_charm = true
+			if not GameData.triggered_events.has("market_done"):
+				GameData.triggered_events.append("market_done")
 			var old_woman = get_node_or_null("NPCLayer/NPC_OldWoman")
 			if old_woman:
 				old_woman.disappear()

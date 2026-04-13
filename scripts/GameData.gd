@@ -41,6 +41,8 @@ var night_triggered: bool = false
 
 ## 隐藏道具：算命先生的铜钱
 var got_coin: bool = false
+## 是否拿到老婆婆给的平安符
+var got_charm: bool = false
 
 ## 章末路径标记（"a"=一起走，"b"=回去看爹，""=未到章末）
 var chapter_end_path: String = ""
@@ -128,6 +130,7 @@ func reset_to_default() -> void:
 	night_triggered    = false
 
 	got_coin           = false
+	got_charm          = false
 	chapter_end_path   = ""
 	heal_potions       = 0
 	incenses           = 0
@@ -173,6 +176,7 @@ func save_data() -> Dictionary:
 		"chapter":        current_chapter,
 
 		"got_coin":           got_coin,
+		"got_charm":          got_charm,
 		"chapter_end_path":  chapter_end_path,
 		"story_phase":       story_phase,
 		"morning_triggered": morning_triggered,
@@ -204,10 +208,14 @@ func load_data(data: Dictionary) -> void:
 	current_chapter    = data.get("chapter", 1)
 
 	got_coin           = data.get("got_coin", false)
+	got_charm          = data.get("got_charm", false)
 	chapter_end_path   = data.get("chapter_end_path", "")
 	story_phase        = data.get("story_phase", 0)
 	morning_triggered  = data.get("morning_triggered", false)
 	triggered_events   = Array(data.get("triggered_events", []), TYPE_STRING, "", null)
+	## 兼容旧存档：若曾触发过market对话，视为已拿到平安符
+	if not got_charm and triggered_events.has("market_done"):
+		got_charm = true
 	bowl_interacted    = data.get("bowl_interacted", false)
 	stones_read        = Array(data.get("stones_read", [false, false, false, false]), TYPE_BOOL, "", null)
 	night_triggered    = data.get("night_triggered", false)

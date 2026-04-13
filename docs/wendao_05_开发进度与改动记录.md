@@ -17,6 +17,15 @@
 
 ### 本轮新增完成（第七版）
 
+**一致性修复（新增）**
+- TeaScene.gd：修复测灵前老江湖不可对话，phase<3 时恢复 `old_wanderer` 对话
+- chapter1.json：老江湖去程台词改为测灵前语境，去除“测出来什么/无灵根”时序冲突
+- TempleScene.gd：碑文已读后按E不再重播；`sense_unlocked_hint` 改为一次性触发，修复可重复刷“感应·已领悟”
+- chapter1.json + TownScene.gd：香料摊回程文案按是否买桂皮动态切换（`vendor_b_return` / `vendor_b_return_no_cinnamon`）
+- BattleUI.gd：战斗 BGM 进场淡入延长至 3.0 秒，缓解“突然过响”
+- chapter1.json + ChapterEndScene.gd：章末“平安符”文案去穿帮（无符走中性文案）
+- GameData.gd + TownScene.gd + ChapterEndScene.gd：新增 `got_charm` 持久化分支，章末路径A按是否拿到平安符切换首句文案
+
 **Bug修复（4个）**
 - BattleManager.gd：BOSS第二阶段固定伤害12→10
 - BattleUI.gd：删除gain_exp()调用，普通胜利改为灵石奖励

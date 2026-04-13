@@ -811,6 +811,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	## 靠近碑文：检查幽影狼是否存活
 	if _nearby_stone >= 0:
+		if _stones_read[_nearby_stone]:
+			_interact_hint.text = "这块碑文已经读过了"
+			_interact_hint.show()
+			get_viewport().set_input_as_handled()
+			return
 		var wolf_blocking := false
 		if _current_room == "left" and _wolf_left != null:
 			wolf_blocking = true
@@ -985,7 +990,8 @@ func _on_dialogue_ended(scene_id: String) -> void:
 		for state in GameData.stones_read:
 			if state:
 				total_read += 1
-		if total_read == 1:
+		if total_read == 1 and not GameData.triggered_events.has("sense_unlocked_hint_shown"):
+			GameData.triggered_events.append("sense_unlocked_hint_shown")
 			await get_tree().create_timer(0.5).timeout
 			DialogueManager.start_scene("sense_unlocked_hint")
 

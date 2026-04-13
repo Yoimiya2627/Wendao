@@ -4,7 +4,8 @@
 extends Node2D
 
 ## 路径A的文字
-const TEXT_A_LINE1 := "她只带了那张平安符，还有腰间装了半壶水的葫芦。"
+const TEXT_A_LINE1_WITH_CHARM := "她只带了那张平安符，还有腰间装了半壶水的葫芦。"
+const TEXT_A_LINE1_NO_CHARM := "她只带了腰间装了半壶水的葫芦。"
 const TEXT_A_LINE2 := "走出废庙的时候，她没有回头。"
 const TEXT_A_LINE3 := "身后，碎玉镇的灯火一盏一盏亮起来。"
 
@@ -101,7 +102,7 @@ func _play_ending() -> void:
 	## 字号缩放系数
 	var scale_f: float = UIManager.get_font_scale_factor() if UIManager else 1.0
 	## 根据GameData.chapter_end_path判断走哪条路径
-	var line1_text := TEXT_A_LINE1
+	var line1_text := TEXT_A_LINE1_WITH_CHARM if GameData.got_charm else TEXT_A_LINE1_NO_CHARM
 	var line2_text := TEXT_A_LINE2
 	var line3_text := TEXT_A_LINE3
 	if GameData.chapter_end_path == "b":

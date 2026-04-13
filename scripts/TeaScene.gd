@@ -77,8 +77,8 @@ func _setup_npcs_by_phase() -> void:
 		## 正常探索阶段（phase 1）：显式赋值去程对话，防止状态残留
 		_npc_disciple_a.dialogue_scene_id = "disciple_a_before"
 		_npc_disciple_b.dialogue_scene_id = "disciple_b_before"
-		## 老江湖去程对话预设测灵已完成（"测出来什么？"），phase < 3 时不应开放
-		_npc_wanderer.dialogue_scene_id = ""
+		## 老江湖去程对话：测灵前可选互动
+		_npc_wanderer.dialogue_scene_id = "old_wanderer"
 
 
 ## 延迟0.8秒后显示老江湖气泡，3秒后自动消失
