@@ -186,7 +186,7 @@ func save_data() -> Dictionary:
 		"incenses":             incenses,
 		"talismans":            talismans,
 		"unlocked_old_items":   unlocked_old_items,
-		"saved_scene_name":     get_tree().current_scene.name if get_tree() and get_tree().current_scene else "TownScene",
+		"saved_scene_name":     String(get_tree().current_scene.name) if get_tree() and get_tree().current_scene else "TownScene",
 		"saved_player_position_x": saved_player_position.x,
 		"saved_player_position_y": saved_player_position.y,
 	}
@@ -194,11 +194,14 @@ func save_data() -> Dictionary:
 
 ## 从字典恢复玩家数据，用于读档。
 func load_data(data: Dictionary) -> void:
-	player          = Character.new(data["player_name"], data["player_max_hp"],
-									data["player_atk"],  data["player_def"])
-	player.hp       = data["player_hp"]
-	gold            = data["gold"]
-	current_chapter    = data["chapter"]
+	player          = Character.new(
+		data.get("player_name", "苏云晚"),
+		data.get("player_max_hp", 100),
+		data.get("player_atk", 15),
+		data.get("player_def", 5))
+	player.hp       = data.get("player_hp", player.max_hp)
+	gold            = data.get("gold", 0)
+	current_chapter    = data.get("chapter", 1)
 
 	got_coin           = data.get("got_coin", false)
 	chapter_end_path   = data.get("chapter_end_path", "")

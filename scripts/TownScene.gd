@@ -36,7 +36,9 @@ const ENTRANCE_TEA_GRID    : Vector2i = Vector2i(28, 24)
 const ENTRANCE_TEMPLE_GRID : Vector2i = Vector2i(36, 28)
 
 ## 入口触发检测半径（格子数，±1格均可触发提示）
-const ENTRANCE_RANGE : int = 0
+## 注意：必须保持为1，否则SPAWN_FROM_SHOP/TEA/TEMPLE的1格偏移就脱离了入口判定区
+## 同时也用于story phase 3的"灯还亮着"等回程旁白触发
+const ENTRANCE_RANGE : int = 1
 
 ## 场景切换冷却时间（秒），防止连续重复触发
 const TRANSITION_COOLDOWN : float = 1.0
@@ -154,8 +156,8 @@ var _stone_used: bool = false
 var _night_overlay: ColorRect = null
 var _night_triggered: bool = false
 
-## 气泡对话标签（世界空间Label，动态创建）
-var _bubble_label: Label = null
+## 气泡对话标签（世界空间 RichTextLabel，动态创建，支持 BBCode 斜体）
+var _bubble_label: RichTextLabel = null
 ## 气泡显示剩余时间（秒）
 var _bubble_timer: float = 0.0
 ## 气泡触发状态（BUBBLE_NODES的运行时副本，含triggered字段）
@@ -222,7 +224,19 @@ func _ready() -> void:
 			ft_npc_ready.is_triggered = false
 	## 读档后全量同步UI（HP条+背包+心绪面板）
 	UIManager.refresh_all_data()
+	## BGM：白天/夜晚分差
+	if GameData.night_triggered:
+		AudioManager.play_bgm("town_night")
+	else:
+		AudioManager.play_bgm("town_day")
 	_initialized = true
+
+
+func _exit_tree() -> void:
+	if DialogueManager.event_triggered.is_connected(_on_event_triggered):
+		DialogueManager.event_triggered.disconnect(_on_event_triggered)
+	if DialogueManager.dialogue_ended.is_connected(_on_dialogue_ended):
+		DialogueManager.dialogue_ended.disconnect(_on_dialogue_ended)
 
 
 func _process(delta: float) -> void:
@@ -283,6 +297,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				GameData.debug_set_phase(3)
 				GameData.morning_triggered = true
 				GameData.night_triggered = true
+				## 调试时跳过首次战斗教学（避免每次重置都弹教学对话卡住按钮）
+				if not GameData.triggered_events.has("tutorial_first_battle"):
+					GameData.triggered_events.append("tutorial_first_battle")
 				## 玩家落点设为内殿入口
 				GameData.last_player_position = Vector2(240, -51)
 				SceneTransition.change_scene("res://scenes/TempleScene.tscn")
@@ -541,7 +558,7 @@ func _try_enter_scene(entrance: String) -> void:
 ## 执行场景切换，带冷却与防重入保护
 func _enter_scene(entrance: String) -> void:
 	# 冷却未结束或过渡动画进行中，拒绝切换
-	if _transition_timer > 0.0 or SceneTransition._is_transitioning:
+	if _transition_timer > 0.0 or SceneTransition.is_transitioning:
 		return
 	_transition_timer = TRANSITION_COOLDOWN
 	match entrance:
@@ -567,7 +584,9 @@ func _enter_scene(entrance: String) -> void:
 
 ## 等待 SceneTransition 当前过渡动画完成（供 story_phase==0 重定向使用）
 func _wait_for_transition() -> void:
-	while SceneTransition._is_transitioning:
+	while SceneTransition.is_transitioning:
+		if not is_inside_tree():
+			return
 		await get_tree().process_frame
 
 
@@ -980,15 +999,15 @@ func _check_night_walk_triggers() -> void:
 	var pg := Vector2i(
 		int(_player.global_position.x / TILE_SIZE),
 		int(_player.global_position.y / TILE_SIZE))
-	## 榕树格(17,16)
+	## 榕树格(17,16)：用 ±1 容差，与 FORCE_TRIGGER_NODES 保持一致
 	if not GameData.triggered_events.has("night_walk_tree"):
-		if _in_range(pg, Vector2i(17, 16)):
+		if abs(pg.x - 17) <= 1 and abs(pg.y - 16) <= 1:
 			GameData.triggered_events.append("night_walk_tree")
 			DialogueManager.start_scene("night_walk_tree")
 			return
-	## 古井格(22,17)
+	## 古井格(22,17)：用 ±1 容差
 	if not GameData.triggered_events.has("night_walk_well"):
-		if _in_range(pg, Vector2i(22, 17)):
+		if abs(pg.x - 22) <= 1 and abs(pg.y - 17) <= 1:
 			GameData.triggered_events.append("night_walk_well")
 			DialogueManager.start_scene("night_walk_well")
 			return
@@ -1058,12 +1077,17 @@ func _init_bubble_states() -> void:
 ## 显示气泡文字：在世界坐标world_pos上方创建/更新Label，显示3秒
 func _show_bubble(text: String, world_pos: Vector2) -> void:
 	if _bubble_label == null:
-		_bubble_label = Label.new()
-		_bubble_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.75, 1.0))
-		_bubble_label.add_theme_font_size_override("font_size", 13)
+		_bubble_label = RichTextLabel.new()
+		_bubble_label.bbcode_enabled = true
+		_bubble_label.fit_content    = true
+		_bubble_label.scroll_active  = false
+		_bubble_label.autowrap_mode  = TextServer.AUTOWRAP_OFF
+		_bubble_label.add_theme_color_override("default_color", ThemeManager.COLOR_TEXT_PRIMARY)
+		_bubble_label.add_theme_font_size_override("normal_font_size",  16)
+		_bubble_label.add_theme_font_size_override("italics_font_size", 16)
 		_bubble_label.z_index = 10
 		add_child(_bubble_label)
-	_bubble_label.text = "「" + text + "」"
+	_bubble_label.text = "[i]「" + text + "」[/i]"
 	_bubble_label.global_position = world_pos + Vector2(-48.0, -40.0)
 	_bubble_label.show()
 	_bubble_timer = 3.0
@@ -1124,7 +1148,7 @@ func _setup_night_vendor() -> void:
 	label.text = "药婆"
 	label.position = Vector2(-16, -36)
 	label.add_theme_font_size_override("font_size", 12)
-	label.add_theme_color_override("font_color", Color(0.85, 0.78, 0.65, 1.0))
+	label.add_theme_color_override("font_color", ThemeManager.COLOR_ACCENT_GOLD)
 	vendor.add_child(label)
 
 	## 物理碰撞体（阻止玩家穿透）

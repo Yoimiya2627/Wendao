@@ -1840,3 +1840,68 @@ assets/audio/bgm/            新增 11 首 BGM 文件
 1. 美术资源替换
 2. 字号设置面板 UI（信号已就绪，缺 UI 入口）
 3. 已读跳过功能
+
+---
+
+## 第二十三版（2026-04-13）—— 全文件自审查 + 补漏修复
+
+### 一、审查范围
+
+本轮对全部代码及资源文件逐一人工通读，交叉核对：
+
+| 扫描项 | 内容 |
+|--------|------|
+| GDScript 脚本 | 19 个全部重读（含 archive/PlazaScene.gd 确认已归档不活跃） |
+| tscn 场景文件 | 12 个全部交叉核对（@onready / $Path / get_node_or_null vs 节点树） |
+| Shader | `shaders/ink_wash.gdshader`：5-tap 权重归一化 ✅，vignette/泛黄逻辑正确 ✅ |
+| InkWashOverlay.tscn | 独立叠层场景，shader 参数与 uniform 匹配，layer=5 优先级正确 ✅ |
+| chapter1.json | 60+ 个 scene_id 引用（脚本 start_scene + tscn NPC dialogue_scene_id + _after）全部在 JSON 中存在 ✅ |
+
+### 二、Bug 修复（1个）
+
+**TownScene.gd — 私有变量访问漏修**
+
+| 位置 | 问题 | 修复 |
+|------|------|------|
+| `TownScene.gd` 第 561 行 `_enter_scene()` | `SceneTransition._is_transitioning`（直接访问私有变量） | 改为 `SceneTransition.is_transitioning` |
+| `TownScene.gd` 第 587 行 `_wait_for_transition()` | 同上 | 同上 |
+
+根因：第二十二版在 SceneTransition.gd 新增 `is_transitioning` 公开属性并修复 Player.gd 时，TownScene.gd 的两处漏未修改。
+
+### 三、审查确认项（无其他问题）
+
+**脚本层面**
+- 所有 `@onready` / `$Path` / `get_node_or_null` 路径与对应 tscn 节点树完全匹配 ✅
+- TempleScene 的 8 扇门及 2 个隐藏交互点均为动态创建（`_setup_doors` + `_setup_inner_doors` + `_setup_temple_hidden_interacts`），`_process` 中 `get_node_or_null` 正常可达 ✅
+- ShopScene / TeaScene 提示 Label 挂载位置不同（ShopScene 挂 Player 下，TeaScene 挂 UILayer 下），两者均与各自脚本 `$` 路径一致 ✅
+
+**数据层面**
+- 所有 `dialogue_scene_id_after` 值（9 个）在 JSON 中均有对应场景 ✅
+- BattleUI 失败分支返回的 4 个差分场景（`battle_loss_wolf / _toad / _boss_p1 / _boss_p2`）全部存在 ✅
+- `temple_stone_1~4` / `boss_phase2_start` / `remnant_page_4` 均存在 ✅
+
+### 四、文件修改记录（第二十三版）
+
+```
+scripts/TownScene.gd    _enter_scene() + _wait_for_transition() 两处
+                        SceneTransition._is_transitioning → is_transitioning
+```
+
+### 五、当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | 无变化 |
+| 链路二 测灵广场 | ✅ | 无变化 |
+| 链路三 回家流程 | ✅ | 无变化 |
+| 链路四 废庙流程 | ✅ | 无变化 |
+| 链路五 章末流程 | ✅ | 无变化 |
+| 主菜单 | ✅ | 无变化 |
+| ESC系统菜单 | ✅ | 无变化 |
+| 音频系统 | ✅ | 无变化 |
+
+### 六、待完成任务（按优先级）
+
+1. 美术资源替换
+2. 字号设置面板 UI（信号已就绪，缺 UI 入口）
+3. 已读跳过功能

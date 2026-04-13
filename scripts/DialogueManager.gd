@@ -209,6 +209,22 @@ func _end_scene() -> void:
 	if db: db.on_dialogue_ended(ended_id)
 
 
+## 强制终止当前对话，用于场景切换前清理状态
+## 不触发 dialogue_ended 信号，防止跨场景回调误触发
+func force_stop() -> void:
+	if not is_active:
+		return
+	is_active               = false
+	waiting_for_choice      = false
+	is_waiting_event_finish = false
+	_current_scene_id       = ""
+	_current_scene          = {}
+	_current_node           = {}
+	var db := _get_dialogue_box()
+	if db and db.has_method("on_dialogue_ended"):
+		db.on_dialogue_ended("")
+
+
 ## 修复5：DialogueBox 在 _ready 中主动注册，此处直接返回缓存引用
 func _get_dialogue_box() -> Node:
 	return _dialogue_box

@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/NPC.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/InkWashOverlay.tscn" id="5_inkwash"]
 
 [sub_resource type="RectangleShape2D" id="Wall_top"]
 size = Vector2(480, 64)
@@ -37,6 +38,8 @@ size = Vector2(24.0, 16.0)
 
 [node name="ShopScene" type="Node2D" unique_id=1908260665]
 script = ExtResource("1")
+
+[node name="InkWashOverlay" parent="." instance=ExtResource("5_inkwash")]
 
 [node name="Background" type="Node2D" parent="." unique_id=1635396555]
 

@@ -29,12 +29,23 @@ var _bubble_shown: bool = false
 
 func _ready() -> void:
 	_exit_hint.hide()
-	_player.global_position = _spawn_point.global_position
+	## 优先恢复手动存档时的玩家坐标，否则用默认 SpawnPoint
+	if GameData.saved_player_position != Vector2.ZERO:
+		_player.global_position = GameData.saved_player_position
+		GameData.saved_player_position = Vector2.ZERO
+	else:
+		_player.global_position = _spawn_point.global_position
 	_setup_camera()
 	_exit_area.body_entered.connect(_on_exit_body_entered)
 	_exit_area.body_exited.connect(_on_exit_body_exited)
 	DialogueManager.event_triggered.connect(_on_event_triggered)
 	_setup_npcs_by_phase()
+	## BGM 由 SceneTransition._auto_play_bgm() 统一触发（SCENE_BGM_MAP["TeaScene"]）
+
+
+func _exit_tree() -> void:
+	if DialogueManager.event_triggered.is_connected(_on_event_triggered):
+		DialogueManager.event_triggered.disconnect(_on_event_triggered)
 
 
 func _setup_camera() -> void:
@@ -66,6 +77,8 @@ func _setup_npcs_by_phase() -> void:
 		## 正常探索阶段（phase 1）：显式赋值去程对话，防止状态残留
 		_npc_disciple_a.dialogue_scene_id = "disciple_a_before"
 		_npc_disciple_b.dialogue_scene_id = "disciple_b_before"
+		## 老江湖去程对话预设测灵已完成（"测出来什么？"），phase < 3 时不应开放
+		_npc_wanderer.dialogue_scene_id = ""
 
 
 ## 延迟0.8秒后显示老江湖气泡，3秒后自动消失

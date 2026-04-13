@@ -43,6 +43,40 @@ func _ready() -> void:
 
 	_apply_styles()
 
+	## 监听字号变化（设置菜单调整时实时刷新）
+	if UIManager and UIManager.has_signal("font_scale_changed"):
+		if not UIManager.font_scale_changed.is_connected(_on_font_scale_changed):
+			UIManager.font_scale_changed.connect(_on_font_scale_changed)
+		_apply_font_scale(UIManager.get_font_scale_factor())
+
+
+func _exit_tree() -> void:
+	if UIManager and UIManager.has_signal("font_scale_changed") \
+			and UIManager.font_scale_changed.is_connected(_on_font_scale_changed):
+		UIManager.font_scale_changed.disconnect(_on_font_scale_changed)
+	if DialogueManager.dialogue_started.is_connected(on_dialogue_started):
+		DialogueManager.dialogue_started.disconnect(on_dialogue_started)
+	if DialogueManager.dialogue_ended.is_connected(on_dialogue_ended):
+		DialogueManager.dialogue_ended.disconnect(on_dialogue_ended)
+	if DialogueManager.node_changed.is_connected(on_node_changed):
+		DialogueManager.node_changed.disconnect(on_node_changed)
+
+
+## 字号变化回调
+func _on_font_scale_changed(scale_factor: float) -> void:
+	_apply_font_scale(scale_factor)
+
+
+## 应用字号缩放到对话文字（三种字型统一基准 18px，旁白靠 [i] 斜体视觉区分）
+func _apply_font_scale(scale_factor: float) -> void:
+	var size: int = int(round(18 * scale_factor))
+	if dialogue_text:
+		dialogue_text.add_theme_font_size_override("normal_font_size",  size)
+		dialogue_text.add_theme_font_size_override("bold_font_size",    size)
+		dialogue_text.add_theme_font_size_override("italics_font_size", size)
+	if speaker_label:
+		speaker_label.add_theme_font_size_override("font_size", size)
+
 
 ## 由 NPC 直接调用，绕开信号时序问题
 ## 在连接信号后立即启动对话，不依赖外部 _ready 执行顺序
@@ -65,30 +99,38 @@ func _apply_styles() -> void:
 		push_warning("DialogueBox: 节点引用无效，跳过样式初始化")
 		return
 
-	# 主对话面板：深色半透明 + 顶部细边框
+	# 主对话面板：深紫背景（0.92透明度让深紫色可见）+ 顶部暖白细边框
+	var box_bg := ThemeManager.COLOR_BG_DARK
+	box_bg.a = 0.92
 	var box_style := StyleBoxFlat.new()
-	box_style.bg_color = Color(0.07, 0.05, 0.04, 0.93)
+	box_style.bg_color         = box_bg
 	box_style.border_width_top = 1
-	box_style.border_color = Color(0.45, 0.38, 0.28, 0.7)
+	box_style.border_color     = ThemeManager.COLOR_BORDER
 	box_panel.add_theme_stylebox_override("panel", box_style)
 
-	# 继续提示字色
-	continue_hint.add_theme_color_override("font_color", Color(0.75, 0.68, 0.58, 1.0))
+	# 继续提示：暖金色（动画在 _process 里驱动）
+	continue_hint.add_theme_color_override("font_color", ThemeManager.COLOR_ACCENT_GOLD)
 
-	# 说话人名框：深色圆角背景 + 白字
+	# 说话人名框：深紫背景（0.85透明度）+ 左侧3px金色竖线 + 金色文字
+	var speaker_bg := ThemeManager.COLOR_BG_DARK
+	speaker_bg.a = 0.85
 	var speaker_style := StyleBoxFlat.new()
-	speaker_style.bg_color = Color(0.1, 0.08, 0.06, 0.92)
-	speaker_style.corner_radius_top_left     = 6
-	speaker_style.corner_radius_top_right    = 6
-	speaker_style.corner_radius_bottom_right = 6
-	speaker_style.corner_radius_bottom_left  = 6
+	speaker_style.bg_color            = speaker_bg
+	speaker_style.border_width_left   = 3
+	speaker_style.border_width_top    = 0
+	speaker_style.border_width_right  = 0
+	speaker_style.border_width_bottom = 0
+	speaker_style.border_color        = ThemeManager.COLOR_ACCENT_GOLD
+	speaker_style.corner_radius_top_right    = 3
+	speaker_style.corner_radius_bottom_right = 3
 	speaker_panel.add_theme_stylebox_override("panel", speaker_style)
-	speaker_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+	speaker_label.add_theme_color_override("font_color", ThemeManager.COLOR_ACCENT_GOLD)
 	speaker_label.add_theme_font_size_override("font_size", 18)
 
-	# 对话正文字号
-	dialogue_text.add_theme_font_size_override("normal_font_size", 18)
-	dialogue_text.add_theme_font_size_override("bold_font_size", 18)
+	# 对话正文：暖白色，全部 18px（旁白靠 [i] 斜体视觉区分，不再靠字号）
+	dialogue_text.add_theme_color_override("default_color", ThemeManager.COLOR_TEXT_PRIMARY)
+	dialogue_text.add_theme_font_size_override("normal_font_size",  18)
+	dialogue_text.add_theme_font_size_override("bold_font_size",    18)
 	dialogue_text.add_theme_font_size_override("italics_font_size", 18)
 
 
@@ -96,7 +138,10 @@ func _process(delta: float) -> void:
 	# ── 逐字推进 ──────────────────────────────────────────────
 	if _is_typing:
 		_typing_elapsed += delta
-		var target: int = int(_typing_elapsed * TYPING_SPEED)
+		## 文字速度由 UIManager 设置控制（慢/中/快）
+		var interval: float = UIManager.get_dialogue_char_interval() if UIManager else 0.03
+		var current_speed: float = 1.0 / interval if interval > 0.0 else TYPING_SPEED
+		var target: int = int(_typing_elapsed * current_speed)
 		if target >= _total_chars:
 			# 所有字符已显示完毕
 			dialogue_text.visible_characters = -1
@@ -106,11 +151,13 @@ func _process(delta: float) -> void:
 			dialogue_text.visible_characters = target
 		return
 
-	# ── 继续提示闪烁（正弦波，0.3~1.0 的透明度区间）────────────
+	# ── 继续提示：透明度渐变 + 上下轻微浮动 ────────────────────
 	if continue_hint.visible:
 		_blink_time += delta
-		var alpha: float = 0.3 + 0.7 * (sin(_blink_time * TAU * 1.2) * 0.5 + 0.5)
-		continue_hint.modulate.a = alpha
+		var t := sin(_blink_time * TAU * 0.9)
+		continue_hint.modulate.a  = 0.55 + 0.45 * (t * 0.5 + 0.5)
+		continue_hint.offset_top    = -36.0 + t * 3.0
+		continue_hint.offset_bottom = -10.0 + t * 3.0
 
 
 func _input(event: InputEvent) -> void:
@@ -136,6 +183,7 @@ func _input(event: InputEvent) -> void:
 		_finish_typing()
 	elif _can_advance and not DialogueManager.waiting_for_choice:
 		# 推进到下一节点
+		AudioManager.play_sfx("dialogue_advance")
 		DialogueManager.advance()
 
 	get_viewport().set_input_as_handled()
@@ -177,13 +225,18 @@ func on_node_changed(node: Dictionary) -> void:
 		speaker_panel.show()
 		speaker_label.text = speaker
 
-	# ── 文字内容：narration 用斜体 BBCode 包裹 ───────────────
+	# ── 文字内容：按 type 和 speaker 分三类处理 ─────────────
 	var raw_text: String = node.get("text", "")
 	var display_text: String
 
 	if node_type == "narration":
-		display_text = "[i][color=#b0a898]" + raw_text + "[/color][/i]"
+		## 旁白：斜体 + COLOR_TEXT_PRIMARY（#f2e6bf），italics_font_size=16px
+		display_text = "[i][color=#f2e6bf]" + raw_text + "[/color][/i]"
+	elif speaker == "苏云晚":
+		## 苏云晚台词：COLOR_ACCENT_GOLD（#d4a857），正体
+		display_text = "[color=#d4a857]" + raw_text + "[/color]"
 	else:
+		## NPC台词：默认 COLOR_TEXT_PRIMARY，正体
 		display_text = raw_text
 
 	_start_typing(display_text)
@@ -242,11 +295,15 @@ func _show_choices() -> void:
 		btn.pressed.connect(func() -> void: _on_choice_selected(idx))
 		choices_container.add_child(btn)
 
+	## 无按钮时不显示空面板（防止对话数据异常导致玩家卡死）
+	if choices_container.get_child_count() == 0:
+		continue_hint.show()
+		return
+
 	choices_panel.show()
 
 	# 让第一个按钮自动获焦（支持手柄/键盘导航）
-	if choices_container.get_child_count() > 0:
-		choices_container.get_child(0).grab_focus()
+	choices_container.get_child(0).grab_focus()
 
 
 ## 清除所有选项按钮并隐藏选项面板

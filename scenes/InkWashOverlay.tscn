@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://shaders/ink_wash.gdshader" id="1"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMat"]
+shader = ExtResource("1")
+shader_parameter/paper_strength    = 0.06
+shader_parameter/vignette_intensity = 0.25
+shader_parameter/vignette_shape    = 2.0
+shader_parameter/blur_radius       = 0.001
+
+; ── 说明 ─────────────────────────────────────────────────────────
+; layer=5：在游戏世界(0)之上、UILayer-DialogueBox(10)之下
+; hint_screen_texture 只采样本层之前已渲染的内容
+; → UI层不受影响
+
+[node name="InkWashOverlay" type="CanvasLayer"]
+layer = 5
+
+; 全屏 ColorRect，anchor 拉满，shader 通过 SCREEN_UV 自动适配分辨率
+[node name="OverlayRect" type="ColorRect" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+material = SubResource("ShaderMat")
+color = Color(1, 1, 1, 1)

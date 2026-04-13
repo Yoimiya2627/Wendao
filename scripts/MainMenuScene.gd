@@ -24,6 +24,7 @@ func _ready() -> void:
 	## 从游戏中返回主菜单时，确保游戏HUD隐藏
 	if UIManager.has_method("hide_main_hud"):
 		UIManager.hide_main_hud()
+	## BGM 由 SceneTransition._auto_play_bgm() 统一触发（SCENE_BGM_MAP["MainMenuScene"]）
 
 
 # ══════════════════════════════════════════════════════
@@ -31,13 +32,13 @@ func _ready() -> void:
 # ══════════════════════════════════════════════════════
 
 func _build_ui() -> void:
-	## 黑色全屏背景
+	## 深紫全屏背景（与ThemeManager色系一致）
 	_canvas = CanvasLayer.new()
 	_canvas.layer = 10
 	add_child(_canvas)
 
 	var bg := ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.0, 1.0)
+	bg.color = ThemeManager.COLOR_BG_DARK
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_canvas.add_child(bg)
 
@@ -93,23 +94,13 @@ func _build_ui() -> void:
 	_refresh_button_states()
 
 
-## 创建统一风格的菜单按钮
+## 创建统一风格的菜单按钮（风格由 ThemeManager 全局主题提供，不再本地覆盖）
 func _create_menu_btn(label: String) -> Button:
 	var btn := Button.new()
 	btn.text                = label
 	btn.custom_minimum_size = Vector2(200, 44)
 	btn.add_theme_font_override("font", FONT_REGULAR)
 	btn.add_theme_font_size_override("font_size", 18)
-	btn.add_theme_color_override("font_color",          Color(0.90, 0.85, 0.75, 1.0))
-	btn.add_theme_color_override("font_disabled_color", Color(0.45, 0.42, 0.38, 1.0))
-
-	var style := StyleBoxFlat.new()
-	style.bg_color            = Color(0.08, 0.06, 0.05, 0.0)
-	style.border_width_bottom = 1
-	style.border_color        = Color(0.45, 0.38, 0.28, 0.0)
-	btn.add_theme_stylebox_override("normal",  style)
-	btn.add_theme_stylebox_override("hover",   style)
-	btn.add_theme_stylebox_override("pressed", style)
 	return btn
 
 
@@ -174,12 +165,12 @@ func _build_confirm_panel() -> void:
 	_confirm_panel.offset_bottom = 80.0
 
 	var style := StyleBoxFlat.new()
-	style.bg_color            = Color(0.06, 0.04, 0.04, 0.97)
+	style.bg_color            = ThemeManager.COLOR_PANEL_BG
 	style.border_width_top    = 1
 	style.border_width_bottom = 1
 	style.border_width_left   = 1
 	style.border_width_right  = 1
-	style.border_color        = Color(0.45, 0.36, 0.24, 0.8)
+	style.border_color        = ThemeManager.COLOR_PANEL_BORDER
 	style.corner_radius_top_left     = 4
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_right = 4
@@ -254,12 +245,12 @@ func _build_slot_panel() -> void:
 	_slot_panel.offset_bottom = 100.0
 
 	var style := StyleBoxFlat.new()
-	style.bg_color            = Color(0.06, 0.04, 0.04, 0.97)
+	style.bg_color            = ThemeManager.COLOR_PANEL_BG
 	style.border_width_top    = 1
 	style.border_width_bottom = 1
 	style.border_width_left   = 1
 	style.border_width_right  = 1
-	style.border_color        = Color(0.45, 0.36, 0.24, 0.8)
+	style.border_color        = ThemeManager.COLOR_PANEL_BORDER
 	style.corner_radius_top_left     = 4
 	style.corner_radius_top_right    = 4
 	style.corner_radius_bottom_right = 4

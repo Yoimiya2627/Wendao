@@ -33,6 +33,7 @@ shape = SubResource("Circle_interact")
 [node name="InteractLabel" type="Label" parent="."]
 position = Vector2(-28.0, -52.0)
 text = "按 E 交互"
+theme_override_colors/font_color = Color(0.83, 0.66, 0.34, 1)
 theme_override_font_sizes/font_size = 12
 
 ; 摄像机（zoom=1.5 使视野缩小，地图可滚动）

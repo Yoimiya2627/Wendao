@@ -25,6 +25,8 @@ config/icon="res://icon.svg"
 GameData="*res://scripts/GameData.gd"
 DialogueManager="*res://scripts/DialogueManager.gd"
 SceneTransition="*uid://5sgp8k2em81h"
+AudioManager="*res://scripts/AudioManager.gd"
+ThemeManager="*res://scripts/ThemeManager.gd"
 UIManager="*res://scripts/UIManager.gd"
 VirtualJoystick="*res://scripts/VirtualJoystick.gd"
 

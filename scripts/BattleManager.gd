@@ -507,8 +507,8 @@ func _enemy_action_boss_phase1() -> void:
 			_boss_blur_next = true
 			_log("👻 虚形魇形态渐渐模糊……（预警：下回合对其攻击将落空！）")
 		2:
-			var steal: int = 15
-			player.hp = max(player.hp - steal, 0)
+			var steal: int = min(15, player.hp)
+			player.hp -= steal
 			enemy.hp = min(enemy.hp + steal, enemy.max_hp)
 			_log("🩸 虚形魇「侵蚀」，吸取 %d HP！（%s 剩余 %d HP）" % [
 				steal, player.char_name, player.hp])
