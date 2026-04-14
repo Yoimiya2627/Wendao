@@ -184,6 +184,10 @@ func _start_return_home_flow() -> void:
 
 ## 看信流程（phase 5，路径B）：战斗后回家看爹的信
 func _start_letter_flow() -> void:
+	## phase 5 不应再允许猫咪NPC交互，避免空对话场景ID
+	_player.npc_interaction_enabled = false
+	_npc_niannian.dialogue_scene_id = ""
+	_npc_dayu.dialogue_scene_id = ""
 	## 隐藏破碗
 	_broken_bowl.hide()
 	_broken_bowl_area.set_deferred("monitoring", false)
@@ -303,6 +307,7 @@ func _on_event_triggered(event_name: String) -> void:
 			DialogueManager.finish_event()
 			## morning结束，玩家可出门，此时显示游戏UI
 			UIManager.show_main_hud()
+			UIManager.add_item("sword_tassel")
 		"night_begin":
 			## night_begin事件已从JSON移除
 			## 此分支保留作兜底，直接放行
@@ -324,13 +329,8 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			pass
 
 		"dayu_morning":
-			## 大鱼叼来旧剑穗，云晚揣进口袋
-			## 按设计文档：大鱼互动结束时自动给予，不需要玩家去柜台按E
-			if "sword_tassel" not in GameData.unlocked_old_items:
-				UIManager.add_item("sword_tassel")
-				await get_tree().process_frame
-				if is_inside_tree():
-					DialogueManager.start_scene("old_sword_tassel")
+			## 剑穗已由morning主线对话自动给予，此处仅作兜底去重
+			UIManager.add_item("sword_tassel")
 
 		"return_home":
 			## 回家对话结束

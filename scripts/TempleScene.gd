@@ -716,7 +716,7 @@ var _wolf_battle_pending: bool = false
 
 ## 触发小怪战斗（不推进story_phase）
 func _trigger_wolf_battle(wolf_id: String) -> void:
-	if _wolf_battle_pending:
+	if _wolf_battle_pending or SceneTransition.is_transitioning or DialogueManager.is_active:
 		return
 	_wolf_battle_pending = true
 	## 首次遭遇妖兽：播放氛围旁白后再进战斗

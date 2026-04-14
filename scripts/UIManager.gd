@@ -8,7 +8,7 @@ extends Node
 const ITEM_DATA := {
 	"sword_tassel": {
 		"name": "旧剑穗",
-		"desc": "大鱼叼来的，不知道从哪捡的。\n穗子有点旧，但手感不错。"
+		"desc": "柜台角落压了许久的旧物。\n大鱼从门缝叼进来的。\n穗绳上的结扎得很紧，不像是丢掉的东西。"
 	},
 	"cinnamon": {
 		"name": "桂皮",

@@ -381,6 +381,8 @@ func _on_battle_log(message: String) -> void:
 	log_text.append_text(message + "\n")
 	## 自动滚到底部
 	await get_tree().process_frame
+	if not is_inside_tree():
+		return
 	var scroll := log_text.get_v_scroll_bar()
 	if scroll:
 		scroll.value = scroll.max_value

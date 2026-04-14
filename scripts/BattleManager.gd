@@ -155,13 +155,16 @@ func player_action(action_type: ActionType) -> void:
 			_log("👁  %s 运转混沌灵根，感应法则——" % player.char_name)
 			_log("   （本回合受伤减半，下一击破甲×1.2）")
 			_preview_enemy_action()
-		ActionType.USE_POTION:
-			GameData.heal_potions -= 1
-			var healed: int = player.heal(30)
-			_log("[color=lightgreen]【 饮下伤药，恢复 %d HP。（当前 %d/%d HP）】[/color]" % [
-				healed, player.hp, player.max_hp])
 
 	## ── 第二步：按先手顺序结算双方行动 ──
+	if action_type == ActionType.USE_POTION:
+		GameData.heal_potions -= 1
+		var healed: int = player.heal(30)
+		_log("[color=lightgreen]【 饮下伤药，恢复 %d HP。（当前 %d/%d HP）】[/color]" % [
+			healed, player.hp, player.max_hp])
+		turn_start()
+		return
+
 	if _enemy_first:
 		## 敌方先结算
 		_run_enemy_action()

@@ -213,4 +213,10 @@ func _show_line(label: Label, text: String) -> void:
 	label.text = ""
 	for ch in text:
 		label.text += ch
-		await get_tree().create_timer(UIManager.get_dialogue_char_interval()).timeout
+		var interval := 0.0
+		if UIManager and UIManager.dialogue_skip:
+			interval = 0.0
+		else:
+			interval = UIManager.get_dialogue_char_interval() if UIManager else 0.03
+		if interval > 0.0:
+			await get_tree().create_timer(interval).timeout
