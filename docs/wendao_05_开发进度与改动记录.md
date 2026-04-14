@@ -1350,6 +1350,51 @@ project.godot                注册VirtualJoystick AutoLoad
 ### 待完成任务（按优先级）
 
 1. 美术资源替换
+
+---
+
+## 第二十五版（2026-04-14）—— 战斗边界修复 + 剑穗叙事重排
+
+### 一、Bug修复（5项）
+
+| 文件 | 修复内容 |
+|------|----------|
+| `scripts/ChapterEndScene.gd` | `_show_line()` 逐字显示接入 `dialogue_skip`；并修复 `UIManager` 判空顺序（先判空后调用） |
+| `scripts/TempleScene.gd` | `_trigger_wolf_battle()` 增加 `SceneTransition.is_transitioning` + `DialogueManager.is_active` 守卫，防止幽影狼战斗重入 |
+| `scripts/ShopScene.gd` | `_start_letter_flow()` 补齐 phase5 NPC 交互关闭：禁用玩家NPC交互并清空年年/大鱼 `dialogue_scene_id` |
+| `scripts/BattleManager.gd` | `USE_POTION` 改为先结算（扣药+回血+turn_start后 return），修复敌先手下“死亡后回血”顺序漏洞 |
+| `scripts/BattleUI.gd` | `_on_battle_log()` 在 `await process_frame` 后补 `is_inside_tree()` 守卫，避免跨场景访问已释放节点 |
+
+### 二、叙事与数据调整
+
+**`data/chapter1.json`**
+- `morning` 场景在 `m_05` 与 `m_07` 之间新增 `m_05b`、`m_05c`，将旧剑穗获取改为主线自动叙事
+- `dayu_morning` 改为纯猫咪互动（`dm_01`~`dm_04`），移除剑穗相关叙述
+- 删除整段 `old_sword_tassel` 场景（已不可达且与新版叙事冲突）
+
+**`scripts/ShopScene.gd`**
+- `morning_done` 事件新增 `UIManager.add_item("sword_tassel")`，将旧剑穗发放时机固定到 morning 主线
+- `dayu_morning` 对话结束回调改为仅保留兜底发放，不再触发额外旧剑穗独白
+
+**`scripts/UIManager.gd`**
+- `ITEM_DATA["sword_tassel"]["desc"]` 更新为新版设定文案：
+  - 柜台角落压了许久的旧物
+  - 大鱼从门缝叼进来
+  - 穗绳结扎很紧，不像被丢弃
+
+### 三、文件修改记录（第二十五版）
+
+```
+data/chapter1.json           morning新增 m_05b/m_05c
+                             dayu_morning 改写为纯猫咪互动
+                             删除 old_sword_tassel 场景
+scripts/ChapterEndScene.gd   章末逐字显示接入 dialogue_skip + 判空顺序修复
+scripts/TempleScene.gd       幽影狼战斗触发重入守卫补齐
+scripts/ShopScene.gd         phase5 NPC交互关闭 + sword_tassel 发放时机调整
+scripts/BattleManager.gd     USE_POTION 先结算，修复死亡后回血顺序问题
+scripts/BattleUI.gd          battle_log await 后 is_inside_tree() 防护
+scripts/UIManager.gd         sword_tassel 道具描述更新为新版设定
+```
 2. 背景音乐和音效
 
 > 注：存档系统已完成四文件隔离（auto/manual_1/manual_2/crossroad）+ 主菜单选档，无需重构。
