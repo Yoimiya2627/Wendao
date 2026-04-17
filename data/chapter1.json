@@ -153,7 +153,27 @@
         "mk_07": {
           "speaker": "老婆婆",
           "text": "不要钱。就当老婆子送你一程。",
-          "next": "mk_08"
+          "next": "mk_07b"
+        },
+        "mk_07b": {
+          "type": "choice",
+          "text": "苏云晚握着那张符。",
+          "choices": [
+            {
+              "text": "「婆婆，我不能白拿。」（从口袋里摸出几枚灵石）",
+              "set_flag": {"self_market_proud": true, "town_paid_old_lady": true},
+              "next": "mk_07c"
+            },
+            {
+              "text": "「……谢谢您。」",
+              "next": "mk_08"
+            }
+          ]
+        },
+        "mk_07c": {
+          "type": "narration",
+          "text": "灵石放下时，老婆婆笑了笑，没有推辞，也没有收。当她抬起头，老婆婆和那几枚灵石都不见了——连人带篮子，像是从未站在那里。",
+          "next": "_end"
         },
         "mk_08": {
           "type": "narration",
@@ -705,6 +725,15 @@
         "rh_04": {
           "type": "narration",
           "text": "他从一开始就没打算留下来吃。",
+          "next": "rh_04b"
+        },
+        "rh_04b": {
+          "if_flag": {"father_cinnamon_forgot": "rh_04c"},
+          "next": "rh_05"
+        },
+        "rh_04c": {
+          "type": "narration",
+          "text": "灶台上没有桂皮的味道。她忽然想起来——早上忘了买。",
           "next": "rh_05"
         },
         "rh_05": {
@@ -1039,7 +1068,27 @@
         },
         "ar_07": {
           "type": "narration",
-          "text": "苏云晚点了点头，没有停步。她听见了。她们也知道她听见了。但大家都没有说破。"
+          "text": "苏云晚点了点头，没有停步。她听见了。她们也知道她听见了。但大家都没有说破。",
+          "next": "ar_08"
+        },
+        "ar_08": {
+          "type": "choice",
+          "text": "她经过她们身边。",
+          "choices": [
+            {
+              "text": "（停下来，回头看了她们一眼）",
+              "set_flag": {"town_aunts_confronted": true},
+              "next": "ar_09"
+            },
+            {
+              "text": "（什么都没说，继续走）",
+              "next": "_end"
+            }
+          ]
+        },
+        "ar_09": {
+          "type": "narration",
+          "text": "两个大婶笑得有点僵。苏云晚没有说话，只是看着。三秒之后，她转身走了。背后的笑声没有再响起。"
         }
       }
     },
@@ -1185,7 +1234,22 @@
         "cb_06": {
           "type": "narration",
           "text": "他很快把眼神移开了，不是恶意，就是——不知道该说什么。",
-          "next": "cb_07"
+          "next": "cb_06b"
+        },
+        "cb_06b": {
+          "type": "choice",
+          "text": "",
+          "choices": [
+            {
+              "text": "（朝他点了点头，笑了一下）",
+              "set_flag": {"town_celebration_smile": true},
+              "next": "cb_07"
+            },
+            {
+              "text": "（移开视线，继续走）",
+              "next": "cb_07"
+            }
+          ]
         },
         "cb_07": {
           "type": "narration",
@@ -1220,6 +1284,31 @@
         "tb_05": {
           "speaker": "茶馆掌柜",
           "text": "见过。上个月有个外乡来的少年，金灵根，五品。太平宗的人当场就把他带走了，连行李都没来得及收拾。",
+          "next": "tb_05b"
+        },
+        "tb_05b": {
+          "type": "choice",
+          "text": "",
+          "choices": [
+            {
+              "text": "「他想去吗？」",
+              "set_flag": {"self_teahouse_curious": true},
+              "next": "tb_05c"
+            },
+            {
+              "text": "「那他家里人呢？」",
+              "next": "tb_06"
+            }
+          ]
+        },
+        "tb_05c": {
+          "speaker": "茶馆掌柜",
+          "text": "想不想要紧吗？灵根这种事，由不得人挑。",
+          "next": "tb_05d"
+        },
+        "tb_05d": {
+          "speaker": "苏云晚",
+          "text": "……那他家里人呢？",
           "next": "tb_06"
         },
         "tb_06": {
@@ -1429,7 +1518,28 @@
         },
         "db_b06": {
           "type": "narration",
-          "text": "他是真的在安慰她，没有讽刺的意思。但不知道为什么，这话比骂她还难受。"
+          "text": "他是真的在安慰她，没有讽刺的意思。但不知道为什么，这话比骂她还难受。",
+          "next": "db_b07"
+        },
+        "db_b07": {
+          "type": "choice",
+          "text": "",
+          "choices": [
+            {
+              "text": "「碎玉镇确实挺好的。」（淡淡地）",
+              "requires_flag": {"self_test_calm": true},
+              "set_flag": {"town_disciple_calm_reply": true},
+              "next": "db_b08"
+            },
+            {
+              "text": "（没有说话，端起茶杯）",
+              "next": "_end"
+            }
+          ]
+        },
+        "db_b08": {
+          "type": "narration",
+          "text": "弟子愣了一下，似乎没料到她会接话。他点了点头，把脸转开了。"
         }
       }
     },
@@ -2515,7 +2625,26 @@
         "vb_01": {
           "speaker": "摊贩",
           "text": "姑娘，香料要吗？桂皮今儿刚到货，新鲜着呢。",
-          "next": "vb_02"
+          "next": "vb_01b"
+        },
+        "vb_01b": {
+          "type": "choice",
+          "text": "她想起爹早上说桂皮快用完了。",
+          "choices": [
+            {
+              "text": "「来一包桂皮。」",
+              "next": "vb_02"
+            },
+            {
+              "text": "「回来再买。」（先去测灵根）",
+              "set_flag": {"father_cinnamon_forgot": true},
+              "next": "vb_skip"
+            }
+          ]
+        },
+        "vb_skip": {
+          "type": "narration",
+          "text": "她想着先把测试做完，摊贩点了点头。"
         },
         "vb_02": {
           "speaker": "苏云晚",

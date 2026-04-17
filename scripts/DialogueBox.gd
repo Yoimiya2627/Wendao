@@ -364,12 +364,22 @@ func _show_choices() -> void:
 	_clear_choices()
 
 	for i: int in choices.size():
+		var choice: Dictionary = choices[i]
+		# requires_flag：条件不满足的选项不显示
+		var req: Dictionary = choice.get("requires_flag", {})
+		var show_choice := true
+		for flag_key: String in req:
+			if not GameData.narrative_flags.get(flag_key, false):
+				show_choice = false
+				break
+		if not show_choice:
+			continue
 		var btn := Button.new()
-		btn.text = choices[i].get("text", "选项 %d" % (i + 1))
+		btn.text = choice.get("text", "选项 %d" % (i + 1))
 		btn.add_theme_font_override("font", _FONT_REGULAR)
 		btn.add_theme_font_size_override("font_size", 16)
 		btn.focus_mode = Control.FOCUS_ALL
-		# 使用闭包捕获索引 i（注意 GDScript 闭包不捕获外层 var，需用参数传值）
+		# 保留原始索引传给 DialogueManager（过滤后按钮序号与数据索引解耦）
 		var idx := i
 		btn.pressed.connect(func() -> void: _on_choice_selected(idx))
 		choices_container.add_child(btn)
