@@ -1588,6 +1588,124 @@ scripts/UIManager.gd         sword_tassel 道具描述更新为新版设定
 
 ---
 
+## 第三十四版（2026-04-18）—— morning 对话修正 + flag 兑付补强（6 处）
+
+### 一、morning 对话修正
+
+用户试玩发现 `m_08b` 选项[0]「嗯。爹你也吃。」不合逻辑——爹在门口嘱咐她出门，并非共餐。另外 `m_09` 开头与 `m_08b` 引导文"爹向来不多说话"重复。
+
+重新定位：主角"无所谓/只为家"基调下**她不会多说话**，温度应由动作承载。
+
+- `morning` `m_08b` 选项[0]：「嗯。爹你也吃。」→ （她点了点头，在门口多停了一下）
+- `morning` `m_08b` 选项[1]：（沉默地点了点头）→ （她点了点头）
+- `morning` `m_09` 去掉开头重复的"爹向来不多说话"
+- `boss_awakening` `ba_cb_father` 同步：从"爹伸手添饭"画面改为"今早她出门前，在门口多停了一下"
+- `letter` `lt_06c_warm` 同步：改为"她想起今早在门口多停的那一下"
+
+**设计要义**：选项差别只在"有没有留恋那一秒"，那一秒是全部的温度。
+
+### 二、flag 兑付补强（6 处）
+
+#### 2.1 现状诊断
+v33 结束时 22 个 `narrative_flags` 中，仅 10 处有回响兑付，12 个 flag 在第一章内无反馈点——玩家对约半数选项"没感知"。
+
+#### 2.2 兑付新增
+
+**① `lore_page_1_read` 降低 boss_room_enter 触发门槛**
+`bre_05_lore_check` 的 `if_flag` 从 `lore_page_3_read` 改为 `lore_page_1_read`——读过任何一张残页都触发残页字句浮现。
+
+**② `self_temple_brave` / `self_temple_scared` → after_battle 开头回响**
+`ab_01` 后插入双 if_flag 链（`after_battle` / `after_battle_coin` 两场景同步）：
+- brave 命中 `ab_01_brave`：挡在路前的那一下，现在还在手里。
+- scared 命中 `ab_01_scared`：从庙门口开始，这手就没停下来过。
+
+**③ `self_test_hurt` → letter 开头**
+`letter.start` 从 `lt_01` 改为 `lt_00_check`；新增：
+- `lt_00_hurt`：下午石台上那些目光，她还记得。
+
+**④⑤ `gu_pressed_who` / `gu_pressed_where` + `self_teahouse_curious` → ab_choice 前回响链**
+`ab_08`（after_battle）/ `abc_coin_06`（after_battle_coin）到 `ab_choice` 之间插入 3 段 if_flag 链：
+- `ab_recall_who`：他没答她那句「谁」。
+- `ab_recall_where`：他没答清那句「通向什么」。
+- `ab_recall_boy`：那个被太平宗带走的少年。
+
+**⑦ `town_celebration_smile` → return_home 开头**
+`return_home.start` 从 `rh_01` 改为 `rh_00_check`；新增：
+- `rh_00_boy`：路过那少年家门口时，灯笼还亮着。
+
+#### 2.3 原提案中取消的一条（⑥）
+`self_market_proud` → letter 碰符回响：**审查后取消**，`mk_07c` 已经当场兑付（老婆婆连人带篮子与灵石一同消失），再加晚上回响是冗余。
+
+### 三、flag 兑付总表（v34 后完整清单）
+
+#### 已兑付 flag（16 回响点 + 1 真·分支）
+
+| Flag | 来源 | 兑付位置 |
+|---|---|---|
+| `father_morning_warm` | `morning/m_08b[0]` | `letter/lt_06c_warm` + `boss_awakening/ba_cb_father` |
+| `father_cinnamon_forgot` | `vendor_b/vb_01b[1]` | `return_home/rh_04c` + `boss_awakening/ba_cb_cinnamon` |
+| `father_letter_promise_return` | `letter/lt_11b[1]` | `boss_awakening/ba_cb_promise` |
+| `self_test_calm` | `test_stone/ts_05c[0]` | `disciple_b/db_b07`（`requires_flag` 解锁选项） |
+| `self_test_hurt` | `test_stone/ts_05c[1]` | `letter/lt_00_hurt` ⭐ v34 新增 |
+| `self_temple_brave` | `temple/tp_07b[0]` | `after_battle*/ab_01_brave` ⭐ v34 新增 |
+| `self_temple_scared` | `temple/tp_07b[1]` | `after_battle*/ab_01_scared` ⭐ v34 新增 |
+| `town_paid_old_lady` | `market/mk_07b[0]` | `market/mk_07c`（当场·老婆婆消失） |
+| `self_teahouse_curious` | `teahouse_before/tb_05b[0]` | `after_battle*/ab_recall_boy` ⭐ v34 新增 |
+| `gu_pressed_who` | `after_battle*/ab_07b[0]` | `ab_07c` 当场 + `ab_recall_who` ⭐ v34 新增 |
+| `gu_pressed_where` | `after_battle*/ab_07b[1]` | `ab_07d` 当场 + `ab_recall_where` ⭐ v34 新增 |
+| `mother_bowl_lingered` | `bowl_interact/bi_07[0]` | `tally_marks/tm_06b` + `transmission_array/ta_05b` |
+| `lore_wanderer_asked` | `old_wanderer/ow_10b[0]` | `tally_marks/tm_06c` |
+| `lore_fortune_pressed` | `fortune_teller/ft_06b[0]` | `fortune_teller_coin/ftc_04c` |
+| `lore_page_1_read` | `remnant_page_1/rp1_03` | `boss_room_enter/bre_05c` ⭐ v34 门槛放宽 |
+| `town_celebration_smile` | `celebration_boy/cb_06b[0]` | `return_home/rh_00_boy` ⭐ v34 新增 |
+| `path_ending` | `after_battle*/ab_choice` | 章末真·分支（follow / return） |
+
+#### 未兑付 flag（5 个，明确留给第二章）
+
+| Flag | 来源 | 第二章兑付意图 |
+|---|---|---|
+| `father_morning_silent` | `morning/m_08b[1]` | 作为 `father_morning_warm` 的补集，第二章父女重逢场景的反向回响 |
+| `self_market_proud` | `market/mk_07b[0]` | "老婆婆是谁" lore 揭示的入口（与 `town_paid_old_lady` 成对出现） |
+| `town_aunts_confronted` | `aunts_return/ar_08[0]` | 第二章回访碎玉镇时大婶反应的差异 |
+| `town_disciple_calm_reply` | `disciple_b/db_b07[0]` | 第二章与太平宗关系设定 |
+| `lore_page_2_read` / `lore_page_3_read` / `lore_page_4_read` | `remnant_page_2/3/4` | 天道 lore 深揭示的分层门槛（当前仅用 page_1 作入门触发） |
+
+### 四、统计（v34 后）
+
+| 指标 | v27 | v33 | v34 |
+|---|---|---|---|
+| 选择节点数 | 4 | 22 | 22 |
+| 真·分支 | 2 | 1 | 1 |
+| 回响点 | 0 | 10 | **16** |
+| 沉默 flag | N/A | 12 | 5（全部标注第二章意图） |
+| `narrative_flags` 总数 | 0 | 22 | 22 |
+
+### 五、文件修改记录（v34）
+
+```
+data/chapter1.json    morning m_08b/m_09 对话修正
+                      boss_awakening ba_cb_father 同步
+                      letter lt_06c_warm 同步 + lt_00_hurt 新增
+                      after_battle/after_battle_coin ab_01 分支回响
+                      after_battle/after_battle_coin ab_recall 链
+                      boss_room_enter lore 触发门槛放宽
+                      return_home rh_00_boy 路过少年家
+```
+
+### 六、待完成任务（按优先级）
+
+1. **端到端试玩**——按以下路径覆盖：
+   - 全沉默路径（所有选项选沉默派）：验证基础流程无假死
+   - 全温暖路径（所有选项选有 flag 的那个）：验证 16 处回响全部浮现
+   - 章末 A / B 两条分支路径
+2. **Opus 待做：第二章规划**（未来的兑付蓝图）
+   - 5 个沉默 flag 的兑付场景设计（父女重逢 / 碎玉镇回访 / 老婆婆身份揭示 / 太平宗关系 / 天道 lore 深揭示）
+   - 主线结构（跟顾飞白路径 vs 独自行动路径的差异化）
+3. **Opus 待做：修炼路线文档**——技能树 / 境界划分 / 战斗系统成长线
+4. **远期**：第二章内容制作
+
+---
+
 ## 第十八版（2026-04-10）
 
 ### 主题：叙事深化 + 伏笔串联 + 全局审查修复

@@ -378,10 +378,12 @@ func _show_choices() -> void:
 		btn.text = choice.get("text", "选项 %d" % (i + 1))
 		btn.add_theme_font_override("font", _FONT_REGULAR)
 		btn.add_theme_font_size_override("font_size", 16)
+		btn.custom_minimum_size = Vector2(0, 46)
 		btn.focus_mode = Control.FOCUS_ALL
 		# 保留原始索引传给 DialogueManager（过滤后按钮序号与数据索引解耦）
 		var idx := i
 		btn.pressed.connect(func() -> void: _on_choice_selected(idx))
+		btn.mouse_entered.connect(func() -> void: btn.grab_focus())
 		choices_container.add_child(btn)
 
 	## 无按钮时不显示空面板（防止对话数据异常导致玩家卡死）
@@ -390,9 +392,19 @@ func _show_choices() -> void:
 		return
 
 	choices_panel.show()
+	_fit_choices_panel.call_deferred()
 
 	# 让第一个按钮自动获焦（支持手柄/键盘导航）
 	choices_container.get_child(0).grab_focus()
+
+
+## 让选项面板高度跟按钮内容自适应，避免底部大片空白
+func _fit_choices_panel() -> void:
+	if not choices_panel.visible:
+		return
+	var content_h := choices_container.get_combined_minimum_size().y
+	if content_h > 0:
+		choices_panel.offset_top = choices_panel.offset_bottom - content_h - 20
 
 
 ## 清除所有选项按钮并隐藏选项面板

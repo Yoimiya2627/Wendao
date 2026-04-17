@@ -94,14 +94,14 @@
 					"text": "爹向来不多说话。",
 					"choices": [
 						{
-							"text": "「嗯。爹你也吃。」（轻声）",
+							"text": "（她点了点头，在门口多停了一下）",
 							"set_flag": {
 								"father_morning_warm": true
 							},
 							"next": "m_09"
 						},
 						{
-							"text": "（沉默地点了点头）",
+							"text": "（她点了点头）",
 							"set_flag": {
 								"father_morning_silent": true
 							},
@@ -111,7 +111,7 @@
 				},
 				"m_09": {
 					"type": "narration",
-					"text": "爹向来不多说话。\"记得回来吃饭\"这四个字她听过很多遍，今天听着和往常没什么两样。她把围裙解下来挂在门边的钉子上，出门了。",
+					"text": "\"记得回来吃饭\"这四个字她听过很多遍。今天听着，和往常没什么两样。她解下围裙挂在门边的钉子上，出门了。",
 					"next": "m_end"
 				},
 				"m_end": {
@@ -365,7 +365,7 @@
 				"ab_01": {
 					"type": "narration",
 					"text": "她不知道自己是怎么赢的。手还在抖，腿也软，但她站着——妖已经化成一地黑灰，被夜风吹散了。",
-					"next": "ab_01b"
+					"next": "ab_01_temple_check"
 				},
 				"ab_01b": {
 					"type": "narration",
@@ -449,7 +449,7 @@
 				"ab_08": {
 					"speaker": "顾飞白",
 					"text": "跟我走。我知道一些事，或许对你有用。",
-					"next": "ab_choice"
+					"next": "ab_recall_who_check"
 				},
 				"ab_choice": {
 					"type": "choice",
@@ -503,13 +503,78 @@
 				"ab_return_end": {
 					"type": "event",
 					"event": "return_home_final"
+				},
+				"ab_01_temple_check": {
+					"type": "narration",
+					"if_flag": {
+						"self_temple_brave": "ab_01_brave"
+					},
+					"next": "ab_01_scared_check"
+				},
+				"ab_01_brave": {
+					"type": "narration",
+					"speaker": "",
+					"text": "挡在路前的那一下，现在还在手里。",
+					"next": "ab_01b"
+				},
+				"ab_01_scared_check": {
+					"type": "narration",
+					"if_flag": {
+						"self_temple_scared": "ab_01_scared"
+					},
+					"next": "ab_01b"
+				},
+				"ab_01_scared": {
+					"type": "narration",
+					"speaker": "",
+					"text": "从庙门口开始，这手就没停下来过。",
+					"next": "ab_01b"
+				},
+				"ab_recall_who_check": {
+					"type": "narration",
+					"if_flag": {
+						"gu_pressed_who": "ab_recall_who"
+					},
+					"next": "ab_recall_where_check"
+				},
+				"ab_recall_who": {
+					"type": "narration",
+					"speaker": "",
+					"text": "他没答她那句「谁」。",
+					"next": "ab_recall_where_check"
+				},
+				"ab_recall_where_check": {
+					"type": "narration",
+					"if_flag": {
+						"gu_pressed_where": "ab_recall_where"
+					},
+					"next": "ab_recall_boy_check"
+				},
+				"ab_recall_where": {
+					"type": "narration",
+					"speaker": "",
+					"text": "他没答清那句「通向什么」。",
+					"next": "ab_recall_boy_check"
+				},
+				"ab_recall_boy_check": {
+					"type": "narration",
+					"if_flag": {
+						"self_teahouse_curious": "ab_recall_boy"
+					},
+					"next": "ab_choice"
+				},
+				"ab_recall_boy": {
+					"type": "narration",
+					"speaker": "",
+					"text": "那个被太平宗带走的少年。",
+					"next": "ab_choice"
 				}
 			}
 		},
 		"letter": {
 			"title": "爹的信",
 			"hidden": true,
-			"start": "lt_01",
+			"start": "lt_00_check",
 			"nodes": {
 				"lt_01": {
 					"type": "narration",
@@ -549,7 +614,7 @@
 				},
 				"lt_06c_warm": {
 					"type": "narration",
-					"text": "「嗯。爹你也吃。」——她早上说过的话，这会儿忽然回来了。",
+					"text": "她想起今早在门口多停的那一下。",
 					"next": "lt_07"
 				},
 				"lt_07": {
@@ -607,6 +672,19 @@
 				"lt_end": {
 					"type": "event",
 					"event": "start_chapter_end_b"
+				},
+				"lt_00_check": {
+					"type": "narration",
+					"if_flag": {
+						"self_test_hurt": "lt_00_hurt"
+					},
+					"next": "lt_01"
+				},
+				"lt_00_hurt": {
+					"type": "narration",
+					"speaker": "",
+					"text": "下午石台上那些目光，她还记得。",
+					"next": "lt_01"
 				}
 			}
 		},
@@ -750,7 +828,7 @@
 		},
 		"return_home": {
 			"title": "回家·爹不在",
-			"start": "rh_01",
+			"start": "rh_00_check",
 			"nodes": {
 				"rh_01": {
 					"type": "narration",
@@ -816,6 +894,19 @@
 				"rh_note_04": {
 					"type": "narration",
 					"text": "她把那张纸条叠起来，放进口袋。"
+				},
+				"rh_00_check": {
+					"type": "narration",
+					"if_flag": {
+						"town_celebration_smile": "rh_00_boy"
+					},
+					"next": "rh_01"
+				},
+				"rh_00_boy": {
+					"type": "narration",
+					"speaker": "",
+					"text": "路过那少年家门口时，灯笼还亮着。",
+					"next": "rh_01"
 				}
 			}
 		},
@@ -1936,7 +2027,7 @@
 				"ab_01": {
 					"type": "narration",
 					"text": "她不知道自己是怎么赢的。手还在抖，腿也软，但她站着——妖已经化成一地黑灰，被夜风吹散了。",
-					"next": "ab_01b"
+					"next": "ab_01_temple_check"
 				},
 				"ab_01b": {
 					"type": "narration",
@@ -2050,7 +2141,7 @@
 				"abc_coin_06": {
 					"type": "narration",
 					"text": "他说这句话的时候，手指碰了一下腰间的剑柄，又放下了。",
-					"next": "ab_choice"
+					"next": "ab_recall_who_check"
 				},
 				"ab_choice": {
 					"type": "choice",
@@ -2104,6 +2195,71 @@
 				"ab_return_end": {
 					"type": "event",
 					"event": "return_home_final"
+				},
+				"ab_01_temple_check": {
+					"type": "narration",
+					"if_flag": {
+						"self_temple_brave": "ab_01_brave"
+					},
+					"next": "ab_01_scared_check"
+				},
+				"ab_01_brave": {
+					"type": "narration",
+					"speaker": "",
+					"text": "挡在路前的那一下，现在还在手里。",
+					"next": "ab_01b"
+				},
+				"ab_01_scared_check": {
+					"type": "narration",
+					"if_flag": {
+						"self_temple_scared": "ab_01_scared"
+					},
+					"next": "ab_01b"
+				},
+				"ab_01_scared": {
+					"type": "narration",
+					"speaker": "",
+					"text": "从庙门口开始，这手就没停下来过。",
+					"next": "ab_01b"
+				},
+				"ab_recall_who_check": {
+					"type": "narration",
+					"if_flag": {
+						"gu_pressed_who": "ab_recall_who"
+					},
+					"next": "ab_recall_where_check"
+				},
+				"ab_recall_who": {
+					"type": "narration",
+					"speaker": "",
+					"text": "他没答她那句「谁」。",
+					"next": "ab_recall_where_check"
+				},
+				"ab_recall_where_check": {
+					"type": "narration",
+					"if_flag": {
+						"gu_pressed_where": "ab_recall_where"
+					},
+					"next": "ab_recall_boy_check"
+				},
+				"ab_recall_where": {
+					"type": "narration",
+					"speaker": "",
+					"text": "他没答清那句「通向什么」。",
+					"next": "ab_recall_boy_check"
+				},
+				"ab_recall_boy_check": {
+					"type": "narration",
+					"if_flag": {
+						"self_teahouse_curious": "ab_recall_boy"
+					},
+					"next": "ab_choice"
+				},
+				"ab_recall_boy": {
+					"type": "narration",
+					"speaker": "",
+					"text": "那个被太平宗带走的少年。",
+					"next": "ab_choice"
 				}
 			}
 		},
@@ -2223,7 +2379,7 @@
 				"bre_05_lore_check": {
 					"type": "narration",
 					"if_flag": {
-						"lore_page_3_read": "bre_05c"
+						"lore_page_1_read": "bre_05c"
 					},
 					"next": "bre_06"
 				},
@@ -2333,7 +2489,7 @@
 				"ba_cb_father": {
 					"type": "narration",
 					"speaker": "",
-					"text": "今早爹伸手添饭时顿了一下。她说过\"你也吃\"。",
+					"text": "今早她出门前，在门口多停了一下。",
 					"next": "ba_cb_cinnamon_check"
 				},
 				"ba_cb_cinnamon_check": {
