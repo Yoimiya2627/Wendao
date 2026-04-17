@@ -749,10 +749,9 @@ func _spawn_world_decorations() -> void:
 	## 公告栏（格22,13 → 像素704,416）
 	_add_notice_board(layer, Vector2(704, 410))
 
-	## ─── L1 美术优化：结构性装饰（仅废庙 + 杂货铺屋檐 + 路边石）──
+	## ─── L1 美术优化：仅废庙装饰 + 杂货铺门口横梁 ────────────────
 	_decorate_temple(layer)
 	_decorate_shop_facade(layer)
-	_add_road_stones(layer)
 
 
 func _add_tree(parent: Node2D, pos: Vector2) -> void:
@@ -909,24 +908,6 @@ func _decorate_shop_facade(parent: Node2D) -> void:
 	shadow.color = Color(0.08, 0.05, 0.03, 0.6)
 	node.add_child(shadow)
 	parent.add_child(node)
-
-
-## 路边石：沿主路散点
-func _add_road_stones(parent: Node2D) -> void:
-	var positions := [
-		Vector2(128, 400), Vector2(352, 400), Vector2(800, 400),
-		Vector2(1024, 400), Vector2(1216, 400),
-		Vector2(192, 528), Vector2(640, 528), Vector2(1088, 528),
-	]
-	for pos in positions:
-		var stone := Polygon2D.new()
-		stone.position = pos
-		stone.polygon = PackedVector2Array([
-			Vector2(-4, -2), Vector2(3, -3),
-			Vector2(5, 1),   Vector2(-3, 2)
-		])
-		stone.color = Color(0.45, 0.42, 0.38, 0.95)
-		parent.add_child(stone)
 
 
 # ══════════════════════════════════════════════════════════════════
