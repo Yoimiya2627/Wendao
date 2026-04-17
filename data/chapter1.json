@@ -223,7 +223,23 @@
         "ts_05b": {
           "type": "narration",
           "text": "她想，今天可以早点回家吃饭了。",
-          "next": "ts_06"
+          "next": "ts_05c"
+        },
+        "ts_05c": {
+          "type": "choice",
+          "text": "她站在台下。台上的人和台下的人都没有再看她。",
+          "choices": [
+            {
+              "text": "（她没有低头，把口袋里的剑穗握紧了）",
+              "set_flag": {"self_test_calm": true},
+              "next": "ts_06"
+            },
+            {
+              "text": "（她快步走开，希望谁都别看她）",
+              "set_flag": {"self_test_hurt": true},
+              "next": "ts_06"
+            }
+          ]
         },
         "ts_06": {
           "speaker": "苏云晚",
@@ -283,7 +299,23 @@
         "tp_07": {
           "speaker": "苏云晚",
           "text": "不行。不能死在这里，也不能让它们留在这里。",
-          "next": "tp_08"
+          "next": "tp_07b"
+        },
+        "tp_07b": {
+          "type": "choice",
+          "text": "她握住口袋里的剑穗。",
+          "choices": [
+            {
+              "text": "（深吸一口气，挡在路前）",
+              "set_flag": {"self_temple_brave": true},
+              "next": "tp_08"
+            },
+            {
+              "text": "（手在抖，但没有退）",
+              "set_flag": {"self_temple_scared": true},
+              "next": "tp_08"
+            }
+          ]
         },
         "tp_08": {
           "type": "event",
@@ -343,6 +375,36 @@
         "ab_07": {
           "speaker": "顾飞白",
           "text": "意味着有人动了手脚。也意味着，你走的路，或许比那些五灵根的人更难——也更远。",
+          "next": "ab_07b"
+        },
+        "ab_07b": {
+          "type": "choice",
+          "text": "",
+          "choices": [
+            {
+              "text": "「谁动了手脚？」",
+              "set_flag": {"gu_pressed_who": true},
+              "next": "ab_07c"
+            },
+            {
+              "text": "「这条路通向什么？」",
+              "set_flag": {"gu_pressed_where": true},
+              "next": "ab_07d"
+            },
+            {
+              "text": "（沉默地等他说完）",
+              "next": "ab_08"
+            }
+          ]
+        },
+        "ab_07c": {
+          "speaker": "顾飞白",
+          "text": "现在告诉你，你也未必信。等你在槐树林见到我，我再说。",
+          "next": "ab_08"
+        },
+        "ab_07d": {
+          "speaker": "顾飞白",
+          "text": "通向一个能给你答案的地方。也通向更多的麻烦。",
           "next": "ab_08"
         },
         "ab_08": {
@@ -356,10 +418,12 @@
           "choices": [
             {
               "text": "一起走",
+              "set_flag": {"path_ending": "follow"},
               "next": "ab_together_01"
             },
             {
               "text": "先回去看爹",
+              "set_flag": {"path_ending": "return"},
               "next": "ab_return_01"
             }
           ]
@@ -466,7 +530,27 @@
         "lt_11": {
           "type": "narration",
           "text": "活着，比赢了更要紧。",
-          "next": "lt_12"
+          "next": "lt_11b"
+        },
+        "lt_11b": {
+          "type": "choice",
+          "text": "",
+          "choices": [
+            {
+              "text": "「知道了，爹。」（轻声）",
+              "next": "lt_end"
+            },
+            {
+              "text": "「……我会回来的。」",
+              "set_flag": {"father_letter_promise_return": true},
+              "next": "lt_11c"
+            }
+          ]
+        },
+        "lt_11c": {
+          "type": "narration",
+          "text": "她对着空房子说了这句话。窗外风吹过，灯芯抖了一下，没有灭。",
+          "next": "lt_end"
         },
         "lt_12": {
           "speaker": "苏云晚",
@@ -1666,6 +1750,36 @@
         "ab_07": {
           "speaker": "顾飞白",
           "text": "意味着有人动了手脚。也意味着，你走的路，或许比那些五灵根的人更难——也更远。",
+          "next": "ab_07b"
+        },
+        "ab_07b": {
+          "type": "choice",
+          "text": "",
+          "choices": [
+            {
+              "text": "「谁动了手脚？」",
+              "set_flag": {"gu_pressed_who": true},
+              "next": "ab_07c"
+            },
+            {
+              "text": "「这条路通向什么？」",
+              "set_flag": {"gu_pressed_where": true},
+              "next": "ab_07d"
+            },
+            {
+              "text": "（沉默地等他说完）",
+              "next": "ab_08"
+            }
+          ]
+        },
+        "ab_07c": {
+          "speaker": "顾飞白",
+          "text": "现在告诉你，你也未必信。等你在槐树林见到我，我再说。",
+          "next": "ab_08"
+        },
+        "ab_07d": {
+          "speaker": "顾飞白",
+          "text": "通向一个能给你答案的地方。也通向更多的麻烦。",
           "next": "ab_08"
         },
         "ab_08": {
@@ -1709,10 +1823,12 @@
           "choices": [
             {
               "text": "一起走",
+              "set_flag": {"path_ending": "follow"},
               "next": "ab_together_01"
             },
             {
               "text": "先回去看爹",
+              "set_flag": {"path_ending": "return"},
               "next": "ab_return_01"
             }
           ]
