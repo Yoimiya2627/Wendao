@@ -753,6 +753,18 @@ func _spawn_world_decorations() -> void:
 	## 公告栏（格22,13 → 像素704,416）
 	_add_notice_board(layer, Vector2(704, 410))
 
+	## ─── L1 美术优化：装饰物 / 建筑细节 / 光影 / 粒子 ────────────
+	_decorate_temple(layer)
+	_decorate_shop_facade(layer)
+	_decorate_tea_facade(layer)
+	_decorate_plaza(layer)
+	_add_lanterns(layer)
+	_add_grass_patches(layer)
+	_add_road_stones(layer)
+	_add_chimney_smoke(layer)
+	_add_falling_leaves(layer)
+	_add_ambient_light()
+
 
 func _add_tree(parent: Node2D, pos: Vector2) -> void:
 	var node := Node2D.new()
@@ -831,6 +843,337 @@ func _add_notice_board(parent: Node2D, pos: Vector2) -> void:
 	line2.color = Color(0.38, 0.26, 0.14, 0.6)
 	node.add_child(line2)
 	parent.add_child(node)
+
+
+# ══════════════════════════════════════════════════════════════════
+# 十二·B、L1 美术优化：建筑细节 / 装饰物 / 光影 / 粒子
+# ══════════════════════════════════════════════════════════════════
+
+## 废庙建筑立体化：屋檐探出 + 屋脊暗线 + 瓦片
+func _decorate_temple(parent: Node2D) -> void:
+	var node := Node2D.new()
+	node.position = Vector2(0, 0)
+	node.z_index = 1
+	## 屋檐（从屋顶两端探出的深色梯形）
+	var eave_l := Polygon2D.new()
+	eave_l.polygon = PackedVector2Array([
+		Vector2(1152, 784), Vector2(1172, 784),
+		Vector2(1164, 796), Vector2(1148, 796)
+	])
+	eave_l.color = Color(0.05, 0.04, 0.03, 1.0)
+	node.add_child(eave_l)
+	var eave_r := Polygon2D.new()
+	eave_r.polygon = PackedVector2Array([
+		Vector2(1268, 784), Vector2(1288, 784),
+		Vector2(1288, 796), Vector2(1276, 796)
+	])
+	eave_r.color = Color(0.05, 0.04, 0.03, 1.0)
+	node.add_child(eave_r)
+	## 屋脊（屋顶横向暗线）
+	var ridge := Polygon2D.new()
+	ridge.polygon = PackedVector2Array([
+		Vector2(1160, 788), Vector2(1280, 788),
+		Vector2(1280, 791), Vector2(1160, 791)
+	])
+	ridge.color = Color(0.02, 0.02, 0.02, 0.85)
+	node.add_child(ridge)
+	## 瓦片横纹（3 条）
+	for i in 3:
+		var tile := Polygon2D.new()
+		var yy := 784 + 4 + i * 4
+		tile.polygon = PackedVector2Array([
+			Vector2(1160, yy), Vector2(1280, yy),
+			Vector2(1280, yy + 1), Vector2(1160, yy + 1)
+		])
+		tile.color = Color(0.15, 0.11, 0.08, 0.55)
+		node.add_child(tile)
+	## 门框对联（两侧暗红竖条）
+	for dx in [-4, 30]:
+		var scroll := Polygon2D.new()
+		scroll.polygon = PackedVector2Array([
+			Vector2(1156 + dx, 856), Vector2(1160 + dx, 856),
+			Vector2(1160 + dx, 944), Vector2(1156 + dx, 944)
+		])
+		scroll.color = Color(0.32, 0.10, 0.08, 0.85)
+		node.add_child(scroll)
+	parent.add_child(node)
+
+
+## 杂货铺门面装饰：屋檐 + 招牌横梁（标签下方）
+func _decorate_shop_facade(parent: Node2D) -> void:
+	var node := Node2D.new()
+	node.z_index = 1
+	## 屋檐横梁（row 10-11 之间）
+	var beam := Polygon2D.new()
+	beam.polygon = PackedVector2Array([
+		Vector2(32, 344), Vector2(384, 344),
+		Vector2(384, 352), Vector2(32, 352)
+	])
+	beam.color = Color(0.22, 0.15, 0.08, 1.0)
+	node.add_child(beam)
+	## 屋檐阴影线（更深一道）
+	var shadow := Polygon2D.new()
+	shadow.polygon = PackedVector2Array([
+		Vector2(32, 352), Vector2(384, 352),
+		Vector2(384, 355), Vector2(32, 355)
+	])
+	shadow.color = Color(0.08, 0.05, 0.03, 0.6)
+	node.add_child(shadow)
+	parent.add_child(node)
+
+
+## 茶馆门面装饰：屋檐 + 两根立柱
+func _decorate_tea_facade(parent: Node2D) -> void:
+	var node := Node2D.new()
+	node.z_index = 1
+	## 屋檐横梁（茶馆 row 18 附近，cols 26-30）
+	var beam := Polygon2D.new()
+	beam.polygon = PackedVector2Array([
+		Vector2(832, 568), Vector2(1024, 568),
+		Vector2(1024, 576), Vector2(832, 576)
+	])
+	beam.color = Color(0.22, 0.15, 0.08, 1.0)
+	node.add_child(beam)
+	## 屋檐阴影
+	var shadow := Polygon2D.new()
+	shadow.polygon = PackedVector2Array([
+		Vector2(832, 576), Vector2(1024, 576),
+		Vector2(1024, 579), Vector2(832, 579)
+	])
+	shadow.color = Color(0.08, 0.05, 0.03, 0.6)
+	node.add_child(shadow)
+	parent.add_child(node)
+
+
+## 测灵石广场：台阶边缘暗线 + 四角石墩
+func _decorate_plaza(parent: Node2D) -> void:
+	var node := Node2D.new()
+	node.z_index = 1
+	## 四角小石墩（广场界标，cols 25-34, rows 1-9 大致范围）
+	var corners := [
+		Vector2(816, 48),  Vector2(1104, 48),
+		Vector2(816, 288), Vector2(1104, 288)
+	]
+	for c in corners:
+		var stone := Polygon2D.new()
+		stone.polygon = PackedVector2Array([
+			c + Vector2(-5, -4), c + Vector2(5, -4),
+			c + Vector2(5, 4),   c + Vector2(-5, 4)
+		])
+		stone.color = Color(0.38, 0.40, 0.44, 1.0)
+		node.add_child(stone)
+		## 石墩顶部高光
+		var hl := Polygon2D.new()
+		hl.polygon = PackedVector2Array([
+			c + Vector2(-5, -4), c + Vector2(5, -4),
+			c + Vector2(5, -3),  c + Vector2(-5, -3)
+		])
+		hl.color = Color(0.60, 0.62, 0.66, 1.0)
+		node.add_child(hl)
+	parent.add_child(node)
+
+
+## 灯笼：挂在杂货铺、茶馆、庙门口（红灯笼 + 金边 + 下方穗子）
+func _add_lanterns(parent: Node2D) -> void:
+	var positions := [
+		Vector2(96,  340),   ## 杂货铺门口左
+		Vector2(320, 340),   ## 杂货铺门口右
+		Vector2(832, 564),   ## 茶馆门口左
+		Vector2(1024, 564),  ## 茶馆门口右
+		Vector2(1172, 848),  ## 废庙门口
+	]
+	for pos in positions:
+		_add_lantern(parent, pos)
+
+
+func _add_lantern(parent: Node2D, pos: Vector2) -> void:
+	var node := Node2D.new()
+	node.position = pos
+	node.z_index = 3
+	## 悬绳
+	var rope := Polygon2D.new()
+	rope.polygon = PackedVector2Array([
+		Vector2(-1, -12), Vector2(1, -12),
+		Vector2(1, -4),   Vector2(-1, -4)
+	])
+	rope.color = Color(0.18, 0.12, 0.08, 1.0)
+	node.add_child(rope)
+	## 灯笼主体（暗红椭圆）
+	var body := Polygon2D.new()
+	body.polygon = PackedVector2Array([
+		Vector2(0, -4), Vector2(6, -2), Vector2(7, 4),
+		Vector2(6, 10), Vector2(0, 12), Vector2(-6, 10),
+		Vector2(-7, 4), Vector2(-6, -2)
+	])
+	body.color = Color(0.72, 0.18, 0.14, 0.95)
+	node.add_child(body)
+	## 金边上下
+	var top := Polygon2D.new()
+	top.polygon = PackedVector2Array([
+		Vector2(-4, -4), Vector2(4, -4),
+		Vector2(4, -3),  Vector2(-4, -3)
+	])
+	top.color = Color(0.88, 0.70, 0.36, 1.0)
+	node.add_child(top)
+	var bot := Polygon2D.new()
+	bot.polygon = PackedVector2Array([
+		Vector2(-4, 11), Vector2(4, 11),
+		Vector2(4, 12),  Vector2(-4, 12)
+	])
+	bot.color = Color(0.88, 0.70, 0.36, 1.0)
+	node.add_child(bot)
+	## 穗子
+	var tassel := Polygon2D.new()
+	tassel.polygon = PackedVector2Array([
+		Vector2(-1, 12), Vector2(1, 12),
+		Vector2(1, 18),  Vector2(-1, 18)
+	])
+	tassel.color = Color(0.88, 0.70, 0.36, 1.0)
+	node.add_child(tassel)
+	parent.add_child(node)
+
+
+## 草丛：沿路边、墙边散点
+func _add_grass_patches(parent: Node2D) -> void:
+	var positions := [
+		## 沿主路（row 13-15）边缘
+		Vector2(64, 408),   Vector2(256, 408),  Vector2(448, 408),
+		Vector2(640, 408),  Vector2(960, 408),  Vector2(1152, 408),
+		Vector2(96, 520),   Vector2(288, 520),  Vector2(480, 520),
+		Vector2(896, 520),  Vector2(1088, 520),
+		## 纵向路边
+		Vector2(576, 80),   Vector2(576, 240),  Vector2(576, 720),
+		Vector2(704, 80),   Vector2(704, 240),  Vector2(704, 720),
+		## 边角
+		Vector2(128, 720),  Vector2(1088, 160), Vector2(1248, 384),
+		Vector2(256, 160),  Vector2(384, 720),  Vector2(832, 384),
+	]
+	for pos in positions:
+		_add_grass(parent, pos)
+
+
+func _add_grass(parent: Node2D, pos: Vector2) -> void:
+	var node := Node2D.new()
+	node.position = pos
+	## 三到四根草叶（深绿细三角）
+	var leaves := [
+		PackedVector2Array([Vector2(-3, 0), Vector2(-2, -6), Vector2(-1, 0)]),
+		PackedVector2Array([Vector2(0, 0),  Vector2(1, -8),  Vector2(2, 0)]),
+		PackedVector2Array([Vector2(3, 0),  Vector2(5, -5),  Vector2(6, 0)]),
+	]
+	var color := Color(0.18, 0.34, 0.14, 0.88)
+	for leaf_pts in leaves:
+		var g := Polygon2D.new()
+		g.polygon = leaf_pts
+		g.color = color
+		node.add_child(g)
+	parent.add_child(node)
+
+
+## 路边石：沿主路散点
+func _add_road_stones(parent: Node2D) -> void:
+	var positions := [
+		Vector2(128, 400), Vector2(352, 400), Vector2(800, 400),
+		Vector2(1024, 400), Vector2(1216, 400),
+		Vector2(192, 528), Vector2(640, 528), Vector2(1088, 528),
+	]
+	for pos in positions:
+		var stone := Polygon2D.new()
+		stone.position = pos
+		stone.polygon = PackedVector2Array([
+			Vector2(-4, -2), Vector2(3, -3),
+			Vector2(5, 1),   Vector2(-3, 2)
+		])
+		stone.color = Color(0.45, 0.42, 0.38, 0.95)
+		parent.add_child(stone)
+
+
+## 炊烟：杂货铺和茶馆屋顶冒烟（CPUParticles2D）
+func _add_chimney_smoke(parent: Node2D) -> void:
+	var chimneys := [
+		Vector2(220, 64),   ## 杂货铺屋顶
+		Vector2(930, 540),  ## 茶馆屋顶
+	]
+	for pos in chimneys:
+		var p := CPUParticles2D.new()
+		p.position = pos
+		p.amount = 14
+		p.lifetime = 3.2
+		p.preprocess = 2.0
+		p.speed_scale = 1.0
+		p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+		p.emission_sphere_radius = 3.0
+		p.direction = Vector2(0, -1)
+		p.spread = 20.0
+		p.initial_velocity_min = 10.0
+		p.initial_velocity_max = 22.0
+		p.gravity = Vector2(0, -4)
+		p.scale_amount_min = 3.0
+		p.scale_amount_max = 5.5
+		p.color = Color(0.78, 0.78, 0.74, 0.38)
+		p.z_index = 4
+		parent.add_child(p)
+
+
+## 落叶：整个场景范围飘落（CPUParticles2D）
+func _add_falling_leaves(parent: Node2D) -> void:
+	var p := CPUParticles2D.new()
+	p.position = Vector2(640, -40)
+	p.amount = 20
+	p.lifetime = 12.0
+	p.preprocess = 6.0
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_BOX
+	p.emission_box_extents = Vector3(640, 20, 0)
+	p.direction = Vector2(0, 1)
+	p.spread = 15.0
+	p.initial_velocity_min = 14.0
+	p.initial_velocity_max = 24.0
+	p.gravity = Vector2(6, 10)
+	p.scale_amount_min = 1.5
+	p.scale_amount_max = 2.5
+	p.color = Color(0.76, 0.55, 0.28, 0.55)
+	p.z_index = 5
+	parent.add_child(p)
+
+
+## 整体光影：CanvasModulate 略微暗化 + 灯笼处 PointLight2D 暖黄晕染
+func _add_ambient_light() -> void:
+	## 整体色调（轻微压暗，不过度）
+	var cm := CanvasModulate.new()
+	cm.name = "AmbientModulate"
+	cm.color = Color(0.92, 0.90, 0.86, 1.0)
+	add_child(cm)
+	## 灯笼位置的暖黄点光
+	var light_positions := [
+		Vector2(96,  340), Vector2(320, 340),
+		Vector2(832, 564), Vector2(1024, 564),
+		Vector2(1172, 848),
+	]
+	var lights_layer := Node2D.new()
+	lights_layer.name = "LanternLights"
+	lights_layer.z_index = 10
+	add_child(lights_layer)
+	for pos in light_positions:
+		var light := PointLight2D.new()
+		light.position = pos
+		light.color = Color(1.0, 0.78, 0.42, 0.80)
+		light.energy = 1.5
+		## 使用径向渐变贴图（无贴图则 PointLight2D 不发光）
+		var grad := Gradient.new()
+		grad.offsets = PackedFloat32Array([0.0, 0.6, 1.0])
+		grad.colors = PackedColorArray([
+			Color.WHITE, Color(1, 1, 1, 0.4), Color(1, 1, 1, 0)
+		])
+		var tex := GradientTexture2D.new()
+		tex.gradient = grad
+		tex.width = 160
+		tex.height = 160
+		tex.fill = GradientTexture2D.FILL_RADIAL
+		tex.fill_from = Vector2(0.5, 0.5)
+		tex.fill_to = Vector2(1.0, 0.5)
+		light.texture = tex
+		light.offset = Vector2(-80, -80)
+		lights_layer.add_child(light)
 
 
 # ══════════════════════════════════════════════════════════════════
