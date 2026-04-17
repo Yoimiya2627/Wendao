@@ -184,26 +184,8 @@ func _ready() -> void:
 	_setup_toad()
 	_update_inner_door_lock()
 	_setup_temple_hidden_interacts()
-	_apply_floor_texture()
 	## 读档直接进入TempleScene时（不经过TownScene），确保主HUD显示
 	UIManager.show_main_hud()
-
-
-## 给废庙各房间的石地板挂 shader（石纹基底，无木纹，低频色斑更强）
-func _apply_floor_texture() -> void:
-	for bg_name in ["Background", "BackgroundLeft", "BackgroundRight"]:
-		var floor_rect := get_node_or_null(bg_name + "/Floor")
-		if floor_rect == null:
-			continue
-		var mat := ShaderMaterial.new()
-		mat.shader = preload("res://shaders/ground_texture.gdshader")
-		mat.set_shader_parameter("base_color", floor_rect.color)
-		mat.set_shader_parameter("grain", 0.045)
-		mat.set_shader_parameter("blot", 0.22)
-		mat.set_shader_parameter("blot_scale", 4.5)
-		mat.set_shader_parameter("wood_grain", 0.0)
-		mat.set_shader_parameter("wood_freq", 0.0)
-		floor_rect.material = mat
 
 
 func _spawn_ambient_particles() -> void:

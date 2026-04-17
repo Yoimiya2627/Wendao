@@ -111,22 +111,6 @@ func _ready() -> void:
 		UIManager.refresh_all_data()
 
 	_spawn_ambient_particles()
-	_apply_floor_texture()
-
-
-## 给杂货铺地板挂水墨木纹 shader（暖棕基底 + 横向木纹）
-func _apply_floor_texture() -> void:
-	var floor_rect := get_node_or_null("Background/Floor")
-	if floor_rect == null: return
-	var mat := ShaderMaterial.new()
-	mat.shader = preload("res://shaders/ground_texture.gdshader")
-	mat.set_shader_parameter("base_color", floor_rect.color)
-	mat.set_shader_parameter("grain", 0.03)
-	mat.set_shader_parameter("blot", 0.10)
-	mat.set_shader_parameter("blot_scale", 4.0)
-	mat.set_shader_parameter("wood_grain", 0.14)
-	mat.set_shader_parameter("wood_freq", 70.0)
-	floor_rect.material = mat
 
 
 func _spawn_ambient_particles() -> void:

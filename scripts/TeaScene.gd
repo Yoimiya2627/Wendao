@@ -40,23 +40,7 @@ func _ready() -> void:
 	_exit_area.body_exited.connect(_on_exit_body_exited)
 	DialogueManager.event_triggered.connect(_on_event_triggered)
 	_setup_npcs_by_phase()
-	_apply_floor_texture()
 	## BGM 由 SceneTransition._auto_play_bgm() 统一触发（SCENE_BGM_MAP["TeaScene"]）
-
-
-## 给茶馆地板挂水墨木纹 shader（深棕木地 + 更细密的横纹）
-func _apply_floor_texture() -> void:
-	var floor_rect := get_node_or_null("Background/Floor")
-	if floor_rect == null: return
-	var mat := ShaderMaterial.new()
-	mat.shader = preload("res://shaders/ground_texture.gdshader")
-	mat.set_shader_parameter("base_color", floor_rect.color)
-	mat.set_shader_parameter("grain", 0.022)
-	mat.set_shader_parameter("blot", 0.08)
-	mat.set_shader_parameter("blot_scale", 3.5)
-	mat.set_shader_parameter("wood_grain", 0.18)
-	mat.set_shader_parameter("wood_freq", 28.0)
-	floor_rect.material = mat
 
 
 func _exit_tree() -> void:
