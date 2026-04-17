@@ -650,34 +650,17 @@ func _build_tileset_and_map() -> void:
 	_spawn_world_decorations()
 
 
-## 将 img 从 x_off 起的 32×32 区域绘制为水墨晕染风格
-## 去掉 1px 硬边框 → 消除网格感
-## 中心浅 → 边缘深（径向渐变模拟墨滴晕开）
-## 颗粒扰动（±0.08）+ 随机散点 → 颗粒感与手绘质感
+## 将 img 从 x_off 起的 32×32 区域涂为纯色
+## 去掉 1px 硬边框（消除网格感），保留极轻微扰动（±0.02）避免完全平板
 func _fill_tile(img: Image, x_off: int, color: Color) -> void:
-	var center := float(TILE_SIZE) * 0.5
-	var max_dist := center * 1.414  ## 对角线距离
 	for x in TILE_SIZE:
 		for y in TILE_SIZE:
-			var dx := float(x) - center + 0.5
-			var dy := float(y) - center + 0.5
-			var dist := sqrt(dx * dx + dy * dy) / max_dist
-			## 边缘渐深（pow 1.4 让渐变集中在外圈，中心大片保持浅色）
-			var edge_darken := pow(dist, 1.4) * 0.15
-			## 颗粒扰动（±0.08，比原版 ±0.035 明显但不过分）
-			var n := (randf() - 0.5) * 0.08
+			var n := (randf() - 0.5) * 0.02
 			img.set_pixel(x_off + x, y, Color(
-				clamp(color.r - edge_darken + n, 0.0, 1.0),
-				clamp(color.g - edge_darken + n, 0.0, 1.0),
-				clamp(color.b - edge_darken + n, 0.0, 1.0)
+				clamp(color.r + n, 0.0, 1.0),
+				clamp(color.g + n, 0.0, 1.0),
+				clamp(color.b + n, 0.0, 1.0)
 			))
-	## 散点：每格随机洒 2~4 个深色点，避开最外圈
-	var dot_color := color.darkened(0.35)
-	var dot_count := 2 + randi() % 3
-	for _i in dot_count:
-		var px := 3 + randi() % (TILE_SIZE - 6)
-		var py := 3 + randi() % (TILE_SIZE - 6)
-		img.set_pixel(x_off + px, py, dot_color)
 
 
 # ══════════════════════════════════════════════════════════════════
