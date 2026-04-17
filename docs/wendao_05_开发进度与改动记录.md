@@ -1401,6 +1401,193 @@ scripts/UIManager.gd         sword_tassel 道具描述更新为新版设定
 
 ---
 
+## 第二十六版（2026-04-15）—— 美术全面优化
+
+### 主题：水墨渲染 / 粒子特效 / 立绘剪影 / 装饰物 / 按钮动画
+
+### 一、Shader 与粒子
+- `shaders/ink_wash.gdshader`：纸纹噪声 + 横纹扫描线，参数可调
+- `scripts/BattleParticles.gd`（新）：命中墨点飞溅 + 技能金色爆裂，layer=6
+
+### 二、UI 装饰
+- `DialogueBox.gd`：对话框顶部金色分割线 + 四角 ◆ 装饰 + 角色剪影立绘
+- `scripts/PortraitControl.gd`（新）：程序化 `_draw()` 半身剪影，无需外部图片
+- `scripts/ButtonAnimator.gd`（新，AutoLoad）：全局按钮悬停/按下 Tween 动画
+
+### 三、场景粒子与装饰
+- `ShopScene.gd` / `TempleScene.gd`：环境尘埃/雾气粒子，CanvasLayer layer=1
+- `TownScene.gd`：TileMap 格子颜色噪声扰动 + 老榕树/古井/公告栏 `Polygon2D` 装饰
+
+### 四、Bug 修复
+- `BattleUI.gd` match 语法修正
+- `DialogueBox.gd` 角装饰判重
+- `ButtonAnimator.gd` pivot 保护
+
+---
+
+## 第二十七版（2026-04-15）—— 代码清理 + BattleUI 拆分 + 内容健康检查
+
+### 一、代码清理
+- `.gitignore` 补充 `*.bak` / `*.uid` / `tools/` / `docs/word_export/`
+- 删除 `scripts/BattleUI.gd.bak`
+
+### 二、BattleUI 拆分
+`scripts/BattleUI.gd`（766 行）拆为协调层 + 两个新文件：
+- `scripts/BattleEffects.gd`（新，约 130 行）：视觉特效（flash_panel / shake_screen / flash_white / tassel 动画 / HP tween）
+- `scripts/BattleSkillMenu.gd`（新，约 80 行）：技能子菜单（按钮创建 / 焦点导航 / sense 解锁查询）
+- `BattleUI.gd` 减至约 270 行，只做事件调度与 UI 状态协调
+
+### 三、内容健康检查
+对 `data/chapter1.json` 做量化审计（408 节点 / 4 选择节点 / 2 真实分支），输出《内容健康检查报告》。结论：当前形态更接近线性 VN 而非 RPG，缺少玩家选择驱动的分支——为 v28 起的 RPG 化改造铺路。
+
+---
+
+## 第二十八版（2026-04-16）—— 垂直切片：分支基础设施 + morning 父亲选择 + letter 回响
+
+### 主题：为 RPG 化改造铺设基础设施，先验证一条完整支付链
+
+### 一、基础设施（Phase 0）
+- `GameData.gd` 新增 `narrative_flags: Dictionary = {}`，持久化进存档（`save_data` / `load_data` / `reset_to_default` 同步）
+- `DialogueManager.gd`：
+  - `_go_to_node()` 支持节点字段 `if_flag`（条件跳转）和 `set_flag`（节点级 flag 写入）
+  - `make_choice()` 处理选项携带的 `set_flag`
+  - 支持"纯跳转节点"——有 `if_flag` 无 `text` 时自动透传到 `next`
+  - `_end` 与空 `next` 统一走 `_end_scene()`
+
+### 二、内容（Phase 1 首个切片）
+- **morning**：`m_08b` 选择——「嗯。爹你也吃。」(`father_morning_warm`) / 沉默点头(`father_morning_silent`)
+- **letter**：`lt_06b` if_flag 节点——`father_morning_warm` 命中时显示 `lt_06c_warm` 额外回响独白
+
+---
+
+## 第二十九版（2026-04-16）—— Phase 1 剩余选择节点全量植入
+
+### 一、内容改动（`data/chapter1.json`）
+- **test_stone**：`ts_05c` 选择——握紧剑穗(`self_test_calm`) / 快步走开(`self_test_hurt`)
+- **temple**：`tp_07b` 选择——挡在路前(`self_temple_brave`) / 手在抖但没退(`self_temple_scared`)
+- **letter**：`lt_11b` 选择——「知道了，爹」/「我会回来的」(`father_letter_promise_return`)
+- **after_battle** / **after_battle_coin**：`ab_07b` 三选一追问顾飞白（`gu_pressed_who` / `gu_pressed_where` / 沉默），`ab_choice` 写入 `path_ending` flag（`"follow"` / `"return"`）
+
+### 二、Phase 1 完成后 narrative_flags 清单（10 个）
+`father_morning_warm/silent`, `self_test_calm/hurt`, `self_temple_brave/scared`, `father_letter_promise_return`, `gu_pressed_who/where`, `path_ending`
+
+---
+
+## 第三十版（2026-04-16）—— Phase 2 性格雕刻 + requires_flag 基础设施
+
+### 一、基础设施
+`DialogueBox.gd` `_show_choices()` 加 `requires_flag` 过滤：
+- 按钮按需显示，保留原始 choice 数组索引传给 `DialogueManager`
+- 过滤后按钮序号与数据索引解耦
+
+### 二、内容（Phase 2）
+- **market**：`mk_07b` 选择——掏灵石(`self_market_proud` + `town_paid_old_lady`) / 道谢
+- **vendor_b**：`vb_01b` 选择——买桂皮 / 回来再买(`father_cinnamon_forgot`)；**return_home**：`rh_04b` if_flag 回响（灶台无桂皮味）
+- **aunts_return**：`ar_08` 选择——回头看(`town_aunts_confronted`) / 沉默走开
+- **teahouse_before**：`tb_05b` 选择——「他想去吗？」(`self_teahouse_curious`) /「家里人呢？」
+- **disciple_b**：`db_b07` 选择——「碎玉镇挺好」(`requires_flag: self_test_calm`) / 沉默（条件可见选项首秀）
+- **celebration_boy**：`cb_06b` 选择——点头笑(`town_celebration_smile`) / 移开视线
+
+### 三、Phase 2 新增 narrative_flags（7 个）
+`self_market_proud`, `town_paid_old_lady`, `father_cinnamon_forgot`, `town_aunts_confronted`, `self_teahouse_curious`, `town_disciple_calm_reply`, `town_celebration_smile`
+
+---
+
+## 第三十一版（2026-04-17）—— Phase 3 lore / 探索回响
+
+### 主题：探索回报型分支与 if_flag 回响链
+
+### 一、内容改动（`data/chapter1.json`）
+- **bowl_interact**：`bi_07` 选择——记住「她」(`mother_bowl_lingered`) / 转身走开
+- **old_wanderer**：`ow_10b` 选择——追问(`lore_wanderer_asked`) / 点头不再问；新增 `ow_10c/d` 老人答话
+- **fortune_teller**：`ft_06b` 选择——追问(`lore_fortune_pressed`) / 沉默；新增 `ft_06c/d`
+- **fortune_teller_coin**：`ftc_04b` if_flag 节点——`lore_fortune_pressed` 命中插入 `ftc_04c` 额外回响
+- **tally_marks**：`tm_06` 后插入双层 if_flag 链——`mother_bowl_lingered`→`tm_06b` + `lore_wanderer_asked`→`tm_06c`
+- **transmission_array**：`ta_05` 后插入 if_flag——`mother_bowl_lingered`→`ta_05b`
+- **remnant_page_1~4**：每张残页末节 set_flag 写入 `lore_page_1_read` ~ `lore_page_4_read`
+- **boss_room_enter**：`bre_05b` 后插入 if_flag——`lore_page_3_read`→`bre_05c`（残页字句浮现）
+
+### 二、Phase 3 新增 narrative_flags
+`mother_bowl_lingered`, `lore_wanderer_asked`, `lore_fortune_pressed`, `lore_page_1_read` ~ `lore_page_4_read`
+
+---
+
+## 第三十二版（2026-04-17）—— Phase 4：觉醒一击家之回响链
+
+### 主题：全章叙事高潮——主角"只为家"的道在觉醒瞬间兑付
+
+### 一、设计基调
+主角苏云晚的道心核心：**外部仙途 / 灵根 / lore 一概无所谓，心中只有那个小家（爹 + 年年 + 大鱼）**。觉醒一击前的意识流不是"我是什么样的人"的性格回顾，而是"我要回去见他们"的纯粹冲动。
+
+### 二、内容改动（`boss_awakening`）
+在 `ba_06`（爹放下饭碗的背影）与 `ba_06b`（便条"别怕"）之间插入三条"家之回响"链，沿用现有单 flag `if_flag` 链式机制，不改引擎：
+
+| Flag | 回响台词 | 对应行为 |
+|---|---|---|
+| `father_morning_warm` | 今早爹伸手添饭时顿了一下。她说过"你也吃"。 | 早上对爹说"你也吃" |
+| `father_cinnamon_forgot` | 灶台上那包桂皮还没买回去。 | 没去集市买桂皮 |
+| `father_letter_promise_return` | 信上写过四个字——"会回来的"。 | 回信承诺回家 |
+
+### 三、刻意不纳入觉醒回响的 flag
+- `self_test_calm/hurt` / `self_temple_brave/scared` —— 外部事件对主角只是任务，不构成她的内核
+- `mother_bowl_lingered` —— 母亲是另一层缺席伏线，应在其他时刻兑付
+- `lore_*` / `town_*` / `gu_*` —— 与"只为家"的道无关
+
+### 四、极端情况
+- 全命中：7 段蒙太奇（年年 → 大鱼 → 爹背影 → 今早话 → 桂皮 → 会回来 → 别怕）
+- 零命中：跟原版一致（年年 → 大鱼 → 爹背影 → 别怕）——沉默派玩家不凭空多出什么
+
+---
+
+## 第三十三版（2026-04-18）—— 按"主角的道"基调审查 Phase 1-3 台词（17 处）
+
+### 主题：按 v32 确立的角色基调反向收紧 Phase 1-3 已植入文本
+
+### 一、基调原则
+主角不煽情、不自我表演、不做形而上联想，只记家里的事；外部 lore 作为画面浮现而非主角思考。
+
+### 二、改动明细
+
+**Phase 1 相关（4 处）**
+- `morning` `m_09`：去掉"鼻子一酸"，改为"和往常没什么两样"
+- `test_stone` `ts_05c[1]`：去掉"希望谁都别看她"的受伤感
+- `temple` `tp_07b[0]`：去掉"深吸一口气"的表演感
+- `after_battle` / `after_battle_coin` `ab_07b[0][1]`：缩至「谁？」/「通向什么？」
+
+**Phase 2 相关（6 处）**
+- `market` `mk_07b[0]`：「不能白拿」→「我给钱」（去书面语）
+- `market` `mk_07b[1]`：去掉煽情「……」
+- `return_home` `rh_04c`：「忽然想起——忘了」→「早上那一摊，她没买」
+- `aunts_return` `ar_09`：去掉"三秒之后"精确计时
+- `disciple_b` `db_b06`：「比骂还难受」→「觉得有点堵」
+- `celebration_boy` `cb_07`：「她也移开视线」→「她继续走」（修复选项[0]逻辑）
+
+**Phase 3 相关（7 处）**
+- `bowl_interact` `bi_07[0]`：去掉"在心里默默"
+- `old_wanderer` `ow_10b[0]`：去掉"老人家见过那种"套话
+- `fortune_teller` `ft_06b[0]`：去掉"既然看出来了"冗余
+- `tally_marks` `tm_06b`：删除"是否也曾……刻下什么"哲学联想
+- `tally_marks` `tm_06c`：「大概也是这样……」→「有些人活着，是为了等」
+- `transmission_array` `ta_05b`：删除"都是同一种等待"作者总结
+- `boss_room_enter` `bre_05c`：删除"写下它们的人也曾站在这里"史学联想
+
+---
+
+### 当前链路状态（v33 后）
+
+- Phase 0-4 RPG 化改造全部落地
+- `data/chapter1.json` 选择节点：约 22 个（从 v27 的 4 个增至 22）
+- `narrative_flags` 共约 22 个，持久化进存档
+- 觉醒一击支持 0~3 段动态回响（家之回响链）
+- 主角"只为家"的道在 v32-v33 两轮迭代中立住
+
+### 待完成任务（按优先级）
+1. 端到端试玩——验证所有分支触发（沉默派 vs 全选项派两条路径）
+2. Opus 待做：第二章规划与角色/修炼路线设计文档
+3. 远期：第二章内容制作
+
+---
+
 ## 第十八版（2026-04-10）
 
 ### 主题：叙事深化 + 伏笔串联 + 全局审查修复
