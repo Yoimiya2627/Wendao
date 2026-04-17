@@ -80,6 +80,9 @@ var current_enemy_data: Dictionary = {}
 ## 战斗前玩家坐标（返回TempleScene后恢复）
 var last_player_position: Vector2 = Vector2.ZERO
 
+## 玩家选择记录（RPG分支标签，独立于 triggered_events）
+var narrative_flags: Dictionary = {}
+
 
 func _ready() -> void:
 	# 创建默认玩家角色（后续可改为从存档加载）
@@ -147,6 +150,7 @@ func reset_to_default() -> void:
 	current_enemy_id   = ""
 	current_enemy_data = {}
 	last_player_position = Vector2.ZERO
+	narrative_flags    = {}
 	story_phase_changed.emit(story_phase)
 	print("GameData: 已重置为初始状态（新游戏）")
 
@@ -193,6 +197,7 @@ func save_data() -> Dictionary:
 		"saved_scene_name":     String(get_tree().current_scene.name) if get_tree() and get_tree().current_scene else "TownScene",
 		"saved_player_position_x": saved_player_position.x,
 		"saved_player_position_y": saved_player_position.y,
+		"narrative_flags":      narrative_flags,
 	}
 
 
@@ -239,6 +244,7 @@ func load_data(data: Dictionary) -> void:
 		data.get("saved_player_position_x", 0.0),
 		data.get("saved_player_position_y", 0.0)
 	)
+	narrative_flags = data.get("narrative_flags", {})
 	print("GameData: 存档加载完毕 —— ", str(player))
 
 

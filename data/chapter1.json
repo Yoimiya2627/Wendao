@@ -87,7 +87,23 @@
         "m_08": {
           "speaker": "苏明",
           "text": "去吧。不管测出什么，记得回来吃饭。顺路去集市看看有没有桂皮，家里的快用完了。",
-          "next": "m_09"
+          "next": "m_08b"
+        },
+        "m_08b": {
+          "type": "choice",
+          "text": "爹向来不多说话。",
+          "choices": [
+            {
+              "text": "「嗯。爹你也吃。」（轻声）",
+              "set_flag": {"father_morning_warm": true},
+              "next": "m_09"
+            },
+            {
+              "text": "（沉默地点了点头）",
+              "set_flag": {"father_morning_silent": true},
+              "next": "m_09"
+            }
+          ]
         },
         "m_09": {
           "type": "narration",
@@ -416,6 +432,15 @@
         "lt_06": {
           "speaker": "苏明〔信〕",
           "text": "云晚，你要走，就走吧。山高路远，爹拦不住，也不想拦。只是记住一句话：活着，比赢了更要紧。",
+          "next": "lt_06b"
+        },
+        "lt_06b": {
+          "if_flag": {"father_morning_warm": "lt_06c_warm"},
+          "next": "lt_07"
+        },
+        "lt_06c_warm": {
+          "type": "narration",
+          "text": "「嗯。爹你也吃。」——她早上说过的话，这会儿忽然回来了。",
           "next": "lt_07"
         },
         "lt_07": {

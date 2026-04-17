@@ -88,13 +88,18 @@ func make_choice(choice_index: int) -> void:
 	waiting_for_choice = false
 	choice_made.emit(choice_index)
 
+	# 选项携带 set_flag → 写入 narrative_flags
+	var choice_flags: Dictionary = chosen.get("set_flag", {})
+	for flag_key: String in choice_flags:
+		GameData.narrative_flags[flag_key] = choice_flags[flag_key]
+
 	# 选项本身可携带附加事件（如标记旗帜）
 	var choice_event: String = chosen.get("event", "")
 	if not choice_event.is_empty():
 		event_triggered.emit(choice_event)
 
 	var next_id: String = chosen.get("next", "")
-	if next_id.is_empty():
+	if next_id.is_empty() or next_id == "_end":
 		_end_scene()
 	else:
 		_go_to_node(next_id)
@@ -157,8 +162,12 @@ func _load_data(path: String) -> void:
 # ── 内部：节点导航 ────────────────────────────────────────────
 
 ## 跳转到指定 ID 的节点
-## 事件节点使用 await 异步推进，避免阻塞调用帧
+## 支持 if_flag（条件跳转）和 set_flag（节点级 flag 写入）
 func _go_to_node(node_id: String) -> void:
+	if node_id.is_empty() or node_id == "_end":
+		_end_scene()
+		return
+
 	var nodes: Dictionary = _current_scene.get("nodes", {})
 	if not nodes.has(node_id):
 		push_error("DialogueManager: 场景 '%s' 中找不到节点 '%s'" % [_current_scene_id, node_id])
@@ -166,6 +175,27 @@ func _go_to_node(node_id: String) -> void:
 		return
 
 	_current_node = nodes[node_id]
+
+	# ── if_flag：条件跳转（先于一切执行）────────────────────────
+	# 格式：{"flag_key": "target_node_id"}
+	# 若 flag 为 true，跳转到 target；否则检查是否为纯跳转节点（无文本）
+	var if_flag_map: Dictionary = _current_node.get("if_flag", {})
+	if not if_flag_map.is_empty():
+		for flag_key: String in if_flag_map:
+			if GameData.narrative_flags.get(flag_key, false):
+				_go_to_node(if_flag_map[flag_key])
+				return
+		# flag 未命中，若无文本则是纯跳转节点，直接走 next
+		if not _current_node.has("text"):
+			var redirect_next: String = _current_node.get("next", "")
+			_go_to_node(redirect_next)
+			return
+
+	# ── set_flag：节点级写入（对话/旁白节点上直接设 flag）────────
+	var node_flags: Dictionary = _current_node.get("set_flag", {})
+	for flag_key: String in node_flags:
+		GameData.narrative_flags[flag_key] = node_flags[flag_key]
+
 	var node_type: String = _current_node.get("type", "dialogue")
 
 	match node_type:
