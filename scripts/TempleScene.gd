@@ -100,6 +100,7 @@ func _ready() -> void:
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
 	_connect_stone_areas()
 	## BGM 由 SceneTransition._auto_play_bgm() 统一触发（SCENE_BGM_MAP["TempleScene"]）
+	_spawn_ambient_particles()
 
 	## 碑文位置分配：
 	## Stone1→入口大厅，Stone2→左厢房，Stone3→右厢房，Stone4→内殿
@@ -185,6 +186,29 @@ func _ready() -> void:
 	_setup_temple_hidden_interacts()
 	## 读档直接进入TempleScene时（不经过TownScene），确保主HUD显示
 	UIManager.show_main_hud()
+
+
+func _spawn_ambient_particles() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 1
+	add_child(layer)
+	var p := CPUParticles2D.new()
+	p.amount               = 15
+	p.lifetime             = 7.0
+	p.explosiveness        = 0.0
+	p.randomness           = 1.0
+	p.direction            = Vector2(0.1, -1.0)
+	p.spread               = 25.0
+	p.gravity              = Vector2(2.0, -5.0)
+	p.initial_velocity_min = 3.0
+	p.initial_velocity_max = 8.0
+	p.scale_amount_min     = 1.5
+	p.scale_amount_max     = 4.0
+	p.color                = Color(0.60, 0.55, 0.70, 0.15)
+	p.emission_shape       = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(640.0, 360.0)
+	p.position             = Vector2(640.0, 360.0)
+	layer.add_child(p)
 
 
 func _exit_tree() -> void:
@@ -909,6 +933,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not GameData.triggered_events.has("inner_hall_entered"):
 				GameData.triggered_events.append("inner_hall_entered")
 				await get_tree().process_frame
+				if not is_inside_tree():
+					return
 				DialogueManager.start_scene("inner_hall_enter")
 		get_viewport().set_input_as_handled()
 		return
@@ -925,6 +951,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not GameData.triggered_events.has("boss_room_entered"):
 				GameData.triggered_events.append("boss_room_entered")
 				await get_tree().process_frame
+				if not is_inside_tree():
+					return
 				DialogueManager.start_scene("boss_room_enter")
 		get_viewport().set_input_as_handled()
 		return
@@ -993,6 +1021,8 @@ func _on_dialogue_ended(scene_id: String) -> void:
 		if total_read == 1 and not GameData.triggered_events.has("sense_unlocked_hint_shown"):
 			GameData.triggered_events.append("sense_unlocked_hint_shown")
 			await get_tree().create_timer(0.5).timeout
+			if not is_inside_tree():
+				return
 			DialogueManager.start_scene("sense_unlocked_hint")
 
 	if scene_id == "sense_unlocked_hint":

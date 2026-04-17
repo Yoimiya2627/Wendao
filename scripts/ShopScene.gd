@@ -110,6 +110,31 @@ func _ready() -> void:
 		UIManager.show_main_hud()
 		UIManager.refresh_all_data()
 
+	_spawn_ambient_particles()
+
+
+func _spawn_ambient_particles() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 1
+	add_child(layer)
+	var p := CPUParticles2D.new()
+	p.amount               = 25
+	p.lifetime             = 5.0
+	p.explosiveness        = 0.0
+	p.randomness           = 1.0
+	p.direction            = Vector2(0.3, -1.0)
+	p.spread               = 45.0
+	p.gravity              = Vector2(5.0, -15.0)
+	p.initial_velocity_min = 5.0
+	p.initial_velocity_max = 15.0
+	p.scale_amount_min     = 1.0
+	p.scale_amount_max     = 3.0
+	p.color                = Color(0.95, 0.85, 0.60, 0.20)
+	p.emission_shape       = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(640.0, 360.0)
+	p.position             = Vector2(640.0, 360.0)
+	layer.add_child(p)
+
 
 func _exit_tree() -> void:
 	if DialogueManager.event_triggered.is_connected(_on_event_triggered):
@@ -138,6 +163,8 @@ func _start_morning_flow() -> void:
 	if not GameData.morning_triggered:
 		GameData.morning_triggered = true
 		await get_tree().process_frame
+		if not is_inside_tree():
+			return
 		DialogueManager.start_scene("morning")
 
 
@@ -178,6 +205,8 @@ func _start_return_home_flow() -> void:
 
 	## 等待一帧确保节点就位
 	await get_tree().process_frame
+	if not is_inside_tree():
+		return
 	## 自动播放return_home对话（爹不在，饭盛好了）
 	DialogueManager.start_scene(_DIALOGUE_RETURN_HOME)
 
@@ -198,6 +227,8 @@ func _start_letter_flow() -> void:
 	_fathers_letter.show()
 	## 等待一帧
 	await get_tree().process_frame
+	if not is_inside_tree():
+		return
 	## 自动播放letter对话
 	DialogueManager.start_scene(_DIALOGUE_FATHERS_LETTER)
 

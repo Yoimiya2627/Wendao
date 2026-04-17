@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bvyuu25jmhh6y" path="res://scripts/BattleUI.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/DialogueBox.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/InkWashOverlay.tscn" id="5_inkwash"]
+[ext_resource type="Script" path="res://scripts/BattleParticles.gd" id="6_particles"]
 
 [node name="BattleScene" type="Control" unique_id=779163303]
 layout_mode = 3
@@ -165,3 +166,6 @@ disabled = true
 layout_mode = 1
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="BattleParticles" type="Node" parent="."]
+script = ExtResource("6_particles")

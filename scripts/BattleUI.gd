@@ -19,6 +19,7 @@ extends Control
 @onready var item_button      : Button        = $SkillPanel/ItemButton
 
 @onready var log_text         : RichTextLabel = $LogPanel/LogText
+@onready var _particles       : Node          = $BattleParticles
 
 # ── 战斗状态 ─────────────────────────────────────────────────
 var _battle : BattleManager = null
@@ -599,11 +600,17 @@ func _execute_action(action_type: BattleManager.ActionType) -> void:
 	if enemy_took_dmg:
 		_flash_panel($EnemyPanel, Color(1.0, 0.2, 0.2))
 		AudioManager.play_sfx("enemy_hurt")
+		_particles.play_hit($EnemyPanel.get_global_rect().get_center())
 	if player_took_dmg:
 		_flash_panel($PlayerPanel, Color(1.0, 0.2, 0.2))
 		AudioManager.play_sfx("player_hurt")
+		_particles.play_hit($PlayerPanel.get_global_rect().get_center())
 		if player_dmg_amount >= 15:
 			_shake_screen()
+
+	match action_type:
+		BattleManager.ActionType.CHARGE, BattleManager.ActionType.SENSE:
+			_particles.play_skill($PlayerPanel.get_global_rect().get_center())
 
 	_refresh_all_hp()
 

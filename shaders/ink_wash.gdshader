@@ -16,6 +16,15 @@ uniform float vignette_shape   : hint_range(0.8, 2.5)  = 1.4;
 /// 墨迹渗透模糊半径（占屏幕宽度比例，0.003≈轻微柔化）
 uniform float blur_radius      : hint_range(0.0, 0.008) = 0.0025;
 
+/// 纸纹噪声强度（0=无颗粒，0.025=轻微宣纸纤维感）
+uniform float grain_strength   : hint_range(0.0, 0.06)  = 0.025;
+
+/// 画卷横纹条数（宣纸纤维横向纹路密度）
+uniform float scanline_count   : hint_range(0.0, 400.0) = 120.0;
+
+/// 横纹强度（0=无横纹，0.03=轻微织物感）
+uniform float scanline_strength : hint_range(0.0, 0.08) = 0.03;
+
 
 void fragment() {
 	vec2 uv = SCREEN_UV;
@@ -39,6 +48,19 @@ void fragment() {
 	// 宣纸色 #faf3df ≈ (0.98, 0.95, 0.87)
 	vec3 paper = vec3(0.98, 0.95, 0.87);
 	col.rgb    = mix(col.rgb, paper, paper_strength);
+
+	// ── 4. 纸纹噪声：宣纸纤维颗粒感 ─────────────────────────────
+	// 基于像素坐标的伪随机哈希，产生细腻颗粒
+	vec2 gp   = floor(uv * vec2(1280.0, 720.0));
+	gp        = fract(gp * vec2(0.1031, 0.1030));
+	gp       += dot(gp, gp.yx + 33.33);
+	float grain = fract((gp.x + gp.y) * gp.x);
+	col.rgb  += (grain - 0.5) * grain_strength;
+
+	// ── 5. 横纹：旧画卷横向纤维纹路 ─────────────────────────────
+	float sl     = fract(uv.y * scanline_count);
+	float sl_mask = smoothstep(0.0, 0.15, sl) * smoothstep(1.0, 0.85, sl);
+	col.rgb      *= 1.0 - sl_mask * scanline_strength;
 
 	COLOR = col;
 }

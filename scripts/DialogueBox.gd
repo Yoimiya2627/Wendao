@@ -14,6 +14,10 @@ extends Control
 
 # ── 字体资源 ─────────────────────────────────────────────────
 const _FONT_REGULAR = preload("res://assets/fonts/NotoSerifSC-Regular.ttf")
+const _PortraitControl = preload("res://scripts/PortraitControl.gd")
+
+# ── 人物立绘 ─────────────────────────────────────────────────
+var _portrait: Control = null
 
 # ── 逐字显示参数 ──────────────────────────────────────────────
 ## 每秒显示的字符数
@@ -133,6 +137,72 @@ func _apply_styles() -> void:
 	dialogue_text.add_theme_font_size_override("bold_font_size",    18)
 	dialogue_text.add_theme_font_size_override("italics_font_size", 18)
 
+	# 顶部金色分割线（竹简卷轴横纹）
+	var divider := ColorRect.new()
+	divider.layout_mode   = 1
+	divider.anchor_left   = 0.0
+	divider.anchor_top    = 0.0
+	divider.anchor_right  = 1.0
+	divider.anchor_bottom = 0.0
+	divider.offset_left   = 18.0
+	divider.offset_top    = 8.0
+	divider.offset_right  = -18.0
+	divider.offset_bottom = 10.0
+	divider.color = Color(0.83, 0.66, 0.34, 0.45)
+	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box_panel.add_child(divider)
+
+	# 四角装饰（◆ 金色，卷轴角花）——只创建一次
+	if box_panel.get_node_or_null("_corner_root") == null:
+		_add_corner_ornaments(box_panel)
+
+	# 人物剪影立绘面板（110×160，BoxPanel左上方，旁白时隐藏）
+	if _portrait == null:
+		_portrait = _PortraitControl.new()
+		_portrait.layout_mode   = 1
+		_portrait.anchor_left   = 0.0
+		_portrait.anchor_top    = 1.0
+		_portrait.anchor_right  = 0.0
+		_portrait.anchor_bottom = 1.0
+		_portrait.offset_left   = 44.0
+		_portrait.offset_top    = -356.0
+		_portrait.offset_right  = 154.0
+		_portrait.offset_bottom = -196.0
+		_portrait.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+		_portrait.visible       = false
+		add_child(_portrait)
+		move_child(_portrait, 0)
+
+
+func _add_corner_ornaments(panel: Panel) -> void:
+	# 用一个 Node 作为容器，方便 get_node_or_null 判重
+	var root := Node.new()
+	root.name = "_corner_root"
+	panel.add_child(root)
+
+	var corners := [
+		[0.0, 0.0, 0.0, 0.0,  3.0,  2.0, 14.0, 14.0],
+		[1.0, 0.0, 1.0, 0.0, -14.0,  2.0, -3.0, 14.0],
+		[0.0, 1.0, 0.0, 1.0,  3.0, -14.0, 14.0, -2.0],
+		[1.0, 1.0, 1.0, 1.0, -14.0, -14.0, -3.0, -2.0],
+	]
+	for c in corners:
+		var lbl := Label.new()
+		lbl.text           = "◆"
+		lbl.layout_mode    = 1
+		lbl.anchor_left    = c[0]
+		lbl.anchor_top     = c[1]
+		lbl.anchor_right   = c[2]
+		lbl.anchor_bottom  = c[3]
+		lbl.offset_left    = c[4]
+		lbl.offset_top     = c[5]
+		lbl.offset_right   = c[6]
+		lbl.offset_bottom  = c[7]
+		lbl.mouse_filter   = Control.MOUSE_FILTER_IGNORE
+		lbl.add_theme_color_override("font_color", ThemeManager.COLOR_ACCENT_GOLD)
+		lbl.add_theme_font_size_override("font_size", 10)
+		panel.add_child(lbl)
+
 
 func _process(delta: float) -> void:
 	# ── 逐字推进 ──────────────────────────────────────────────
@@ -207,6 +277,8 @@ func on_dialogue_started(_scene_id: String) -> void:
 func on_dialogue_ended(_scene_id: String) -> void:
 	hide()
 	_clear_choices()
+	if _portrait != null:
+		_portrait.set_speaker("")
 
 
 ## 节点变化：更新说话人名、启动逐字效果、处理选项显示
@@ -221,9 +293,13 @@ func on_node_changed(node: Dictionary) -> void:
 
 	if speaker.is_empty() or node_type == "narration":
 		speaker_panel.hide()
+		if _portrait != null:
+			_portrait.set_speaker("")
 	else:
 		speaker_panel.show()
 		speaker_label.text = speaker
+		if _portrait != null:
+			_portrait.set_speaker(speaker)
 
 	# ── 文字内容：按 type 和 speaker 分三类处理 ─────────────
 	var raw_text: String = node.get("text", "")

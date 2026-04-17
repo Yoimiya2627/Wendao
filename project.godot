@@ -28,6 +28,7 @@ SceneTransition="*uid://5sgp8k2em81h"
 AudioManager="*res://scripts/AudioManager.gd"
 ThemeManager="*res://scripts/ThemeManager.gd"
 UIManager="*res://scripts/UIManager.gd"
+ButtonAnimator="*res://scripts/ButtonAnimator.gd"
 VirtualJoystick="*res://scripts/VirtualJoystick.gd"
 
 [display]

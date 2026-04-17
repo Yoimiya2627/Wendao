@@ -645,16 +645,26 @@ func _build_tileset_and_map() -> void:
 
 	# ⑦ 应用 TileSet 后绘制地图
 	_tile_map.tile_set = ts
+	_tile_map.z_index = 0
 	_draw_map()
+	_spawn_world_decorations()
 
 
-## 将 img 从 x_off 起的32×32区域涂为纯色（带1px深色边框增加网格感）
+## 将 img 从 x_off 起的32×32区域涂为纯色（带1px深色边框 + 轻微随机扰动模拟手绘质感）
 func _fill_tile(img: Image, x_off: int, color: Color) -> void:
-	var border_color := color.darkened(0.2)
+	var border_color := color.darkened(0.22)
 	for x in TILE_SIZE:
 		for y in TILE_SIZE:
 			var is_edge := (x == 0 or x == TILE_SIZE - 1 or y == 0 or y == TILE_SIZE - 1)
-			img.set_pixel(x_off + x, y, border_color if is_edge else color)
+			if is_edge:
+				img.set_pixel(x_off + x, y, border_color)
+			else:
+				var n := (randf() - 0.5) * 0.035
+				img.set_pixel(x_off + x, y, Color(
+					clamp(color.r + n, 0.0, 1.0),
+					clamp(color.g + n, 0.0, 1.0),
+					clamp(color.b + n, 0.0, 1.0)
+				))
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -727,6 +737,100 @@ func _draw_map() -> void:
 ## 注意：不能命名为 _set，会与 Godot 内置虚函数 Node._set(property,value) 冲突
 func _place_tile(layer: int, x: int, y: int, tile_col: int) -> void:
 	_tile_map.set_cell(layer, Vector2i(x, y), _tileset_source_id, Vector2i(tile_col, 0))
+
+
+## 世界场景装饰物：老榕树、古井、公告栏（纯Polygon2D，无需图片资源）
+func _spawn_world_decorations() -> void:
+	var layer := Node2D.new()
+	layer.name = "WorldDecorations"
+	layer.z_index = 2
+	add_child(layer)
+
+	## 老榕树（格17,14 → 像素544,448）
+	_add_tree(layer, Vector2(544, 440))
+	## 古井（格22,17 → 像素704,544）
+	_add_well(layer, Vector2(704, 544))
+	## 公告栏（格22,13 → 像素704,416）
+	_add_notice_board(layer, Vector2(704, 410))
+
+
+func _add_tree(parent: Node2D, pos: Vector2) -> void:
+	var node := Node2D.new()
+	node.position = pos
+	## 树冠
+	var canopy := Polygon2D.new()
+	canopy.polygon = PackedVector2Array([
+		Vector2(0, -28), Vector2(19, -20), Vector2(26, -6),
+		Vector2(22, 10), Vector2(8, 18), Vector2(-8, 18),
+		Vector2(-22, 10), Vector2(-26, -6), Vector2(-19, -20)
+	])
+	canopy.color = Color(0.17, 0.30, 0.13, 0.92)
+	node.add_child(canopy)
+	## 树干
+	var trunk := Polygon2D.new()
+	trunk.polygon = PackedVector2Array([
+		Vector2(-5, 6), Vector2(5, 6), Vector2(4, 22), Vector2(-4, 22)
+	])
+	trunk.color = Color(0.34, 0.22, 0.12, 1.0)
+	node.add_child(trunk)
+	parent.add_child(node)
+
+
+func _add_well(parent: Node2D, pos: Vector2) -> void:
+	var node := Node2D.new()
+	node.position = pos
+	## 井沿外圈
+	var outer := Polygon2D.new()
+	outer.polygon = PackedVector2Array([
+		Vector2(0, -16), Vector2(11, -11), Vector2(16, 0),
+		Vector2(11, 11), Vector2(0, 16), Vector2(-11, 11),
+		Vector2(-16, 0), Vector2(-11, -11)
+	])
+	outer.color = Color(0.42, 0.36, 0.28, 1.0)
+	node.add_child(outer)
+	## 井口（黑色水面）
+	var inner := Polygon2D.new()
+	inner.polygon = PackedVector2Array([
+		Vector2(0, -9), Vector2(6, -6), Vector2(9, 0),
+		Vector2(6, 6), Vector2(0, 9), Vector2(-6, 6),
+		Vector2(-9, 0), Vector2(-6, -6)
+	])
+	inner.color = Color(0.05, 0.06, 0.10, 0.96)
+	node.add_child(inner)
+	parent.add_child(node)
+
+
+func _add_notice_board(parent: Node2D, pos: Vector2) -> void:
+	var node := Node2D.new()
+	node.position = pos
+	## 支柱
+	var pole := Polygon2D.new()
+	pole.polygon = PackedVector2Array([
+		Vector2(-3, -8), Vector2(3, -8), Vector2(3, 16), Vector2(-3, 16)
+	])
+	pole.color = Color(0.38, 0.26, 0.14, 1.0)
+	node.add_child(pole)
+	## 牌面
+	var board := Polygon2D.new()
+	board.polygon = PackedVector2Array([
+		Vector2(-18, -26), Vector2(18, -26), Vector2(18, -8), Vector2(-18, -8)
+	])
+	board.color = Color(0.62, 0.48, 0.26, 1.0)
+	node.add_child(board)
+	## 牌面横纹（装饰线）
+	var line1 := Polygon2D.new()
+	line1.polygon = PackedVector2Array([
+		Vector2(-14, -22), Vector2(14, -22), Vector2(14, -21), Vector2(-14, -21)
+	])
+	line1.color = Color(0.38, 0.26, 0.14, 0.6)
+	node.add_child(line1)
+	var line2 := Polygon2D.new()
+	line2.polygon = PackedVector2Array([
+		Vector2(-14, -16), Vector2(14, -16), Vector2(14, -15), Vector2(-14, -15)
+	])
+	line2.color = Color(0.38, 0.26, 0.14, 0.6)
+	node.add_child(line2)
+	parent.add_child(node)
 
 
 # ══════════════════════════════════════════════════════════════════
