@@ -4,6 +4,7 @@ shader_type canvas_item;
 // 参数：grain=高频颗粒；blot=低频色斑；blot_scale=色斑密度；
 //      wood_grain=木纹强度（0=纯石地）；wood_freq=木纹横线密度
 
+uniform vec4  base_color : source_color = vec4(0.5, 0.4, 0.3, 1.0);
 uniform float grain      : hint_range(0.0, 0.15) = 0.04;
 uniform float blot       : hint_range(0.0, 0.25) = 0.08;
 uniform float blot_scale : hint_range(1.0, 20.0) = 5.0;
@@ -26,7 +27,7 @@ float smooth_noise(vec2 p) {
 }
 
 void fragment() {
-	vec3 col = COLOR.rgb;
+	vec3 col = base_color.rgb;
 	vec2 uv = UV;
 
 	// 低频色斑（像宣纸上散开的淡墨）
@@ -43,5 +44,5 @@ void fragment() {
 		col -= abs(wave) * wood_grain * 0.5;
 	}
 
-	COLOR = vec4(col, COLOR.a);
+	COLOR = vec4(col, base_color.a);
 }

@@ -120,6 +120,7 @@ func _apply_floor_texture() -> void:
 	if floor_rect == null: return
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://shaders/ground_texture.gdshader")
+	mat.set_shader_parameter("base_color", floor_rect.color)
 	mat.set_shader_parameter("grain", 0.04)
 	mat.set_shader_parameter("blot", 0.08)
 	mat.set_shader_parameter("blot_scale", 4.0)
