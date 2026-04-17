@@ -9,7 +9,7 @@ uniform float grain      : hint_range(0.0, 0.15) = 0.04;
 uniform float blot       : hint_range(0.0, 0.25) = 0.08;
 uniform float blot_scale : hint_range(1.0, 20.0) = 5.0;
 uniform float wood_grain : hint_range(0.0, 0.25) = 0.0;
-uniform float wood_freq  : hint_range(0.0, 60.0) = 0.0;
+uniform float wood_freq  : hint_range(0.0, 120.0) = 0.0;
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);

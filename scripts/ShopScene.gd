@@ -125,7 +125,7 @@ func _apply_floor_texture() -> void:
 	mat.set_shader_parameter("blot", 0.10)
 	mat.set_shader_parameter("blot_scale", 4.0)
 	mat.set_shader_parameter("wood_grain", 0.14)
-	mat.set_shader_parameter("wood_freq", 20.0)
+	mat.set_shader_parameter("wood_freq", 70.0)
 	floor_rect.material = mat
 
 
