@@ -753,7 +753,7 @@ func _spawn_world_decorations() -> void:
 	## 公告栏（格22,13 → 像素704,416）
 	_add_notice_board(layer, Vector2(704, 410))
 
-	## ─── L1 美术优化：装饰物 / 建筑细节 / 光影 / 粒子 ────────────
+	## ─── L1 美术优化：结构性装饰（无粒子无光影，保持白天场景干净）──
 	_decorate_temple(layer)
 	_decorate_shop_facade(layer)
 	_decorate_tea_facade(layer)
@@ -761,9 +761,6 @@ func _spawn_world_decorations() -> void:
 	_add_lanterns(layer)
 	_add_grass_patches(layer)
 	_add_road_stones(layer)
-	_add_chimney_smoke(layer)
-	_add_falling_leaves(layer)
-	_add_ambient_light()
 
 
 func _add_tree(parent: Node2D, pos: Vector2) -> void:
@@ -1086,94 +1083,6 @@ func _add_road_stones(parent: Node2D) -> void:
 		])
 		stone.color = Color(0.45, 0.42, 0.38, 0.95)
 		parent.add_child(stone)
-
-
-## 炊烟：杂货铺和茶馆屋顶冒烟（CPUParticles2D）
-func _add_chimney_smoke(parent: Node2D) -> void:
-	var chimneys := [
-		Vector2(220, 64),   ## 杂货铺屋顶
-		Vector2(930, 540),  ## 茶馆屋顶
-	]
-	for pos in chimneys:
-		var p := CPUParticles2D.new()
-		p.position = pos
-		p.amount = 14
-		p.lifetime = 3.2
-		p.preprocess = 2.0
-		p.speed_scale = 1.0
-		p.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
-		p.emission_sphere_radius = 3.0
-		p.direction = Vector2(0, -1)
-		p.spread = 20.0
-		p.initial_velocity_min = 10.0
-		p.initial_velocity_max = 22.0
-		p.gravity = Vector2(0, -4)
-		p.scale_amount_min = 3.0
-		p.scale_amount_max = 5.5
-		p.color = Color(0.78, 0.78, 0.74, 0.38)
-		p.z_index = 4
-		parent.add_child(p)
-
-
-## 落叶：整个场景范围飘落（CPUParticles2D）
-func _add_falling_leaves(parent: Node2D) -> void:
-	var p := CPUParticles2D.new()
-	p.position = Vector2(640, -40)
-	p.amount = 20
-	p.lifetime = 12.0
-	p.preprocess = 6.0
-	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	p.emission_rect_extents = Vector2(640, 20)
-	p.direction = Vector2(0, 1)
-	p.spread = 15.0
-	p.initial_velocity_min = 14.0
-	p.initial_velocity_max = 24.0
-	p.gravity = Vector2(6, 10)
-	p.scale_amount_min = 1.5
-	p.scale_amount_max = 2.5
-	p.color = Color(0.76, 0.55, 0.28, 0.55)
-	p.z_index = 5
-	parent.add_child(p)
-
-
-## 整体光影：CanvasModulate 略微暗化 + 灯笼处 PointLight2D 暖黄晕染
-func _add_ambient_light() -> void:
-	## 整体色调（轻微压暗，不过度）
-	var cm := CanvasModulate.new()
-	cm.name = "AmbientModulate"
-	cm.color = Color(0.92, 0.90, 0.86, 1.0)
-	add_child(cm)
-	## 灯笼位置的暖黄点光
-	var light_positions := [
-		Vector2(96,  340), Vector2(320, 340),
-		Vector2(832, 564), Vector2(1024, 564),
-		Vector2(1172, 848),
-	]
-	var lights_layer := Node2D.new()
-	lights_layer.name = "LanternLights"
-	lights_layer.z_index = 10
-	add_child(lights_layer)
-	for pos in light_positions:
-		var light := PointLight2D.new()
-		light.position = pos
-		light.color = Color(1.0, 0.78, 0.42, 0.80)
-		light.energy = 1.5
-		## 使用径向渐变贴图（无贴图则 PointLight2D 不发光）
-		var grad := Gradient.new()
-		grad.offsets = PackedFloat32Array([0.0, 0.6, 1.0])
-		grad.colors = PackedColorArray([
-			Color.WHITE, Color(1, 1, 1, 0.4), Color(1, 1, 1, 0)
-		])
-		var tex := GradientTexture2D.new()
-		tex.gradient = grad
-		tex.width = 160
-		tex.height = 160
-		tex.fill = GradientTexture2D.FILL_RADIAL
-		tex.fill_from = Vector2(0.5, 0.5)
-		tex.fill_to = Vector2(1.0, 0.5)
-		light.texture = tex
-		light.offset = Vector2(-80, -80)
-		lights_layer.add_child(light)
 
 
 # ══════════════════════════════════════════════════════════════════
