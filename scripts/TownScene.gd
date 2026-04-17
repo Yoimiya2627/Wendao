@@ -749,12 +749,9 @@ func _spawn_world_decorations() -> void:
 	## 公告栏（格22,13 → 像素704,416）
 	_add_notice_board(layer, Vector2(704, 410))
 
-	## ─── L1 美术优化：结构性装饰（无粒子无光影，保持白天场景干净）──
+	## ─── L1 美术优化：结构性装饰（仅废庙 + 杂货铺屋檐 + 路边石）──
 	_decorate_temple(layer)
 	_decorate_shop_facade(layer)
-	_decorate_tea_facade(layer)
-	_decorate_plaza(layer)
-	_add_grass_patches(layer)
 	_add_road_stones(layer)
 
 
@@ -911,94 +908,6 @@ func _decorate_shop_facade(parent: Node2D) -> void:
 	])
 	shadow.color = Color(0.08, 0.05, 0.03, 0.6)
 	node.add_child(shadow)
-	parent.add_child(node)
-
-
-## 茶馆门面装饰：屋檐 + 两根立柱
-func _decorate_tea_facade(parent: Node2D) -> void:
-	var node := Node2D.new()
-	node.z_index = 1
-	## 屋檐横梁（茶馆 row 18 附近，cols 26-30）
-	var beam := Polygon2D.new()
-	beam.polygon = PackedVector2Array([
-		Vector2(832, 568), Vector2(1024, 568),
-		Vector2(1024, 576), Vector2(832, 576)
-	])
-	beam.color = Color(0.22, 0.15, 0.08, 1.0)
-	node.add_child(beam)
-	## 屋檐阴影
-	var shadow := Polygon2D.new()
-	shadow.polygon = PackedVector2Array([
-		Vector2(832, 576), Vector2(1024, 576),
-		Vector2(1024, 579), Vector2(832, 579)
-	])
-	shadow.color = Color(0.08, 0.05, 0.03, 0.6)
-	node.add_child(shadow)
-	parent.add_child(node)
-
-
-## 测灵石广场：台阶边缘暗线 + 四角石墩
-func _decorate_plaza(parent: Node2D) -> void:
-	var node := Node2D.new()
-	node.z_index = 1
-	## 四角小石墩（广场界标，cols 25-34, rows 1-9 大致范围）
-	var corners := [
-		Vector2(816, 48),  Vector2(1104, 48),
-		Vector2(816, 288), Vector2(1104, 288)
-	]
-	for c in corners:
-		var stone := Polygon2D.new()
-		stone.polygon = PackedVector2Array([
-			c + Vector2(-5, -4), c + Vector2(5, -4),
-			c + Vector2(5, 4),   c + Vector2(-5, 4)
-		])
-		stone.color = Color(0.38, 0.40, 0.44, 1.0)
-		node.add_child(stone)
-		## 石墩顶部高光
-		var hl := Polygon2D.new()
-		hl.polygon = PackedVector2Array([
-			c + Vector2(-5, -4), c + Vector2(5, -4),
-			c + Vector2(5, -3),  c + Vector2(-5, -3)
-		])
-		hl.color = Color(0.60, 0.62, 0.66, 1.0)
-		node.add_child(hl)
-	parent.add_child(node)
-
-
-## 草丛：沿路边、墙边散点
-func _add_grass_patches(parent: Node2D) -> void:
-	var positions := [
-		## 沿主路（row 13-15）边缘
-		Vector2(64, 408),   Vector2(256, 408),  Vector2(448, 408),
-		Vector2(640, 408),  Vector2(960, 408),  Vector2(1152, 408),
-		Vector2(96, 520),   Vector2(288, 520),  Vector2(480, 520),
-		Vector2(896, 520),  Vector2(1088, 520),
-		## 纵向路边
-		Vector2(576, 80),   Vector2(576, 240),  Vector2(576, 720),
-		Vector2(704, 80),   Vector2(704, 240),  Vector2(704, 720),
-		## 边角
-		Vector2(128, 720),  Vector2(1088, 160), Vector2(1248, 384),
-		Vector2(256, 160),  Vector2(384, 720),  Vector2(832, 384),
-	]
-	for pos in positions:
-		_add_grass(parent, pos)
-
-
-func _add_grass(parent: Node2D, pos: Vector2) -> void:
-	var node := Node2D.new()
-	node.position = pos
-	## 三到四根草叶（深绿细三角）
-	var leaves := [
-		PackedVector2Array([Vector2(-3, 0), Vector2(-2, -6), Vector2(-1, 0)]),
-		PackedVector2Array([Vector2(0, 0),  Vector2(1, -8),  Vector2(2, 0)]),
-		PackedVector2Array([Vector2(3, 0),  Vector2(5, -5),  Vector2(6, 0)]),
-	]
-	var color := Color(0.18, 0.34, 0.14, 0.88)
-	for leaf_pts in leaves:
-		var g := Polygon2D.new()
-		g.polygon = leaf_pts
-		g.color = color
-		node.add_child(g)
 	parent.add_child(node)
 
 
