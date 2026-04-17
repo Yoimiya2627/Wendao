@@ -38,10 +38,12 @@ void fragment() {
 	float g = hash(uv * 500.0);
 	col += (g - 0.5) * grain;
 
-	// 木纹横线（带低频噪声扰动，模拟木头真实纹理的不规则）
+	// 木纹横线（带低频噪声扰动模拟真实木纹）
+	// uv.x 驱动 → 条纹随 x 周期变化 → 横向延伸的木纹
+	// 中心化（abs - 0.5）让条纹有亮有暗，不会系统性偏暗
 	if (wood_grain > 0.001) {
-		float wave = sin(uv.y * wood_freq + smooth_noise(uv * 2.0) * 3.0);
-		col -= abs(wave) * wood_grain * 0.5;
+		float wave = sin(uv.x * wood_freq + smooth_noise(uv * 2.0) * 3.0);
+		col += (abs(wave) - 0.5) * wood_grain * 0.6;
 	}
 
 	COLOR = vec4(col, base_color.a);
