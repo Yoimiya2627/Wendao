@@ -2307,7 +2307,7 @@
 				"ba_06": {
 					"type": "narration",
 					"text": "爹把那碗饭盛好，放在桌上，然后离开的背影。",
-					"next": "ba_06b"
+					"next": "ba_cb_father_check"
 				},
 				"ba_06b": {
 					"type": "narration",
@@ -2322,6 +2322,45 @@
 				"ba_08": {
 					"type": "narration",
 					"text": "剑穗在黑暗里划出一道白光。"
+				},
+				"ba_cb_father_check": {
+					"type": "narration",
+					"if_flag": {
+						"father_morning_warm": "ba_cb_father"
+					},
+					"next": "ba_cb_cinnamon_check"
+				},
+				"ba_cb_father": {
+					"type": "narration",
+					"speaker": "",
+					"text": "今早爹伸手添饭时顿了一下。她说过\"你也吃\"。",
+					"next": "ba_cb_cinnamon_check"
+				},
+				"ba_cb_cinnamon_check": {
+					"type": "narration",
+					"if_flag": {
+						"father_cinnamon_forgot": "ba_cb_cinnamon"
+					},
+					"next": "ba_cb_promise_check"
+				},
+				"ba_cb_cinnamon": {
+					"type": "narration",
+					"speaker": "",
+					"text": "灶台上那包桂皮还没买回去。",
+					"next": "ba_cb_promise_check"
+				},
+				"ba_cb_promise_check": {
+					"type": "narration",
+					"if_flag": {
+						"father_letter_promise_return": "ba_cb_promise"
+					},
+					"next": "ba_06b"
+				},
+				"ba_cb_promise": {
+					"type": "narration",
+					"speaker": "",
+					"text": "信上写过四个字——\"会回来的\"。",
+					"next": "ba_06b"
 				}
 			}
 		},
