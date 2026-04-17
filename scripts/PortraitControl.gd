@@ -9,15 +9,15 @@ var _speaker: String = ""
 var _base_color: Color = Color.TRANSPARENT
 
 
-func set_speaker(name: String) -> void:
-	_speaker = name
-	_base_color = _resolve_color(name)
-	visible = not name.is_empty()
+func set_speaker(speaker_name: String) -> void:
+	_speaker = speaker_name
+	_base_color = _resolve_color(speaker_name)
+	visible = not speaker_name.is_empty()
 	queue_redraw()
 
 
-func _resolve_color(name: String) -> Color:
-	match name:
+func _resolve_color(speaker_name: String) -> Color:
+	match speaker_name:
 		"苏云晚": return Color(0.83, 0.66, 0.34, 0.92)
 		"苏明":   return Color(0.25, 0.35, 0.55, 0.92)
 		"年年":   return Color(0.78, 0.78, 0.88, 0.92)

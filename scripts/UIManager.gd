@@ -363,6 +363,7 @@ func _build_bag() -> void:
 	_bag_slots.clear()
 	for i in 6:
 		var col := i % 3
+		@warning_ignore("integer_division")
 		var row := i / 3
 		var slot := Button.new()
 		slot.position = Vector2(8.0 + col * 64.0, 34.0 + row * 64.0)

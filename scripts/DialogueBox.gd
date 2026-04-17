@@ -73,13 +73,13 @@ func _on_font_scale_changed(scale_factor: float) -> void:
 
 ## 应用字号缩放到对话文字（三种字型统一基准 18px，旁白靠 [i] 斜体视觉区分）
 func _apply_font_scale(scale_factor: float) -> void:
-	var size: int = int(round(18 * scale_factor))
+	var sz: int = int(round(18 * scale_factor))
 	if dialogue_text:
-		dialogue_text.add_theme_font_size_override("normal_font_size",  size)
-		dialogue_text.add_theme_font_size_override("bold_font_size",    size)
-		dialogue_text.add_theme_font_size_override("italics_font_size", size)
+		dialogue_text.add_theme_font_size_override("normal_font_size",  sz)
+		dialogue_text.add_theme_font_size_override("bold_font_size",    sz)
+		dialogue_text.add_theme_font_size_override("italics_font_size", sz)
 	if speaker_label:
-		speaker_label.add_theme_font_size_override("font_size", size)
+		speaker_label.add_theme_font_size_override("font_size", sz)
 
 
 ## 由 NPC 直接调用，绕开信号时序问题
@@ -139,7 +139,6 @@ func _apply_styles() -> void:
 
 	# 顶部金色分割线（竹简卷轴横纹）
 	var divider := ColorRect.new()
-	divider.layout_mode   = 1
 	divider.anchor_left   = 0.0
 	divider.anchor_top    = 0.0
 	divider.anchor_right  = 1.0
@@ -159,7 +158,6 @@ func _apply_styles() -> void:
 	# 人物剪影立绘面板（110×160，BoxPanel左上方，旁白时隐藏）
 	if _portrait == null:
 		_portrait = _PortraitControl.new()
-		_portrait.layout_mode   = 1
 		_portrait.anchor_left   = 0.0
 		_portrait.anchor_top    = 1.0
 		_portrait.anchor_right  = 0.0
@@ -189,7 +187,6 @@ func _add_corner_ornaments(panel: Panel) -> void:
 	for c in corners:
 		var lbl := Label.new()
 		lbl.text           = "◆"
-		lbl.layout_mode    = 1
 		lbl.anchor_left    = c[0]
 		lbl.anchor_top     = c[1]
 		lbl.anchor_right   = c[2]
