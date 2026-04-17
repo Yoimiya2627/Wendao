@@ -650,21 +650,34 @@ func _build_tileset_and_map() -> void:
 	_spawn_world_decorations()
 
 
-## 将 img 从 x_off 起的32×32区域涂为纯色（带1px深色边框 + 轻微随机扰动模拟手绘质感）
+## 将 img 从 x_off 起的 32×32 区域绘制为水墨晕染风格
+## 去掉 1px 硬边框 → 消除网格感
+## 中心浅 → 边缘深（径向渐变模拟墨滴晕开）
+## 颗粒扰动（±0.08）+ 随机散点 → 颗粒感与手绘质感
 func _fill_tile(img: Image, x_off: int, color: Color) -> void:
-	var border_color := color.darkened(0.22)
+	var center := float(TILE_SIZE) * 0.5
+	var max_dist := center * 1.414  ## 对角线距离
 	for x in TILE_SIZE:
 		for y in TILE_SIZE:
-			var is_edge := (x == 0 or x == TILE_SIZE - 1 or y == 0 or y == TILE_SIZE - 1)
-			if is_edge:
-				img.set_pixel(x_off + x, y, border_color)
-			else:
-				var n := (randf() - 0.5) * 0.035
-				img.set_pixel(x_off + x, y, Color(
-					clamp(color.r + n, 0.0, 1.0),
-					clamp(color.g + n, 0.0, 1.0),
-					clamp(color.b + n, 0.0, 1.0)
-				))
+			var dx := float(x) - center + 0.5
+			var dy := float(y) - center + 0.5
+			var dist := sqrt(dx * dx + dy * dy) / max_dist
+			## 边缘渐深（pow 1.4 让渐变集中在外圈，中心大片保持浅色）
+			var edge_darken := pow(dist, 1.4) * 0.15
+			## 颗粒扰动（±0.08，比原版 ±0.035 明显但不过分）
+			var n := (randf() - 0.5) * 0.08
+			img.set_pixel(x_off + x, y, Color(
+				clamp(color.r - edge_darken + n, 0.0, 1.0),
+				clamp(color.g - edge_darken + n, 0.0, 1.0),
+				clamp(color.b - edge_darken + n, 0.0, 1.0)
+			))
+	## 散点：每格随机洒 2~4 个深色点，避开最外圈
+	var dot_color := color.darkened(0.35)
+	var dot_count := 2 + randi() % 3
+	for _i in dot_count:
+		var px := 3 + randi() % (TILE_SIZE - 6)
+		var py := 3 + randi() % (TILE_SIZE - 6)
+		img.set_pixel(x_off + px, py, dot_color)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -758,7 +771,6 @@ func _spawn_world_decorations() -> void:
 	_decorate_shop_facade(layer)
 	_decorate_tea_facade(layer)
 	_decorate_plaza(layer)
-	_add_lanterns(layer)
 	_add_grass_patches(layer)
 	_add_road_stones(layer)
 
@@ -967,66 +979,6 @@ func _decorate_plaza(parent: Node2D) -> void:
 		])
 		hl.color = Color(0.60, 0.62, 0.66, 1.0)
 		node.add_child(hl)
-	parent.add_child(node)
-
-
-## 灯笼：挂在杂货铺、茶馆、庙门口（红灯笼 + 金边 + 下方穗子）
-func _add_lanterns(parent: Node2D) -> void:
-	var positions := [
-		Vector2(96,  340),   ## 杂货铺门口左
-		Vector2(320, 340),   ## 杂货铺门口右
-		Vector2(832, 564),   ## 茶馆门口左
-		Vector2(1024, 564),  ## 茶馆门口右
-		Vector2(1172, 848),  ## 废庙门口
-	]
-	for pos in positions:
-		_add_lantern(parent, pos)
-
-
-func _add_lantern(parent: Node2D, pos: Vector2) -> void:
-	var node := Node2D.new()
-	node.position = pos
-	node.z_index = 3
-	## 悬绳
-	var rope := Polygon2D.new()
-	rope.polygon = PackedVector2Array([
-		Vector2(-1, -12), Vector2(1, -12),
-		Vector2(1, -4),   Vector2(-1, -4)
-	])
-	rope.color = Color(0.18, 0.12, 0.08, 1.0)
-	node.add_child(rope)
-	## 灯笼主体（暗红椭圆）
-	var body := Polygon2D.new()
-	body.polygon = PackedVector2Array([
-		Vector2(0, -4), Vector2(6, -2), Vector2(7, 4),
-		Vector2(6, 10), Vector2(0, 12), Vector2(-6, 10),
-		Vector2(-7, 4), Vector2(-6, -2)
-	])
-	body.color = Color(0.72, 0.18, 0.14, 0.95)
-	node.add_child(body)
-	## 金边上下
-	var top := Polygon2D.new()
-	top.polygon = PackedVector2Array([
-		Vector2(-4, -4), Vector2(4, -4),
-		Vector2(4, -3),  Vector2(-4, -3)
-	])
-	top.color = Color(0.88, 0.70, 0.36, 1.0)
-	node.add_child(top)
-	var bot := Polygon2D.new()
-	bot.polygon = PackedVector2Array([
-		Vector2(-4, 11), Vector2(4, 11),
-		Vector2(4, 12),  Vector2(-4, 12)
-	])
-	bot.color = Color(0.88, 0.70, 0.36, 1.0)
-	node.add_child(bot)
-	## 穗子
-	var tassel := Polygon2D.new()
-	tassel.polygon = PackedVector2Array([
-		Vector2(-1, 12), Vector2(1, 12),
-		Vector2(1, 18),  Vector2(-1, 18)
-	])
-	tassel.color = Color(0.88, 0.70, 0.36, 1.0)
-	node.add_child(tassel)
 	parent.add_child(node)
 
 
