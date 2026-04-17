@@ -1122,8 +1122,8 @@ func _add_falling_leaves(parent: Node2D) -> void:
 	p.amount = 20
 	p.lifetime = 12.0
 	p.preprocess = 6.0
-	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_BOX
-	p.emission_box_extents = Vector3(640, 20, 0)
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(640, 20)
 	p.direction = Vector2(0, 1)
 	p.spread = 15.0
 	p.initial_velocity_min = 14.0
