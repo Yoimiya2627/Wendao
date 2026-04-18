@@ -103,11 +103,12 @@ func try_whisper(stage: String) -> void:
 func get_chapter_end_coda() -> Array[String]:
 	if not GameData.got_charm:
 		return []
-	var path  := GameData.chapter_end_path
-	var paid  := GameData.narrative_flags.get("town_paid_old_lady", false)
-	var key   := ("a" if path != "b" else "b") + ("_paid" if paid else "_not_paid")
+	var path  : String = GameData.chapter_end_path
+	var paid  : bool   = GameData.narrative_flags.get("town_paid_old_lady", false)
+	var key   : String = ("a" if path != "b" else "b") + ("_paid" if paid else "_not_paid")
 	var lines : Array[String] = []
-	for l: String in _CODA.get(key, _CODA["a_not_paid"]):
+	var coda_variants : Array = _CODA.get(key, _CODA["a_not_paid"])
+	for l: String in coda_variants:
 		lines.append(l)
 	lines.append(_CODA_CLOSING)
 	return lines
@@ -116,20 +117,21 @@ func get_chapter_end_coda() -> Array[String]:
 # ── 内部逻辑 ─────────────────────────────────────────────────
 
 func _pick_line(stage: String) -> String:
-	var variants: Array = _WHISPER_LINES.get(stage, [])
-	for v in variants:
-		var cond_key : String = v[0]
-		var cond_val          = v[1]
-		var text     : String = v[2]
+	var variants : Array = _WHISPER_LINES.get(stage, [])
+	for v: Array in variants:
+		var cond_key : String  = v[0]
+		var cond_val : Variant = v[1]
+		var text     : String  = v[2]
 		match cond_key:
 			"_default":
 				return text
 			"_has_items":
-				var has := (GameData.heal_potions + GameData.incenses + GameData.talismans) > 0
+				var has : bool = (GameData.heal_potions + GameData.incenses + GameData.talismans) > 0
 				if has == cond_val:
 					return text
 			_:
-				if GameData.narrative_flags.get(cond_key, false) == cond_val:
+				var actual : Variant = GameData.narrative_flags.get(cond_key, false)
+				if actual == cond_val:
 					return text
 	return ""
 
