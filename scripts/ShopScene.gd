@@ -339,10 +339,6 @@ func _on_event_triggered(event_name: String) -> void:
 			## morning结束，玩家可出门，此时显示游戏UI
 			UIManager.show_main_hud()
 			UIManager.add_item("sword_tassel")
-		"night_begin":
-			## night_begin事件已从JSON移除
-			## 此分支保留作兜底，直接放行
-			DialogueManager.finish_event()
 		"start_chapter_end_b":
 			## letter场景结束，触发章末路径B
 			DialogueManager.finish_event()
@@ -480,9 +476,9 @@ func _trigger_night_and_leave() -> void:
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(overlay)
-	## 1.5秒渐变到全黑
+	## 0.9秒渐变到全黑（原 1.5s，压缩以减少黑屏等待感）
 	var tween := create_tween()
-	tween.tween_property(overlay, "color:a", 1.0, 1.5)\
+	tween.tween_property(overlay, "color:a", 1.0, 0.9)\
 		.set_ease(Tween.EASE_IN_OUT)\
 		.set_trans(Tween.TRANS_SINE)
 	await tween.finished

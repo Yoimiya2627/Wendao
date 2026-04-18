@@ -125,7 +125,7 @@ func _play_ending() -> void:
 	if not is_inside_tree(): return
 
 	## 淡入显示章节标题
-	_title.text = "第一章·问道"
+	_title.text = "第一章·碎玉镇"
 	var tween := create_tween()
 	tween.tween_property(
 		_title,

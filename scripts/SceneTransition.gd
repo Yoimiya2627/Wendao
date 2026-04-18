@@ -50,8 +50,10 @@ func change_scene(path: String) -> void:
 	## 切场景前强制终止对话，防止 DialogueManager.is_active 跨场景残留导致玩家卡死
 	DialogueManager.force_stop()
 
-	# 淡出：画面变黑
-	await _fade(1.0)
+	# 淡出：画面变黑。若上层（如 ShopScene 夜晚渐变）已把遮罩置为不透明，
+	# 跳过本次淡出，避免 0.3s 纯黑屏的冗余等待。
+	if _overlay.modulate.a < 0.99:
+		await _fade(1.0)
 
 	## 二次 force_stop：淡出期间旧场景的 _process 可能因状态变更
 	## 而自动触发新对话（如 TownScene 的夜行旁白），导致 is_active 残留

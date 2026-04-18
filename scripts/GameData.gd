@@ -245,6 +245,24 @@ func load_data(data: Dictionary) -> void:
 		data.get("saved_player_position_y", 0.0)
 	)
 	narrative_flags = data.get("narrative_flags", {})
+
+	## 迁移：清理旧版本 NPC.gd 错误写入的 _triggered keys。
+	## 旧版本在 interact() 里会给所有有 dialogue_scene_id_after 的 NPC
+	## 自动写 _triggered（大婶/打水人/守卫等），导致 phase 1 聊过一次后
+	## scene reload 就变成回程对话。修复后应清除这些误写的 key。
+	## 测验师（NPC_Examiner）是唯一"事件一次性切换"的合法用例，
+	## 若 phase >= 3（测灵已完成），需保留/重建其 _triggered key。
+	var _purge: Array[String] = []
+	for _key in triggered_events:
+		if _key.ends_with("_triggered"):
+			_purge.append(_key)
+	for _key in _purge:
+		triggered_events.erase(_key)
+	if story_phase >= 3:
+		var _examiner_key := "npc_state_TownScene_NPC_Examiner_triggered"
+		if not triggered_events.has(_examiner_key):
+			triggered_events.append(_examiner_key)
+
 	print("GameData: 存档加载完毕 —— ", str(player))
 
 

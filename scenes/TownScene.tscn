@@ -125,6 +125,7 @@ npc_name = "测验师"
 dialogue_scene_id = "test"
 body_color = Color(0.6, 0.55, 0.7, 1)
 body_shape = "monk"
+dialogue_scene_id_after = "examiner_after"
 
 [node name="NPC_Vendor_A" parent="NPCLayer" unique_id=700903852 instance=ExtResource("2")]
 position = Vector2(128, 640)

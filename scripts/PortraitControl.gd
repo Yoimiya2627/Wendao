@@ -1,9 +1,19 @@
 ## PortraitControl.gd
-## 程序化角色半身剪影立绘控件
-## 在 _draw() 里用基础几何形状描绘各角色剪影，无需外部图片资源
+## 角色半身立绘控件
+## 苏云晚使用真实立绘图片，其他角色使用程序化剪影（几何形状）
 extends Control
 
 const _FONT_BOLD := preload("res://assets/fonts/NotoSerifSC-Bold.ttf")
+
+## 苏云晚立绘：1024×559 水墨风半身像
+## 裁剪区域聚焦头部+肩膀+上半身，与 110×160 控件宽高比接近
+const _SUYUNWAN_TEX: Texture2D = preload("res://assets/suyunwan2.jpg")
+const _SUYUNWAN_CROP: Rect2 = Rect2(382, 20, 236, 350)
+
+## 大鱼立绘：765×1024 工笔水墨缅因猫
+## 裁剪聚焦头部+前胸+身体中段，保留耳簇和鬃毛特征
+const _DAYU_TEX: Texture2D = preload("res://assets/wangdayu2.jpg")
+const _DAYU_CROP: Rect2 = Rect2(185, 150, 400, 580)
 
 var _speaker: String = ""
 var _base_color: Color = Color.TRANSPARENT
@@ -45,6 +55,31 @@ func _draw() -> void:
 	var inner := Color(0.83, 0.66, 0.34, 0.18)
 	draw_rect(Rect2(3, 3, w - 6, h - 6), inner, false)
 
+	# ── 真实立绘图片分支 ─────────────────────────────────────
+	var real_tex: Texture2D = null
+	var real_crop: Rect2 = Rect2()
+	match _speaker:
+		"苏云晚":
+			real_tex = _SUYUNWAN_TEX
+			real_crop = _SUYUNWAN_CROP
+		"大鱼":
+			real_tex = _DAYU_TEX
+			real_crop = _DAYU_CROP
+	if real_tex != null:
+		var img_rect := Rect2(4, 4, w - 8, h - 8)
+		draw_texture_rect_region(real_tex, img_rect, real_crop)
+		draw_string(
+			_FONT_BOLD,
+			Vector2(w * 0.5 - 7, h - 6),
+			_speaker.substr(0, 1),
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1,
+			12,
+			Color(0.83, 0.66, 0.34, 0.85)
+		)
+		return
+
+	# ── 其他角色：程序化剪影 ─────────────────────────────────
 	# ── 头部（8点椭圆多边形）────────────────────────────────
 	var head_cy := h * 0.26
 	var head_rx := w * 0.28

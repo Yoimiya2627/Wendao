@@ -209,6 +209,12 @@ func _ready() -> void:
 		var examiner_node = get_node_or_null("NPCLayer/NPC_Examiner")
 		if examiner_node:
 			examiner_node.dialogue_scene_id = "examiner_after"
+		## 老婆婆：phase 1 专属角色（给平安符后消失）。
+		## 若玩家 phase 1 未与她互动，到 phase 3 应视为"她自己离开了"，
+		## 否则会触发过时的 market 对话（仍在讨论测灵）。
+		var old_woman_late = get_node_or_null("NPCLayer/NPC_OldWoman")
+		if old_woman_late and old_woman_late.visible:
+			old_woman_late.disappear()
 	_setup_night_overlay()
 	_init_bubble_states()
 	_init_hidden_interact_states()
@@ -1101,12 +1107,6 @@ func _on_event_triggered(event_name: String) -> void:
 		"morning_done":
 			## morning对话结束标记，由ShopScene处理
 			## TownScene不需要处理，直接放行
-			DialogueManager.finish_event()
-
-		"night_begin":
-			## 此事件已从chapter1.json移除，此分支永远不会触发
-			## 夜晚渐变由ShopScene._trigger_night_and_leave()处理
-			## 此分支保留作兜底，不执行任何逻辑
 			DialogueManager.finish_event()
 
 		"start_chapter_end_a":

@@ -2434,3 +2434,78 @@ docs/wendao_06_...           新建有意义互动补全设计文档
 1. icon.svg 补充——导出时缺图标，打包后 exe 显示空白图标
 2. 端到端通关测试——验证回程 5 个 FORCE_TRIGGER 能被自然触发
 3. 美术资源替换（程序化剪影为占位，等真实图片资源）
+
+---
+
+## v36：立绘接入 + 回归扫描修复
+
+### 一、改动概要
+
+- **新增立绘**：大鱼（wangdayu2.jpg，工笔缅因猫）接入 PortraitControl，与苏云晚统一走真实图片分支
+- **章节名统一**：ChapterEndScene 标题从"第一章·问道"改为"第一章·碎玉镇"（与 MainMenuScene 副标题一致）
+- **NPC 对话 phase 回退 bug 修复**：NPC.interact() 移除自动写 _triggered key；GameData.load_data() 新增迁移清理旧 _triggered 脏数据
+- **老婆婆 phase 3 残留修复**：TownScene._ready() 在 phase≥3 时强制 disappear()
+- **黑屏优化**：SceneTransition 跳过冗余淡出（overlay 已不透明时），ShopScene 夜晚淡出时长 1.5s→0.9s
+- **文案修正**：market 对话 mk_07b/c 灵石→铜板（开局无灵石逻辑错误）
+- **死代码清理**：TownScene.gd、ShopScene.gd 移除已废弃的 night_begin 事件分支
+- **校验工具**：新增 tools/validate_chapter1.js，扫描 chapter1.json 断链引用和孤儿场景
+
+### 二、校验工具结果
+
+```
+共 87 个 scene，539 个合法 next 目标
+[OK] 无断链引用（_end 为 DialogueManager 合法哨兵）
+[OK] 所有孤儿 scene 均已通过 GDScript 或 .tscn 入口引用
+[INFO] JSON 中无 set_flag 节点（flags 由 GDScript 代码设置）
+```
+
+### 三、NPC 配置核查结果
+
+| NPC | required_phase | dialogue_scene_id_after | 切换机制 |
+|-----|------|------|------|
+| 老婆婆 | -1 | （无） | phase≥3 时 disappear |
+| 算命先生 | -1 | fortune_teller_return | phase≥3 自动切 |
+| 大婶 | -1 | aunts_return | phase≥3 自动切 |
+| 打水人 | -1 | water_carrier_return | phase≥3 自动切 |
+| 老狗 | -1 | dog_return | phase≥3 自动切 |
+| 守卫 | -1 | guard_return | phase≥3 自动切 |
+| 测验师 | -1 | examiner_after | TownScene 显式写 _triggered |
+| 摊位甲/乙/丙 | -1 | vendor_*_return | phase≥3 自动切 |
+
+### 四、战斗逃跑确认
+
+无逃跑机制，属**设计意图**（叙事型回合制，失败走 battle_loss_* 对话链返回场景）。
+
+### 五、文件变更清单
+
+```
+scripts/PortraitControl.gd    大鱼立绘接入，真实图片分支改为 match 结构
+assets/wangdayu2.jpg          大鱼工笔立绘（新增）
+scripts/ChapterEndScene.gd    章节标题 "第一章·问道" → "第一章·碎玉镇"
+scripts/NPC.gd                interact() 移除自动写 _triggered
+scripts/GameData.gd           load_data() 迁移清理 _triggered 脏 key
+scenes/TownScene.tscn         NPC_Examiner 补 dialogue_scene_id_after
+scripts/TownScene.gd          phase≥3 老婆婆 auto-disappear；移除 night_begin 死代码
+scripts/ShopScene.gd          淡出时长 1.5s→0.9s；移除 night_begin 死代码
+scripts/SceneTransition.gd    跳过冗余淡出
+data/chapter1.json            mk_07b/c 灵石→铜板
+tools/validate_chapter1.js    新增 JSON 一致性校验脚本
+tools/validate_chapter1.py    同上（Python 版，备用）
+```
+
+### 六、链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | 无变化 |
+| 链路二 测灵广场 | ✅ | 无变化 |
+| 链路三 回家流程 | ✅ | 黑屏优化 |
+| 链路四 废庙流程 | ✅ | 无变化 |
+| 链路五 章末流程 | ✅ | 标题修正 |
+| 视觉·立绘 | ✅ | 苏云晚 + 大鱼 均已接入真实图片 |
+
+### 七、待完成任务
+
+1. icon.svg 补充
+2. 端到端通关测试
+3. 其余角色立绘（年年等）

@@ -173,11 +173,8 @@ func interact() -> void:
 	if GameData.story_phase >= 3 and not dialogue_scene_id_after.is_empty():
 		scene_id = dialogue_scene_id_after
 	DialogueManager.start_scene(scene_id)
-
-	## 持久化 is_triggered：首次触发后写入 triggered_events，
-	## restore_state_from_save() 在下次加载时会据此切换 dialogue_scene_id
-	if not is_triggered and not dialogue_scene_id_after.is_empty():
-		is_triggered = true
-		var key := _get_save_key() + "_triggered"
-		if not GameData.triggered_events.has(key):
-			GameData.triggered_events.append(key)
+	## 注意：不在这里自动写 _triggered key。
+	## 绝大多数 NPC 的 before/after 切换应由 phase（或业务层显式控制）决定，
+	## 而非"玩家按过一次 E"。之前的自动持久化会导致大婶/打水人/守卫等
+	## 在 phase 1 聊过一次后，scene reload 后变成回程对话。
+	## 真正需要"事件一次性切换"的 NPC（测验师）由 TownScene 在 test_stone 完成时显式写入。
