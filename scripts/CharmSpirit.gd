@@ -9,6 +9,8 @@ const _FONT_REGULAR := preload("res://assets/fonts/NotoSerifSC-Regular.ttf")
 ## 屏顶耳语 UI 节点
 var _whisper_canvas : CanvasLayer
 var _whisper_label  : Label
+var _whisper_panel  : PanelContainer
+var _whisper_style  : StyleBoxFlat
 var _whisper_tween  : Tween
 
 ## ── 耳语变体表 ───────────────────────────────────────────────
@@ -71,16 +73,44 @@ func _build_whisper_ui() -> void:
 	_whisper_canvas.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_whisper_canvas)
 
+	## 居中容器：把 Panel 锚定在屏幕中下区域（约 y=440 一带）
+	## viewport 720 高，中下偏中线一点是符灵的"耳语位置"，自然且不挡住下方对话框区
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	center.offset_top    = 380.0
+	center.offset_bottom = 480.0
+	center.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	_whisper_canvas.add_child(center)
+
+	## Panel 自适应文字宽度，深色圆角衬底
+	_whisper_style = StyleBoxFlat.new()
+	_whisper_style.bg_color = Color(0.04, 0.03, 0.05, 0.0)
+	_whisper_style.content_margin_left   = 28.0
+	_whisper_style.content_margin_right  = 28.0
+	_whisper_style.content_margin_top    = 12.0
+	_whisper_style.content_margin_bottom = 12.0
+	_whisper_style.corner_radius_top_left     = 6
+	_whisper_style.corner_radius_top_right    = 6
+	_whisper_style.corner_radius_bottom_left  = 6
+	_whisper_style.corner_radius_bottom_right = 6
+	_whisper_style.shadow_color = Color(0, 0, 0, 0.0)
+	_whisper_style.shadow_size  = 8
+
+	_whisper_panel = PanelContainer.new()
+	_whisper_panel.add_theme_stylebox_override("panel", _whisper_style)
+	_whisper_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	center.add_child(_whisper_panel)
+
+	## 文字
 	_whisper_label = Label.new()
 	_whisper_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_whisper_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	_whisper_label.offset_top    = 24.0
-	_whisper_label.offset_bottom = 64.0
 	_whisper_label.add_theme_font_override("font", _FONT_REGULAR)
-	_whisper_label.add_theme_font_size_override("font_size", 16)
-	_whisper_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.78, 0.0))
+	_whisper_label.add_theme_font_size_override("font_size", 20)
+	_whisper_label.add_theme_color_override("font_color", Color(0.95, 0.90, 0.78, 0.0))
+	_whisper_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.0))
+	_whisper_label.add_theme_constant_override("outline_size", 3)
 	_whisper_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_whisper_canvas.add_child(_whisper_label)
+	_whisper_panel.add_child(_whisper_label)
 
 
 # ── 对外接口 ─────────────────────────────────────────────────
@@ -139,17 +169,51 @@ func _pick_line(stage: String) -> String:
 func _show_whisper(text: String) -> void:
 	if _whisper_tween:
 		_whisper_tween.kill()
-	_whisper_label.text = text
-	_whisper_label.add_theme_color_override("font_color", Color(0.92, 0.88, 0.78, 0.0))
+
+	## 重置初始状态——文字加「」括号，暗示"这是被听见的声音"
+	_whisper_label.text = "「" + text + "」"
+
+	## 同步背包按钮泛暖光，让玩家潜意识连接到"包里某物在响应"
+	if UIManager and UIManager.has_method("pulse_bag_button"):
+		UIManager.pulse_bag_button()
+	_whisper_label.add_theme_color_override(
+		"font_color", Color(0.95, 0.90, 0.78, 0.0))
+	_whisper_label.add_theme_color_override(
+		"font_outline_color", Color(0, 0, 0, 0.0))
+	_whisper_style.bg_color = Color(0.04, 0.03, 0.05, 0.0)
+
+	## 音效：感应低响（符灵气质）
+	if AudioManager and AudioManager.has_method("play_sfx"):
+		AudioManager.play_sfx("sense")
 
 	_whisper_tween = create_tween()
 	_whisper_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+
+	## 第一拍：衬底先轻微浮现（0.6s 串行）
 	_whisper_tween.tween_property(
-		_whisper_label, "theme_override_colors/font_color:a", 0.82, 0.9
+		_whisper_style, "bg_color:a", 0.78, 0.6
+	).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+
+	## 第二拍：文字与描边并行浮出（0.8s）
+	_whisper_tween.tween_property(
+		_whisper_label, "theme_override_colors/font_color:a", 0.98, 0.8
 	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	_whisper_tween.tween_interval(2.2)
+	_whisper_tween.parallel().tween_property(
+		_whisper_label, "theme_override_colors/font_outline_color:a", 0.6, 0.8
+	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+	## 停留 2.6s 让玩家有时间读完
+	_whisper_tween.tween_interval(2.6)
+
+	## 第三拍：文字、描边、衬底并行淡出（1.4s）
 	_whisper_tween.tween_property(
-		_whisper_label, "theme_override_colors/font_color:a", 0.0, 1.1
+		_whisper_label, "theme_override_colors/font_color:a", 0.0, 1.4
+	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_whisper_tween.parallel().tween_property(
+		_whisper_label, "theme_override_colors/font_outline_color:a", 0.0, 1.4
+	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_whisper_tween.parallel().tween_property(
+		_whisper_style, "bg_color:a", 0.0, 1.4
 	).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 

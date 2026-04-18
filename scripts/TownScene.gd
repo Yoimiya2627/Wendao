@@ -1203,6 +1203,8 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			GameData.got_charm = true
 			if not GameData.triggered_events.has("market_done"):
 				GameData.triggered_events.append("market_done")
+			## 平安符加入背包，让玩家看得见摸得着
+			UIManager.add_item("charm")
 			var old_woman = get_node_or_null("NPCLayer/NPC_OldWoman")
 			if old_woman:
 				old_woman.disappear()

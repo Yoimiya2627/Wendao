@@ -18,10 +18,14 @@ const ITEM_DATA := {
 		"name": "铜钱",
 		"desc": "正反两面都是正面。\n算命先生说，天道遇上这枚，\n只能认输。"
 	},
+	"charm": {
+		"name": "平安符",
+		"desc": "老婆婆塞给你的。红绳磨得发亮，像被许多双手摸过。偶尔有一阵暖意，说不清来处。"
+	},
 }
 
 ## 物品显示顺序（固定槽位）
-const ITEM_ORDER := ["sword_tassel", "cinnamon", "coin"]
+const ITEM_ORDER := ["sword_tassel", "charm", "cinnamon", "coin"]
 
 ## 功法数据（固定顺序显示）
 const SKILL_DATA := {
@@ -171,6 +175,71 @@ func show_main_hud() -> void:
 		_bag_button.show()
 	if is_instance_valid(_skill_button):
 		_skill_button.show()
+
+
+## 让背包按钮发光：在按钮位置叠加一个金色发光圈，淡入淡出
+## 由 CharmSpirit 在符灵开口时调用
+func pulse_bag_button() -> void:
+	if not is_instance_valid(_bag_button) or not is_instance_valid(_canvas):
+		return
+
+	## 在 canvas 上叠加一个临时光圈（StyleBoxFlat 圆角 + 阴影模拟发光）
+	var glow := Panel.new()
+	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	glow.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+	glow.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	glow.grow_vertical   = Control.GROW_DIRECTION_BEGIN
+	## 比按钮大一圈（按钮 36x36，光圈 60x60）
+	glow.offset_left   = -56.0
+	glow.offset_top    = -56.0
+	glow.offset_right  = 4.0
+	glow.offset_bottom = 4.0
+	glow.modulate.a    = 0.0
+
+	var glow_style := StyleBoxFlat.new()
+	glow_style.bg_color = Color(1.0, 0.78, 0.32, 0.65)  # 暖金色半透明
+	glow_style.corner_radius_top_left     = 30
+	glow_style.corner_radius_top_right    = 30
+	glow_style.corner_radius_bottom_left  = 30
+	glow_style.corner_radius_bottom_right = 30
+	glow_style.shadow_color = Color(1.0, 0.78, 0.32, 0.85)
+	glow_style.shadow_size  = 24  # 大阴影模拟外发光晕
+	glow.add_theme_stylebox_override("panel", glow_style)
+	_canvas.add_child(glow)
+
+	## 同时给按钮本身一点点 modulate 变化和胀大
+	_bag_button.pivot_offset = _bag_button.size * 0.5
+	var orig_button_modulate: Color = _bag_button.modulate
+	var orig_button_scale   : Vector2 = _bag_button.scale
+
+	var tw := create_tween()
+	tw.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+
+	## 淡入光圈 + 按钮变亮胀大（0.5s）
+	tw.tween_property(glow, "modulate:a", 1.0, 0.5)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(_bag_button, "modulate",
+		Color(1.6, 1.4, 1.0, 1.0), 0.5)\
+		.set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(_bag_button, "scale",
+		orig_button_scale * 1.18, 0.5)\
+		.set_ease(Tween.EASE_OUT)
+
+	## 保持高亮 1.5s
+	tw.tween_interval(1.5)
+
+	## 全部回落（1.8s）
+	tw.tween_property(glow, "modulate:a", 0.0, 1.8)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tw.parallel().tween_property(_bag_button, "modulate",
+		orig_button_modulate, 1.8)\
+		.set_ease(Tween.EASE_IN_OUT)
+	tw.parallel().tween_property(_bag_button, "scale",
+		orig_button_scale, 1.8)\
+		.set_ease(Tween.EASE_IN_OUT)
+
+	## 结束后清理光圈节点
+	tw.tween_callback(glow.queue_free)
 
 
 ## 战斗开始时隐藏主UI（由BattleUI._ready()调用）
