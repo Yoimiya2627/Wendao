@@ -119,6 +119,15 @@ const HIDDEN_INTERACT_NODES: Array = [
 		"alt_scene_id": "notice_board_after",
 		"alt_phase":   3,
 	},
+	## 西墙根磨平的石板：杂货铺以西空地，格(2,14)，路标型（可反复看，phase 切换文本）
+	{
+		"grid":        Vector2i(2, 14),
+		"scene_id":    "west_stone_slab",
+		"hint":        "按 E 查看",
+		"is_signpost": true,
+		"alt_scene_id": "west_stone_slab_after",
+		"alt_phase":   3,
+	},
 ]
 
 # ══════════════════════════════════════════════════════════════════
@@ -648,6 +657,7 @@ func _build_tileset_and_map() -> void:
 	_tile_map.z_index = 0
 	_draw_map()
 	_spawn_world_decorations()
+	_build_plaza_silhouettes()
 
 
 ## 将 img 从 x_off 起的 32×32 区域涂为纯色
@@ -749,9 +759,43 @@ func _spawn_world_decorations() -> void:
 	## 公告栏（格22,13 → 像素704,416）
 	_add_notice_board(layer, Vector2(704, 410))
 
+	## 西墙根磨平的石板（被遗忘的旧物，供玩家停留观察）
+	_add_west_stone(layer, Vector2(80, 448))
+
 	## ─── L1 美术优化：仅废庙装饰 + 杂货铺门口横梁 ────────────────
 	_decorate_temple(layer)
 	_decorate_shop_facade(layer)
+
+
+## 将广场路人ColorRect替换为人形轮廓（头部椭圆＋梯形躯干）
+func _build_plaza_silhouettes() -> void:
+	var plaza := get_node_or_null("PlazaLayer")
+	if not plaza:
+		return
+	for child in plaza.get_children():
+		var rect: ColorRect = child.get_node_or_null("ColorRect")
+		if rect == null:
+			continue
+		var col := rect.color
+		rect.hide()
+		var body := Polygon2D.new()
+		body.polygon = PackedVector2Array([
+			Vector2(-10, -5), Vector2(10, -5),
+			Vector2(8, 20), Vector2(-8, 20)])
+		body.color = col
+		child.add_child(body)
+		var head := Polygon2D.new()
+		head.polygon = _plaza_ellipse(0.0, -12.0, 6.0, 7.0, 10)
+		head.color = col
+		child.add_child(head)
+
+
+func _plaza_ellipse(cx: float, cy: float, rx: float, ry: float, n: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in n:
+		var angle := TAU * i / n
+		pts.append(Vector2(cx + rx * cos(angle), cy + ry * sin(angle)))
+	return pts
 
 
 func _add_tree(parent: Node2D, pos: Vector2) -> void:
@@ -773,6 +817,17 @@ func _add_tree(parent: Node2D, pos: Vector2) -> void:
 	])
 	trunk.color = Color(0.34, 0.22, 0.12, 1.0)
 	node.add_child(trunk)
+	## 树干碰撞（仅贴合树干，不阻挡树冠下走动）
+	var body := StaticBody2D.new()
+	body.collision_layer = 1
+	body.collision_mask = 1
+	var cshape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(10, 14)
+	cshape.shape = rect
+	cshape.position = Vector2(0, 14)
+	body.add_child(cshape)
+	node.add_child(body)
 	parent.add_child(node)
 
 
@@ -830,6 +885,81 @@ func _add_notice_board(parent: Node2D, pos: Vector2) -> void:
 	])
 	line2.color = Color(0.38, 0.26, 0.14, 0.6)
 	node.add_child(line2)
+	parent.add_child(node)
+
+
+## 西墙根风化石板：半埋、倾斜、裂纹、青苔、野草——"被遗忘"的视觉语言
+func _add_west_stone(parent: Node2D, pos: Vector2) -> void:
+	var node := Node2D.new()
+	node.position = pos
+	node.z_index = 1
+
+	## 石板本体：四边不齐的梯形，略倾斜，表面被晒得发白
+	var slab := Polygon2D.new()
+	slab.polygon = PackedVector2Array([
+		Vector2(-22, -9), Vector2(20, -11),
+		Vector2(23, 5), Vector2(-19, 6)
+	])
+	slab.color = Color(0.58, 0.55, 0.48, 1.0)
+	node.add_child(slab)
+
+	## 石板顶面高光（细细一条，表示被日头晒白的上缘）
+	var hilite := Polygon2D.new()
+	hilite.polygon = PackedVector2Array([
+		Vector2(-20, -9), Vector2(18, -10),
+		Vector2(18, -8), Vector2(-20, -7)
+	])
+	hilite.color = Color(0.72, 0.68, 0.60, 0.7)
+	node.add_child(hilite)
+
+	## 主裂缝（斜贯石面）
+	var crack := Polygon2D.new()
+	crack.polygon = PackedVector2Array([
+		Vector2(-8, -8), Vector2(12, -3),
+		Vector2(12, -2), Vector2(-8, -7)
+	])
+	crack.color = Color(0.28, 0.25, 0.22, 1.0)
+	node.add_child(crack)
+
+	## 青苔斑（左下角，深绿+半透）
+	var moss := Polygon2D.new()
+	moss.polygon = PackedVector2Array([
+		Vector2(-22, -2), Vector2(-12, -4),
+		Vector2(-8, 3), Vector2(-19, 6)
+	])
+	moss.color = Color(0.32, 0.45, 0.28, 0.75)
+	node.add_child(moss)
+
+	## 右侧几根长野草（暗示无人打理）
+	var blade_coords := [
+		Vector2(24, 5), Vector2(27, 5), Vector2(30, 4),
+		Vector2(22, 4), Vector2(33, 5)
+	]
+	var blade_heights := [9, 12, 8, 7, 11]
+	for i in blade_coords.size():
+		var blade := Polygon2D.new()
+		var b: Vector2 = blade_coords[i]
+		var h: int = blade_heights[i]
+		blade.polygon = PackedVector2Array([
+			Vector2(b.x, b.y),
+			Vector2(b.x + 1, b.y - h),
+			Vector2(b.x + 2, b.y)
+		])
+		blade.color = Color(0.40, 0.52, 0.30, 0.9)
+		node.add_child(blade)
+
+	## 碰撞体（矩形，贴合石板本身）
+	var body := StaticBody2D.new()
+	body.collision_layer = 1
+	body.collision_mask = 1
+	var cshape := CollisionShape2D.new()
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(42, 14)
+	cshape.shape = rect
+	cshape.position = Vector2(0, -2)
+	body.add_child(cshape)
+	node.add_child(body)
+
 	parent.add_child(node)
 
 

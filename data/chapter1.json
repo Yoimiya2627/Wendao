@@ -111,7 +111,7 @@
 				},
 				"m_09": {
 					"type": "narration",
-					"text": "\"记得回来吃饭\"这四个字她听过很多遍。今天听着，和往常没什么两样。她解下围裙挂在门边的钉子上，出门了。",
+					"text": "「记得回来吃饭」这四个字她听过很多遍。今天听着，和往常没什么两样。她解下围裙挂在门边的钉子上，出门了。",
 					"next": "m_end"
 				},
 				"m_end": {
@@ -2515,7 +2515,7 @@
 				"ba_cb_promise": {
 					"type": "narration",
 					"speaker": "",
-					"text": "信上写过四个字——\"会回来的\"。",
+					"text": "信上写过四个字——「会回来的」。",
 					"next": "ba_06b"
 				}
 			}
@@ -2959,6 +2959,62 @@
 				"nb2_n3": {
 					"type": "narration",
 					"text": "告示还在那里。她这次没有再看最后那行字。"
+				}
+			}
+		},
+		"west_stone_slab": {
+			"title": "西墙根石板",
+			"start": "wss_01",
+			"nodes": {
+				"wss_01": {
+					"type": "narration",
+					"text": "西墙根半埋着一块石板。",
+					"next": "wss_02"
+				},
+				"wss_02": {
+					"type": "narration",
+					"text": "日头晒得发白，几丛野草长得老高，把石面盖了大半。",
+					"next": "wss_03"
+				},
+				"wss_03": {
+					"type": "narration",
+					"text": "她蹲下来，拨开草——石面上有刻痕，像是字，但已经磨平成一片。",
+					"next": "wss_04"
+				},
+				"wss_04": {
+					"type": "narration",
+					"text": "刻字的人大概也已经不在这里了。",
+					"next": "wss_05"
+				},
+				"wss_05": {
+					"type": "narration",
+					"text": "她站起来拍拍手上的土。",
+					"set_flag": {
+						"west_stone_read": true
+					}
+				}
+			}
+		},
+		"west_stone_slab_after": {
+			"title": "西墙根石板",
+			"start": "wss2_01",
+			"nodes": {
+				"wss2_01": {
+					"type": "narration",
+					"text": "那块石板还在。",
+					"next": "wss2_02"
+				},
+				"wss2_02": {
+					"type": "narration",
+					"text": "野草又长了一截。",
+					"next": "wss2_03"
+				},
+				"wss2_03": {
+					"type": "narration",
+					"text": "她没有再蹲下去。",
+					"set_flag": {
+						"west_stone_read_after": true
+					}
 				}
 			}
 		},

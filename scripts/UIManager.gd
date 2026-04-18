@@ -64,8 +64,11 @@ var _hp_bar       : ColorRect      ## 进度条填充部分
 var _hp_bar_bg    : ColorRect      ## 进度条背景
 var _gold_text    : Label          ## 灵石数量
 
-var _mood_panel   : Panel
-var _mood_text    : Label
+var _mood_panel        : Panel
+var _mood_text         : Label
+var _mood_toggle_btn   : Label
+var _mood_collapsed    : bool = false
+var _mood_sep          : ColorRect
 
 var _bag_button   : Button         ## 右下角展开按钮
 var _bag_panel    : Panel          ## 展开后的背包面板
@@ -284,12 +287,23 @@ func _build_mood_panel() -> void:
 	title.add_theme_color_override("font_color", Color(0.55, 0.50, 0.45, 1.0))
 	_mood_panel.add_child(title)
 
+	## 折叠按钮（Label 形式，与标题同排同字号、可点击）
+	_mood_toggle_btn = Label.new()
+	_mood_toggle_btn.text = "收"
+	_mood_toggle_btn.position = Vector2(155.0, 6.0)
+	_mood_toggle_btn.add_theme_font_size_override("font_size", 12)
+	_mood_toggle_btn.add_theme_color_override("font_color", Color(0.55, 0.50, 0.45, 1.0))
+	_mood_toggle_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	_mood_toggle_btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	_mood_toggle_btn.gui_input.connect(_on_mood_toggle_input)
+	_mood_panel.add_child(_mood_toggle_btn)
+
 	## 分隔线
-	var sep := ColorRect.new()
-	sep.color    = Color(ThemeManager.COLOR_TEXT_WARM.r, ThemeManager.COLOR_TEXT_WARM.g, ThemeManager.COLOR_TEXT_WARM.b, 0.3)
-	sep.position = Vector2(8.0, 24.0)
-	sep.size     = Vector2(164.0, 1.0)
-	_mood_panel.add_child(sep)
+	_mood_sep = ColorRect.new()
+	_mood_sep.color    = Color(ThemeManager.COLOR_TEXT_WARM.r, ThemeManager.COLOR_TEXT_WARM.g, ThemeManager.COLOR_TEXT_WARM.b, 0.3)
+	_mood_sep.position = Vector2(8.0, 24.0)
+	_mood_sep.size     = Vector2(164.0, 1.0)
+	_mood_panel.add_child(_mood_sep)
 
 	## 正文
 	_mood_text = Label.new()
@@ -299,6 +313,24 @@ func _build_mood_panel() -> void:
 	_mood_text.add_theme_font_size_override("font_size", 16)
 	_mood_text.add_theme_color_override("font_color", ThemeManager.COLOR_TEXT_SECONDARY)
 	_mood_panel.add_child(_mood_text)
+
+
+func _on_mood_toggle_input(event: InputEvent) -> void:
+	if not (event is InputEventMouseButton):
+		return
+	if event.button_index != MOUSE_BUTTON_LEFT or not event.pressed:
+		return
+	_mood_collapsed = not _mood_collapsed
+	if _mood_collapsed:
+		_mood_sep.hide()
+		_mood_text.hide()
+		_mood_panel.offset_bottom = _mood_panel.offset_top + 28.0
+		_mood_toggle_btn.text = "展"
+	else:
+		_mood_sep.show()
+		_mood_text.show()
+		_mood_panel.offset_bottom = _mood_panel.offset_top + 172.0
+		_mood_toggle_btn.text = "收"
 
 
 ## 构建右下角旧物背包

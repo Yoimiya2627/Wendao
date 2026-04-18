@@ -76,16 +76,18 @@ shape = SubResource("Temple_shape")
 y_sort_enabled = true
 
 [node name="NPC_OldWoman" parent="NPCLayer" unique_id=429220155 instance=ExtResource("2")]
-position = Vector2(704, 416)
+position = Vector2(352, 672)
 npc_name = "老婆婆"
 dialogue_scene_id = "market"
 body_color = Color(0.72, 0.67, 0.6, 1)
+body_shape = "old"
 
 [node name="NPC_FortuneTeller" parent="NPCLayer" unique_id=434028795 instance=ExtResource("2")]
 position = Vector2(256, 704)
 npc_name = "算命先生"
 dialogue_scene_id = "fortune_teller"
 body_color = Color(0.6, 0.45, 0.2, 1)
+body_shape = "old"
 dialogue_scene_id_after = "fortune_teller_return"
 
 [node name="NPC_AuntA" parent="NPCLayer" unique_id=94885309 instance=ExtResource("2")]
@@ -93,6 +95,7 @@ position = Vector2(448, 448)
 npc_name = "大婶"
 dialogue_scene_id = "aunts_before"
 body_color = Color(0.8, 0.6, 0.55, 1)
+body_shape = "woman"
 dialogue_scene_id_after = "aunts_return"
 
 [node name="NPC_WaterCarrier" parent="NPCLayer" unique_id=1606685697 instance=ExtResource("2")]
@@ -121,6 +124,7 @@ position = Vector2(1024, 224)
 npc_name = "测验师"
 dialogue_scene_id = "test"
 body_color = Color(0.6, 0.55, 0.7, 1)
+body_shape = "monk"
 
 [node name="NPC_Vendor_A" parent="NPCLayer" unique_id=700903852 instance=ExtResource("2")]
 position = Vector2(128, 640)
@@ -134,6 +138,7 @@ position = Vector2(288, 736)
 npc_name = "香料摊"
 dialogue_scene_id = "vendor_b"
 body_color = Color(0.55, 0.42, 0.2, 1)
+body_shape = "woman"
 dialogue_scene_id_after = "vendor_b_return"
 
 [node name="NPC_Vendor_C" parent="NPCLayer" unique_id=340157143 instance=ExtResource("2")]

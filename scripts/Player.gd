@@ -25,7 +25,27 @@ func _ready() -> void:
 	interact_label.hide()
 	interact_area.area_entered.connect(_on_npc_enter)
 	interact_area.area_exited.connect(_on_npc_exit)
+	_build_player_silhouette()
 	_setup_sword_tassel_visual()
+
+
+func _build_player_silhouette() -> void:
+	var body: Polygon2D = $Body
+	body.polygon = PackedVector2Array([
+		Vector2(-10, -5), Vector2(10, -5),
+		Vector2(7, 18), Vector2(-7, 18)])
+	var head := Polygon2D.new()
+	head.polygon = _make_ellipse(0.0, -12.0, 6.0, 7.0, 10)
+	head.color = body.color
+	add_child(head)
+
+
+func _make_ellipse(cx: float, cy: float, rx: float, ry: float, n: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in n:
+		var angle := TAU * i / n
+		pts.append(Vector2(cx + rx * cos(angle), cy + ry * sin(angle)))
+	return pts
 
 
 func _exit_tree() -> void:
@@ -114,7 +134,6 @@ func _on_npc_exit(area: Area2D) -> void:
 func _setup_sword_tassel_visual() -> void:
 	_sword_tassel_visual = Node2D.new()
 	_sword_tassel_visual.name = "SwordTasselVisual"
-	## 角色 Body polygon 是 -12,-20 到 12,14，剑穗放在右侧外缘以免被覆盖
 	_sword_tassel_visual.position = Vector2(16, 8)
 	_sword_tassel_visual.z_index = 2
 	add_child(_sword_tassel_visual)

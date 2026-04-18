@@ -156,24 +156,28 @@ position = Vector2(400, 200)
 npc_name = "说书人"
 dialogue_scene_id = "storyteller"
 body_color = Color(0.60, 0.40, 0.20, 1)
+body_shape = "old"
 
 [node name="NPC_DiscipleA" parent="NPCLayer" instance=ExtResource("2")]
 position = Vector2(120, 160)
 npc_name = "太平宗弟子"
 dialogue_scene_id = "disciple_a"
 body_color = Color(0.50, 0.60, 0.70, 1)
+body_shape = "monk"
 
 [node name="NPC_DiscipleB" parent="NPCLayer" instance=ExtResource("2")]
 position = Vector2(180, 160)
 npc_name = "太平宗弟子"
 dialogue_scene_id = "disciple_b"
 body_color = Color(0.50, 0.60, 0.70, 1)
+body_shape = "monk"
 
 [node name="NPC_OldWanderer" parent="NPCLayer" instance=ExtResource("2")]
 position = Vector2(300, 240)
 npc_name = "老江湖"
 dialogue_scene_id = "old_wanderer"
 body_color = Color(0.45, 0.40, 0.35, 1)
+body_shape = "old"
 
 ; ── 出口检测区域 ──────────────────────────────────────────────────
 [node name="ExitArea" type="Area2D" parent="."]

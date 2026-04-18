@@ -8,6 +8,8 @@ extends Node2D
 @export var dialogue_scene_id: String = ""
 ## 占位方块颜色，在编辑器/场景实例中可覆盖
 @export var body_color: Color = Color(0.70, 0.50, 0.20)
+## 人形轮廓类型：generic / woman / old / child / monk
+@export var body_shape: String = "generic"
 ## 触发对话所需的最低剧情阶段（-1 表示不限制）
 @export var required_phase: int = -1
 @export var dialogue_scene_id_after: String = ""
@@ -16,13 +18,86 @@ var is_triggered: bool = false
 @onready var _label : Label     = $NameLabel
 @onready var _body  : Polygon2D = $Body
 
+var _head: Polygon2D = null
+
 
 func _ready() -> void:
 	_label.text = npc_name
 	_label.hide()
-	_body.color = body_color
+	_build_silhouette()
 	if required_phase >= 0 and GameData.story_phase < required_phase:
 		hide()
+
+
+func _build_silhouette() -> void:
+	if body_shape == "cat":
+		_build_cat_silhouette()
+		return
+
+	var body_pts: PackedVector2Array
+	match body_shape:
+		"woman":
+			body_pts = PackedVector2Array([
+				Vector2(-6, -5), Vector2(6, -5),
+				Vector2(10, 20), Vector2(-10, 20)])
+		"old":
+			## 与generic等宽，仅底部略窄，视觉上接近同等大小
+			body_pts = PackedVector2Array([
+				Vector2(-10, -5), Vector2(10, -5),
+				Vector2(7, 20), Vector2(-7, 20)])
+		"monk":
+			body_pts = PackedVector2Array([
+				Vector2(-9, -5), Vector2(9, -5),
+				Vector2(12, 20), Vector2(-12, 20)])
+		_:  # generic
+			body_pts = PackedVector2Array([
+				Vector2(-10, -5), Vector2(10, -5),
+				Vector2(8, 20), Vector2(-8, 20)])
+
+	_body.polygon = body_pts
+	_body.color = body_color
+
+	_head = Polygon2D.new()
+	_head.polygon = _make_ellipse(0.0, -12.0, 6.0, 7.0, 10)
+	_head.color = body_color
+	add_child(_head)
+
+
+## 猫形轮廓：圆头 + 尖耳 + 宽低身体
+func _build_cat_silhouette() -> void:
+	## 身体：矮宽，坐姿感
+	_body.polygon = PackedVector2Array([
+		Vector2(-9, 0), Vector2(9, 0),
+		Vector2(10, 18), Vector2(-10, 18)])
+	_body.color = body_color
+
+	## 头：横向略宽的圆
+	_head = Polygon2D.new()
+	_head.polygon = _make_ellipse(0.0, -9.0, 7.0, 6.0, 12)
+	_head.color = body_color
+	add_child(_head)
+
+	## 左耳
+	var ear_l := Polygon2D.new()
+	ear_l.polygon = PackedVector2Array([
+		Vector2(-3, -15), Vector2(-7, -15), Vector2(-5, -20)])
+	ear_l.color = body_color
+	add_child(ear_l)
+
+	## 右耳
+	var ear_r := Polygon2D.new()
+	ear_r.polygon = PackedVector2Array([
+		Vector2(3, -15), Vector2(7, -15), Vector2(5, -20)])
+	ear_r.color = body_color
+	add_child(ear_r)
+
+
+func _make_ellipse(cx: float, cy: float, rx: float, ry: float, n: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in n:
+		var angle := TAU * i / n
+		pts.append(Vector2(cx + rx * cos(angle), cy + ry * sin(angle)))
+	return pts
 
 
 # ── 由 Player 调用 ───────────────────────────────────────────

@@ -2302,4 +2302,135 @@ docs/...记录.md          更新版本记录
 
 ### 待完成任务（按优先级）
 
-1. 美术资源替换
+1. 美术资源替换（程序化剪影已到位，等真实图片资源）
+
+---
+
+## 第三十五版（2026-04-18）—— NPC 剪影系统 + 视觉世界丰富 + 心绪折叠
+
+### 主题：角色可识别性 + 地图活人气息 + UI 可收起性
+
+### 一、NPC 剪影系统（NPC.gd / scenes/*.tscn）
+
+**NPC.gd 新增 `body_shape` 系统**
+- `@export var body_shape: String = "generic"`
+- `_build_silhouette()` 根据类型分发：cat → `_build_cat_silhouette()`，其余 → 头部椭圆 + 梯形体
+- 支持类型：`generic`（通用）/ `woman`（略宽腰）/ `old`（略窄底）/ `monk`（最窄底）/ `cat`（圆头+三角耳+宽低体）
+- 全类型头部统一：中心 (0,-12)，rx=6，ry=7——保证视觉一致性，差异仅在体形比例
+- 辅助函数 `_make_ellipse(cx,cy,rx,ry,n)` 生成圆形近似点集
+
+**各场景 NPC body_shape 配置**
+- ShopScene.tscn：年年/大鱼 `body_shape="cat"`，`scale=Vector2(0.78,0.78)`；苏明 `body_shape="old"`
+- TeaScene.tscn：说书人/老江湖 `body_shape="old"`；弟子甲乙 `body_shape="monk"`
+- TownScene.tscn：算命先生 `body_shape="old"`；大婶 `body_shape="woman"`；验师 `body_shape="monk"`；香料贩乙 `body_shape="woman"`；老婆婆 `body_shape="old"`
+
+### 二、玩家剪影（Player.gd）
+
+`_build_player_silhouette()` 在 `_ready()` 中调用，样式与 NPC 保持一致：
+- 体形：(-10,-5)(10,-5)(7,18)(-7,18)
+- 头部：中心 (0,-12)，rx=6，ry=7（与 NPC 完全对齐）
+- 同一辅助函数 `_make_ellipse()`
+
+### 三、测灵广场路人剪影（TownScene.gd）
+
+`_build_plaza_silhouettes()` 函数：
+- 遍历 PlazaLayer 的子节点（Queue/Pass/Watch 等路人 Node2D）
+- 隐藏原始 ColorRect，程序化生成 body + head Polygon2D
+- 与 NPC generic 体形保持一致
+
+### 四、心绪面板折叠按钮（UIManager.gd）
+
+- 新增 `_mood_toggle_btn: Label`（text="收"/"展"），位置 (155,6)，字号与"心绪"标题对齐
+- `mouse_filter = MOUSE_FILTER_STOP`，`cursor_shape = CURSOR_POINTING_HAND`
+- `gui_input` → `_on_mood_toggle_input()`：鼠标左键切换折叠状态
+- 折叠：隐藏分割线+心绪文字，panel 高度压至 28px，btn.text="展"
+- 展开：恢复显示，panel 高度恢复 172px，btn.text="收"
+
+### 五、地图视觉补充（TownScene.gd）
+
+**老榕树碰撞体**
+- `_add_tree()` 新增 StaticBody2D + CollisionShape2D（RectangleShape2D 14×10，offset y=14）
+- 玩家现在无法穿过榕树
+
+**老婆婆位置修正**
+- TownScene.tscn：NPC_OldWoman 从 (704, 416) 移至 (352, 672)
+- 原位置与公告栏重叠；新位置在市场区，符合其 dialogue_scene_id="market" 的叙事定位
+
+**西墙根石板（新隐藏互动点）**
+- `_add_west_stone(layer, Vector2(80, 448))` 函数：
+  - 主石板多边形 + 高光条 + 裂缝线 + 苔藓块 + 5 根草茎（纯视觉）
+  - StaticBody2D 碰撞体（42×14）
+- HIDDEN_INTERACT_NODES 注册为路标型（is_signpost=true）：
+  - phase < 3：播放 `west_stone_slab`（5节·蹲下看刻痕·"刻字的人大概没想到会有一天看不懂"）
+  - phase ≥ 3：播放 `west_stone_slab_after`（3节·石头还在·"被测灵石测过的手印，过几年是不是也会被风磨平？"）
+  - set_flag：west_stone_read / west_stone_read_after → narrative_flags（自动持久化）
+
+### 六、文本修正（chapter1.json）
+
+- `m_14`（morning 父亲送别）：英文双引号 `"记得回来吃饭"` → 「记得回来吃饭」
+- `rh_note_02`（return_home 便条）：英文双引号 `"会回来的"` → 「会回来的」
+
+### 七、新增设计文档
+
+`docs/wendao_06_有意义互动补全设计.md`：
+- 另外 2 个候选互动点（路标/磨石板）的详细设计方案，含 phase 切换文案草稿
+- 6 个装饰物方案（当前仅落地石板，其余保留备用）
+- 实现顺序、测试验收清单、canonical facts 保护表
+- 状态：本版只实现西墙根石板 1 个，其余为备用方案
+
+### 八、文件修改记录（第三十五版）
+
+```
+scripts/NPC.gd               新增 body_shape @export
+                             _build_silhouette() 分发逻辑
+                             _build_cat_silhouette() 新增
+                             _make_ellipse() 辅助函数
+scripts/Player.gd            _build_player_silhouette() 新增
+                             _make_ellipse() 辅助函数
+scripts/UIManager.gd         _mood_toggle_btn Label 新增
+                             _on_mood_toggle_input() 折叠逻辑
+                             _mood_collapsed 状态变量
+scripts/TownScene.gd         _build_plaza_silhouettes() 新增
+                             _plaza_ellipse() 辅助函数
+                             _add_tree() 新增碰撞体
+                             _add_west_stone() 新增石板装饰+碰撞
+                             HIDDEN_INTERACT_NODES 新增石板条目
+scenes/ShopScene.tscn        年年/大鱼 body_shape=cat, scale=0.78
+                             苏明 body_shape=old
+scenes/TeaScene.tscn         说书人/老江湖 body_shape=old
+                             弟子甲乙 body_shape=monk
+scenes/TownScene.tscn        NPC_OldWoman 位置 → (352, 672), body_shape=old
+                             NPC_FortuneTeller body_shape=old
+                             NPC_AuntA body_shape=woman
+                             NPC_Examiner body_shape=monk
+                             NPC_Vendor_B body_shape=woman
+data/chapter1.json           west_stone_slab 场景新增（5节）
+                             west_stone_slab_after 场景新增（3节）
+                             m_14 / rh_note_02 英文引号 → 「」
+docs/wendao_06_...           新建有意义互动补全设计文档
+```
+
+### 九、chapter1.json 场景清单更新（v35 新增）
+
+隐藏探索：新增 `west_stone_slab`、`west_stone_slab_after`
+
+### 十、当前链路状态
+
+| 链路 | 状态 | 备注 |
+|------|------|------|
+| 链路一 morning流程 | ✅ | 引号修正 |
+| 链路二 测灵广场 | ✅ | 无变化 |
+| 链路三 回家流程 | ✅ | 引号修正 |
+| 链路四 废庙流程 | ✅ | 无变化 |
+| 链路五 章末流程 | ✅ | 无变化 |
+| 主菜单 | ✅ | 无变化 |
+| ESC系统菜单 | ✅ | 无变化 |
+| 视觉·NPC剪影 | ✅ | 全场景 NPC + 玩家 + 路人 |
+| 视觉·地图 | ✅ | 榕树碰撞 + 西墙石板装饰&互动 |
+| UI·心绪折叠 | ✅ | 可收起/展开 |
+
+### 十一、待完成任务（按优先级）
+
+1. icon.svg 补充——导出时缺图标，打包后 exe 显示空白图标
+2. 端到端通关测试——验证回程 5 个 FORCE_TRIGGER 能被自然触发
+3. 美术资源替换（程序化剪影为占位，等真实图片资源）

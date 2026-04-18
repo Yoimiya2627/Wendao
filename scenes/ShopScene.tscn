@@ -161,18 +161,23 @@ position = Vector2(240, 145)
 npc_name = "苏明"
 dialogue_scene_id = "suming"
 body_color = Color(0.25, 0.35, 0.55, 1)
+body_shape = "old"
 
 [node name="NPC_Niannian" parent="NPCLayer" unique_id=1766833831 instance=ExtResource("2")]
 position = Vector2(144, 155)
+scale = Vector2(0.78, 0.78)
 npc_name = "年年"
 dialogue_scene_id = "niannian"
 body_color = Color(1, 1, 1, 1)
+body_shape = "cat"
 
 [node name="NPC_Dayu" parent="NPCLayer" unique_id=416456247 instance=ExtResource("2")]
 position = Vector2(352, 155)
+scale = Vector2(0.78, 0.78)
 npc_name = "大鱼"
 dialogue_scene_id = "dayu"
 body_color = Color(0.85, 0.4, 0.15, 1)
+body_shape = "cat"
 
 [node name="ExitArea" type="Area2D" parent="." unique_id=1568775093]
 position = Vector2(48, 288)
