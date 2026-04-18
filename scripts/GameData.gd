@@ -83,6 +83,9 @@ var last_player_position: Vector2 = Vector2.ZERO
 ## 玩家选择记录（RPG分支标签，独立于 triggered_events）
 var narrative_flags: Dictionary = {}
 
+## 符灵已说过话的阶段列表（防止重复触发）
+var charm_spoken_stages: Array[String] = []
+
 
 func _ready() -> void:
 	# 创建默认玩家角色（后续可改为从存档加载）
@@ -151,6 +154,7 @@ func reset_to_default() -> void:
 	current_enemy_data = {}
 	last_player_position = Vector2.ZERO
 	narrative_flags    = {}
+	charm_spoken_stages = []
 	story_phase_changed.emit(story_phase)
 	print("GameData: 已重置为初始状态（新游戏）")
 
@@ -198,6 +202,7 @@ func save_data() -> Dictionary:
 		"saved_player_position_x": saved_player_position.x,
 		"saved_player_position_y": saved_player_position.y,
 		"narrative_flags":      narrative_flags,
+		"charm_spoken_stages":  charm_spoken_stages,
 	}
 
 
@@ -245,6 +250,7 @@ func load_data(data: Dictionary) -> void:
 		data.get("saved_player_position_y", 0.0)
 	)
 	narrative_flags = data.get("narrative_flags", {})
+	charm_spoken_stages = Array(data.get("charm_spoken_stages", []), TYPE_STRING, "", null)
 
 	## 迁移：清理旧版本 NPC.gd 错误写入的 _triggered keys。
 	## 旧版本在 interact() 里会给所有有 dialogue_scene_id_after 的 NPC

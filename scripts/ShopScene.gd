@@ -367,6 +367,9 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			## 持久化：防止切场景后重播
 			if not GameData.triggered_events.has("return_home_done"):
 				GameData.triggered_events.append("return_home_done")
+			## 符灵第二声（与父亲/家对话后的静默回应）
+			get_tree().create_timer(2.0).timeout.connect(
+				func(): CharmSpirit.try_whisper("after_father_talk"), CONNECT_ONE_SHOT)
 			## 注意：NPC交互暂时保持关闭
 			## 等两只猫都安慰完，_check_sword_tassel()里重新开启
 

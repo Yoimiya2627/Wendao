@@ -135,8 +135,16 @@ func _play_ending() -> void:
 	).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
 	if not is_inside_tree(): return
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(1.5).timeout
 	if not is_inside_tree(): return
+
+	## 符灵尾声（仅 got_charm 玩家可见）
+	var coda_lines := CharmSpirit.get_chapter_end_coda()
+	if coda_lines.size() > 0:
+		await _play_charm_coda(coda_lines)
+		if not is_inside_tree(): return
+		await get_tree().create_timer(1.0).timeout
+		if not is_inside_tree(): return
 
 	## 显示悬念钩子文字
 	await get_tree().create_timer(1.0).timeout
@@ -206,6 +214,49 @@ func _play_ending() -> void:
 	## 回到主菜单（而非直接退出）
 	UIManager.on_battle_end()
 	SceneTransition.change_scene("res://scenes/MainMenuScene.tscn")
+
+
+## 章末符灵尾声：逐句淡入，字号略小，暖色调
+func _play_charm_coda(lines: Array[String]) -> void:
+	var scale_f: float = UIManager.get_font_scale_factor() if UIManager else 1.0
+	var coda_size: int = int(round(18 * scale_f))
+	var coda_color := Color(0.92, 0.84, 0.66, 0.0)
+
+	for i in lines.size():
+		if not is_inside_tree(): return
+		var lbl := Label.new()
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_override("font", _font_regular)
+		lbl.add_theme_font_size_override("font_size", coda_size)
+		lbl.add_theme_color_override("font_color", coda_color)
+		lbl.set_anchors_preset(Control.PRESET_CENTER)
+		lbl.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		lbl.offset_left  = -500.0
+		lbl.offset_right =  500.0
+		## 最后一句（收束句）偏下一点
+		lbl.offset_top  = -60.0 + i * 30.0
+		lbl.text = lines[i]
+		_canvas.add_child(lbl)
+
+		var tw := create_tween()
+		tw.tween_property(lbl, "theme_override_colors/font_color:a", 0.80, 1.2)\
+			.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+		await tw.finished
+		if not is_inside_tree(): return
+		await get_tree().create_timer(1.6).timeout
+		if not is_inside_tree(): return
+
+		## 非最后句：淡出后显示下一句
+		if i < lines.size() - 1:
+			var tw_out := create_tween()
+			tw_out.tween_property(lbl, "theme_override_colors/font_color:a", 0.0, 0.8)\
+				.set_ease(Tween.EASE_IN_OUT)
+			await tw_out.finished
+			if not is_inside_tree(): return
+			await get_tree().create_timer(0.4).timeout
+
+	## 最后句额外停留
+	await get_tree().create_timer(1.5).timeout
 
 
 ## 逐字显示一行文字

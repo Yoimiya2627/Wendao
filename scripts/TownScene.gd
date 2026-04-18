@@ -507,6 +507,7 @@ func _check_entrance_proximity() -> void:
 			_current_entrance = ""
 		else:
 			_set_entrance_hint("temple")
+			CharmSpirit.try_whisper("before_temple")
 		return
 
 	# 不靠近任何入口，隐藏提示
@@ -1217,6 +1218,9 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			## 测灵石对话结束，推进phase到3（跳过phase 2，走set_phase接口）
 			if GameData.story_phase == 1:
 				GameData.set_phase(3)
+			## 符灵第一声（测灵失败，回家途中）
+			get_tree().create_timer(1.5).timeout.connect(
+				func(): CharmSpirit.try_whisper("after_test_fail"), CONNECT_ONE_SHOT)
 			## 记录测验师已触发，读取其自身配置的after对话，不硬编码字符串
 			var examiner = get_node_or_null("NPCLayer/NPC_Examiner")
 			if examiner:
