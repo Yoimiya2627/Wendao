@@ -39,7 +39,7 @@ const _WHISPER_LINES := {
 const _CODA := {
 	"a_paid": [
 		"丫头。",
-		"你出门时，心是软的。回来时，多了一道钢。",
+		"你出门时，心是软的。走到现在，多了一道钢。",
 		"这条路苦。但你能走完。",
 	],
 	"a_not_paid": [
@@ -130,6 +130,7 @@ func try_whisper(stage: String) -> void:
 
 ## 返回章末尾声台词数组（3 句分支 + 1 句收束），供 ChapterEndScene 自行播放
 ## got_charm == false 时返回空数组
+## 注：town_paid_old_lady flag 由 data/chapter1.json mk_07b 选择节点写入
 func get_chapter_end_coda() -> Array[String]:
 	if not GameData.got_charm:
 		return []

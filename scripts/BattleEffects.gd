@@ -106,11 +106,13 @@ func battle_tassel_awaken_burst() -> void:
 	)
 
 
-## 面板闪色后回白
+## 面板闪色后回原色（保留 alpha，避免打断外部淡出动画）
 func flash_panel(panel: Control, flash_color: Color) -> void:
+	var orig := panel.modulate
+	var flash_with_alpha := Color(flash_color.r, flash_color.g, flash_color.b, orig.a)
 	var tw := _root_ctrl.create_tween()
-	tw.tween_property(panel, "modulate", flash_color, 0.08)
-	tw.tween_property(panel, "modulate", Color.WHITE, 0.25)\
+	tw.tween_property(panel, "modulate", flash_with_alpha, 0.08)
+	tw.tween_property(panel, "modulate", orig, 0.25)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 
@@ -151,3 +153,66 @@ func tween_hp_bar(bar: ProgressBar, target: float, cached_tween: Tween) -> Tween
 	tw.tween_property(bar, "value", target, 0.3)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 	return tw
+
+
+## 攻击动作演出：player_attacks=true 时玩家立绘前冲；否则敌人立绘晃动
+func play_attack_animation(player_attacks: bool,
+		player_slot: Node2D, enemy_slot: Node2D) -> void:
+	if player_attacks:
+		if player_slot == null or not is_instance_valid(player_slot):
+			return
+		var orig := player_slot.position
+		var tw := _root_ctrl.create_tween()
+		tw.tween_property(player_slot, "position",
+			orig + Vector2(55, -8), 0.10)\
+			.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		tw.tween_property(player_slot, "position",
+			orig, 0.25)\
+			.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
+	else:
+		if enemy_slot == null or not is_instance_valid(enemy_slot):
+			return
+		var orig := enemy_slot.position
+		var tw := _root_ctrl.create_tween()
+		tw.tween_property(enemy_slot, "position",
+			orig + Vector2(-55, 8), 0.10)\
+			.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+		tw.tween_property(enemy_slot, "position",
+			orig, 0.25)\
+			.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_QUAD)
+
+
+## Node2D 立绘闪色（受击高亮；保留 alpha 避免打断外部淡出动画）
+func flash_node(node: Node2D, flash_color: Color) -> void:
+	if node == null or not is_instance_valid(node):
+		return
+	var orig := node.modulate
+	var flash_with_alpha := Color(flash_color.r, flash_color.g, flash_color.b, orig.a)
+	var tw := _root_ctrl.create_tween()
+	tw.tween_property(node, "modulate", flash_with_alpha, 0.07)
+	tw.tween_property(node, "modulate", orig, 0.28)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+
+
+## 飘字伤害数（在战斗画布上浮起然后消散）
+func spawn_damage_number(world_pos: Vector2, amount: int,
+		is_player_hit: bool) -> void:
+	var lbl := Label.new()
+	lbl.text = "-%d" % amount
+	lbl.add_theme_font_size_override("font_size", 28)
+	var col := Color(1.0, 0.30, 0.30, 1.0) if is_player_hit \
+		else Color(1.0, 0.85, 0.20, 1.0)
+	lbl.add_theme_color_override("font_color", col)
+	lbl.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.10, 0.8))
+	lbl.add_theme_constant_override("outline_size", 3)
+	lbl.position = world_pos + Vector2(-20, -10)
+	lbl.modulate.a = 0.0
+	_root_ctrl.add_child(lbl)
+
+	var tw := _root_ctrl.create_tween()
+	tw.tween_property(lbl, "modulate:a", 1.0, 0.10)
+	tw.tween_property(lbl, "position:y", lbl.position.y - 50, 0.55)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.40)\
+		.set_delay(0.25).set_ease(Tween.EASE_IN)
+	tw.tween_callback(lbl.queue_free)

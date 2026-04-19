@@ -2509,3 +2509,253 @@ tools/validate_chapter1.py    同上（Python 版，备用）
 1. icon.svg 补充
 2. 端到端通关测试
 3. 其余角色立绘（年年等）
+
+---
+
+## 待开发：平安符体验深化
+
+> 设计方向：不增加内容总量，只增加符灵的**反应性**。让符在战斗后根据玩家状态说不同的话；在某些预期它开口的时刻，明确保持沉默。
+
+### 任务一：BOSS 战苦战反应
+
+**触发**：仅章末真 BOSS 战胜利（不含狼、石皮蟾），全章只此一次。
+
+**数据通道**：BattleScene 战斗胜利时写入 GameData：
+- `last_battle_hp_pct`（末态 HP 百分比 0~100）
+- `last_battle_turns`（总回合数）
+
+TempleScene `_ready()` 已有 `battle_won && current_enemy_id == <boss_id>` 分支，在那里读这两个值。
+
+**判定**（两条件均需满足）：
+- `HP% ≤ 30` AND `回合数 ≥ 5` → `CharmSpirit.try_whisper("after_temple_hard_won")`
+- 其他所有情况 → 不调用（沉默是默认）
+
+**CharmSpirit._WHISPER_LINES 新增**：
+```gdscript
+"after_temple_hard_won": [
+    ["_default", true, "你流血了。但你站着。"],
+],
+```
+
+### 任务二：沉默时刻（两处叙事，仅 got_charm == true 显示）
+
+**第一处**：BOSS 战胜利后、玩家走出废庙之前插入一行叙事：
+
+> 她握了握那张符。它热过，也凉过。这一刻，什么都没说。
+
+**第二处**：路径 B 回家与父亲对话开始前，在 chapter1.json 对应 narration 节点前插入：
+
+> 她以为符会响。它没有。也许它知道，这一段路不是它的。
+
+### 任务三：清场胜利 → 章末尾声埋伏笔
+
+**触发**：BOSS 战末态 `HP% ≥ 80` AND `回合数 ≤ 3`，在同一段 BOSS 战处理里设置：
+```gdscript
+GameData.boss_won_clean = true
+```
+当下**不发任何耳语**——清场胜利那一刻符灵保持沉默。
+
+**GameData 新增字段**：`boss_won_clean: bool = false`，加入存档序列化。
+
+**CharmSpirit.get_chapter_end_coda() 修改**：
+若 `boss_won_clean == true`，在 `_CODA_CLOSING` 之前插入：
+
+> 「你赢得太轻了。我看见了。我没说。」
+
+ChapterEndScene._play_charm_coda 不需要改，它本就按数组逐条播放。
+
+### 边界（不要做的事）
+- 不给狼/石皮蟾战斗加符灵反应
+- 不给清场胜利加当场耳语
+- 不给苦战/清场反应加付钱变体
+- 不在 Game Over 时让符开口
+
+### 验收表
+
+| 场景 | 当场 | 章末尾声 |
+|---|---|---|
+| 苦战赢 BOSS（HP≤30 且回合≥5） | 「你流血了。但你站着。」 | 原版 |
+| 清场赢 BOSS（HP≥80 且回合≤3） | 无 | 多一句「你赢得太轻了。我看见了。我没说。」 |
+| 中间情况 | 无 | 原版 |
+| 持符走出废庙 | 看到"什么都没说"叙事 | — |
+| 持符走路径 B 回家见父 | 看到"也许它知道"叙事 | — |
+| 无符玩家 | 以上全部不可见 | 无尾声 |
+
+
+---
+
+## v37：NPC 立绘体系 + 战斗立绘 + 战斗演出时序化（2026-04-19）
+
+### 一、资源接入（NPC 对话立绘）
+
+**新增素材**（PortraitControl.gd 引用）：
+- `assets/suming.jpg` / `suming2.jpg` —— 爹·苏明（最终用 suming2，`Rect2(410, 10, 236, 350)`）
+- `assets/laopopo3.jpg` —— 老婆婆（`Rect2(250, 15, 236, 350)`）
+- `assets/gufeibai.jpg` —— 顾飞白（`Rect2(530, 15, 236, 350)`）
+- `assets/suyunwan*.jpg` / `wangdayu.jpg` —— 保留，已在早期版本接入
+- `assets/cursor.png` —— 全局自定义鼠标光标（见下）
+
+**PortraitControl.gd 调整**：
+- 苏明〔信〕变体复用 suming 贴图，统一查找逻辑
+- `_resolve_color` / match 统一识别"苏明" / "苏明〔信〕"
+
+### 二、全局自定义光标 + B 键背包热键
+
+**UIManager.gd**：
+- `_ready()` 调用 `Input.set_custom_mouse_cursor(preload cursor.png)` 全局生效
+- `_input()` 监听 B 键 → `_toggle_bag()`，战斗/对话/ESC 菜单期间禁用
+- 新增 `pulse_bag_button()`：金色光环 + 按钮缩放动画，供外部触发关注
+- `ITEM_DATA` / `ITEM_ORDER` 补齐 `charm` 项
+
+### 三、EnemySilhouettes.gd（新建）
+
+静态工具类，提供 `Polygon2D` 剪影绘制，供 TempleScene 世界地图 + BattleUI 共用（战斗中会再重绘为方块，见下）：
+
+- `draw_wolf(parent)` —— 幽影狼蹲伏剪影（暗紫）
+- `draw_toad(parent)` —— 石皮蟾坐姿剪影（石褐）
+- `draw_boss(parent)` —— 虚形魇 BOSS P1 人形剪影（紫调 + 红眼 + 模糊晕）
+- `draw_boss_phase2(parent)` —— BOSS P2 冰蓝棱角剪影（大白眼，无晕，"静止即恐惧"）
+- `draw_player(parent)` —— 玩家持剑站姿剪影（紫棕）
+- `draw_for_enemy(parent, enemy_id)` —— 按 ID 分派
+- `clear(parent)` —— 清空子节点
+
+**TempleScene.gd**：
+- 原 `_draw_wolf_silhouette` / `_draw_toad_silhouette` / `ColorRect` 占位全部替换为 `EnemySilhouettes.draw_*`
+- 顾飞白世界 NPC：原 20×36 `ColorRect` 替换为 `_draw_gufei_silhouette`（蓝灰长衫 + 墨发 + 红剑穗，26×38）
+- Label 加黑色描边，防止地面浅色反差不够
+
+### 四、战斗立绘系统
+
+**BattleScene.tscn 新增**：
+- `EnemyPortraitSlot`（Node2D，position `(960, 330)`）
+- `PlayerPortraitSlot`（Node2D，position `(280, 310)`）
+
+**BattleUI.gd**：
+- `_build_player_portrait()` / `_build_enemy_portrait()` —— 战斗开始时构建方块立绘（战斗场合弃用精细剪影，用色块方便阅读）
+  - 玩家：90×150 紫棕 + 浅棕高光
+  - 幽影狼：130×100 深紫 + 金眼
+  - 石皮蟾：140×110 土褐 + 黄眼
+  - BOSS P1：100×170 深紫 + 红眼 + 呼吸动画（scale 0.96↔1.06 循环 3.4s）
+  - BOSS P2：110×180 冰蓝黑 + 冰白眼，无呼吸
+- `_start_boss_phase1_breathing()` / `_boss_breathing_tween` —— P1 呼吸动画；P2 切换时 kill
+- `_on_boss_phase2_started()` —— 清空旧立绘、重绘 P2、kill 呼吸 tween
+- `_draw_block(parent, size, body, accent)` —— 方块绘制工具
+
+### 五、战斗演出时序化
+
+**问题**：原 `_execute_action()` 调用 `_battle.player_action()` 后所有视觉效果一次性爆发，玩家看不到"谁先出手"。
+
+**改造**：
+- `_visuals_playing: bool` 锁防止 `_battle.turn_start()` 末尾 emit `turn_changed` 把按钮提前解锁
+- `_on_turn_changed()` 读取该锁，`_visuals_playing == true` 时跳过 HP 刷新并强制禁用按钮
+- `_execute_action()` 重写为：冻结 HP 条 → 按 `_battle._enemy_first` 判定先手 → 调用 `_play_player_turn()` / `_play_enemy_turn()` 依次 await
+- 每段之间 0.18s 冲击前摇 + 0.45s 结束留白
+- 边界保护：`BATTLE_END` / `WAITING_FOR_AWAKENING` 跳过剩余演出
+
+**BattleEffects.gd 增强**：
+- `play_attack_animation(is_player, player_slot, enemy_slot)` —— 玩家前冲 +55,-8 / 敌方前冲 -55,+8，TRANS_BACK 回弹
+- `flash_node(node, color)` / `flash_panel(panel, color)` —— 改为保留原 modulate.a，避免打断外部淡出动画（修"觉醒时玩家色块残留"）
+- `spawn_damage_number(pos, amount, is_player_hit)` —— 带黑色描边的飘字（玩家受伤红/敌人受伤金），浮升 + 渐隐
+
+### 六、章末立绘残留修复
+
+**`_on_ready_for_awakening()` (BattleUI.gd)**：淡出面板时增加 `_enemy_portrait_slot` / `_player_portrait_slot` 的 `modulate:a → 0`，并 kill `_boss_breathing_tween`，否则立绘会挡住"——挥出去"按钮。
+
+### 七、BGM 响度归一化
+
+**AudioManager.gd 新增 `BGM_LOUDNESS_OFFSET` 字典**：
+
+```gdscript
+const BGM_LOUDNESS_OFFSET: Dictionary = {
+    "temple_boss" : -5.0,   ## 普通战斗 BGM 母带偏响，压低 5dB
+}
+```
+
+**应用点**：
+- `play_bgm()` crossfade 目标值
+- `set_bgm_volume()` 实时调整
+
+**原因**：普通战斗（幽影狼/石皮蟾）别名到 `temple_boss.ogg`，母带响度比 `battle_boss_p1/p2.ogg` 高；无归一化时同一 `bgm_volume` 听起来更吵。
+
+### 八、ShopScene 层级修复
+
+**`_trigger_night_and_leave()` (ShopScene.gd)**：黑色覆盖层 CanvasLayer `layer 10 → 9`。原来 DialogueBox 也是 layer 10，覆盖层后加被盖在 DialogueBox 前面，导致 night_exit 对话不可见（黑屏 bug）。
+
+### 九、其他小修
+
+- **chapter1.json**：年年"喝甜汤"改 "挑嘴，肉要剁碎"；大鱼"怕黑"改"贼，旧剑穗叼了好几年"（猫咪习惯贴合度）
+- **CharmSpirit.gd**：a_paid coda "回来时" → "走到现在"；whisper UI 加 PanelContainer + StyleBoxFlat 圆角 + 描边
+- **ChapterEndScene.gd**：coda 开始前 parallel tween 淡出 line1/line2/line3/title 四个白色元素，防止金色 coda 文字和白色标题叠字；`TEXT_A/B_LINE3` 补"打水叔今晚会来给年年和大鱼添食"等父亲细节
+- **AudioManager.gd**：`SFX_PITCH_VARIATION` 新增 `"sense": 0.04`
+
+### 文件变更清单
+
+```
+新增：
+  scripts/EnemySilhouettes.gd
+  assets/cursor.png, gufeibai.jpg, laopopo{2,3}.jpg,
+         suming{,2}.jpg, suyunwan{,2}.jpg, wangdayu.jpg
+
+修改：
+  scenes/BattleScene.tscn      (+PortraitSlot ×2)
+  scripts/AudioManager.gd      (BGM 响度偏移)
+  scripts/BattleEffects.gd     (+attack anim/flash_node/damage_number)
+  scripts/BattleUI.gd          (+portrait system +sequenced visuals +_visuals_playing 锁)
+  scripts/TempleScene.gd       (EnemySilhouettes 接入 + 顾飞白剪影)
+  scripts/UIManager.gd         (+custom cursor +B 热键 +pulse_bag_button +charm 项)
+  scripts/PortraitControl.gd   (+苏明/老婆婆/顾飞白)
+  scripts/ShopScene.gd         (overlay layer 10→9)
+  scripts/ChapterEndScene.gd   (coda 白字淡出 + 父亲细节)
+  scripts/CharmSpirit.gd       (UI 圆角描边 + coda 文案)
+  data/chapter1.json           (猫咪习惯文案)
+```
+
+### 仍需测试
+
+- 战斗演出时序化的连打节奏（每回合 ~1.1–1.3 秒，可能偏慢）
+- BOSS P1 呼吸幅度（当前 0.96↔1.06，实机看是否需收窄）
+- `temple_boss` 响度偏移 -5dB 是否合适（3–8dB 范围内微调）
+
+---
+
+## 下一阶段：小镇扩展 A + B（规划中）
+
+参考 `wendao_02_NPC对话文档.md` 现有 NPC 和 `chapter1.json` 现有剧情，在不破坏既定设定的前提下填补"薄"的部分。
+
+### 方向 A：phase 3→4 之间"出门看看"
+
+**触发**：phase 3 在 ShopScene 读完爹的便条后，允许"出门透气"一次。短暂进入"黄昏小镇"版，大部分 NPC 不在场，只有**打水叔在井边**。
+
+**对话目标**：
+- 打水叔知道爹今天走了（自然，信里说他会来喂猫）
+- 不说破爹的身份，只说一句"你爹……以前也出过几次远门，回来时都是半夜"
+- 暗示：爹这种"去办事"不是第一次
+
+**收获**：
+- 打水叔从 phase 2 一次性 NPC 变成有钩子的角色
+- 妈妈/爹的暗线加一层：爹不是突然消失的普通父亲
+- 云晚对"爹为什么能说出'别怕'"有了微弱答案
+
+**实现要点**：
+- 不新增 NPC，不让已消失的老婆婆/大婶/测验师复现
+- 黄昏小镇版：只 spawn 打水叔，守卫仍在（但不说话）
+- 可能需要 phase 3.5 状态或复用 phase 4 提前触发条件
+
+### 方向 B：针线篓第三幕
+
+**触发**：章末 A/B 之前再次互动针线篓（ShopScene phase 5 或等价时刻）。
+
+**文本**：
+
+> 旁白：线头还在那里。
+> 旁白：但针脚——多缝了两针。
+> 旁白：不是她的手法。
+
+**收获**：
+- 一整章最克制的"有人回来过"暗示，呼应妈妈伏笔
+- 不违反"第一章不揭妈妈身份"的规则
+- 直接回应爹便条"等她回来自己补"
+
+**实现要点**：
+- ShopScene 针线篓互动加 phase 5 分支
+- chapter1.json 新增 `needlework_basket_return_final` 场景

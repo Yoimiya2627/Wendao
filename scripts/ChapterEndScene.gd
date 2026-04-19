@@ -4,15 +4,15 @@
 extends Node2D
 
 ## 路径A的文字
-const TEXT_A_LINE1_WITH_CHARM := "她只带了那张平安符，还有腰间装了半壶水的葫芦。"
-const TEXT_A_LINE1_NO_CHARM := "她只带了腰间装了半壶水的葫芦。"
+const TEXT_A_LINE1_WITH_CHARM := "她带了那张平安符，腰间是装了半壶水的葫芦，还有那支旧剑穗。"
+const TEXT_A_LINE1_NO_CHARM := "她带了腰间装了半壶水的葫芦，还有那支旧剑穗。"
 const TEXT_A_LINE2 := "走出废庙的时候，她没有回头。"
-const TEXT_A_LINE3 := "身后，碎玉镇的灯火一盏一盏亮起来。"
+const TEXT_A_LINE3 := "身后，碎玉镇的灯火一盏一盏亮起来。铺子的那盏也亮着——打水叔今晚会来，给年年和大鱼添食。"
 
 ## 路径B的文字
 const TEXT_B_LINE1 := "一封没有署名的信。"
 const TEXT_B_LINE2 := "一碗早就凉透的饭。"
-const TEXT_B_LINE3 := "第二天一早，她收拾好东西，锁了门。钥匙放在年年够不到的地方。"
+const TEXT_B_LINE3 := "第二天一早，她收拾好东西。后窗留了一线，灶下压了几日的鱼干。锁了门，钥匙放在年年够不到的地方。"
 
 ## 动态创建的节点引用
 var _line1  : Label
@@ -141,6 +141,22 @@ func _play_ending() -> void:
 	## 符灵尾声（仅 got_charm 玩家可见）
 	var coda_lines := CharmSpirit.get_chapter_end_coda()
 	if coda_lines.size() > 0:
+		## 先淡出前三行白字和章节标题，让符灵尾声独占中央视觉
+		var clear_tw := create_tween()
+		clear_tw.set_parallel(true)
+		clear_tw.tween_property(_line1, "theme_override_colors/font_color:a", 0.0, 1.2)\
+			.set_ease(Tween.EASE_IN_OUT)
+		clear_tw.tween_property(_line2, "theme_override_colors/font_color:a", 0.0, 1.2)\
+			.set_ease(Tween.EASE_IN_OUT)
+		clear_tw.tween_property(_line3, "theme_override_colors/font_color:a", 0.0, 1.2)\
+			.set_ease(Tween.EASE_IN_OUT)
+		clear_tw.tween_property(_title, "theme_override_colors/font_color:a", 0.0, 1.2)\
+			.set_ease(Tween.EASE_IN_OUT)
+		await clear_tw.finished
+		if not is_inside_tree(): return
+		await get_tree().create_timer(0.8).timeout
+		if not is_inside_tree(): return
+
 		await _play_charm_coda(coda_lines)
 		if not is_inside_tree(): return
 		await get_tree().create_timer(1.0).timeout

@@ -52,6 +52,13 @@ const BGM_ALIAS: Dictionary = {
 	"awakening"     : "chapter_end",
 }
 
+## 每首 BGM 的响度修正（dB，正数更响，负数更轻）
+## 因各音频文件未做统一响度归一化，这里手动补偿
+## 键用"真实文件名"（别名解析之后），不要写别名
+const BGM_LOUDNESS_OFFSET: Dictionary = {
+	"temple_boss" : -5.0,   ## 普通战斗 BGM 母带偏响，压低 5dB
+}
+
 ## SFX 音调微扰：每种音效的随机偏移幅度（0.05 = ±5%）
 ## 列在这里的音效每次播放时音调略有不同，避免机械重复感
 const SFX_PITCH_VARIATION: Dictionary = {
@@ -61,6 +68,7 @@ const SFX_PITCH_VARIATION: Dictionary = {
 	"player_hurt"      : 0.06,
 	"button_click"     : 0.03,
 	"charge"           : 0.04,
+	"sense"            : 0.04,
 }
 
 # ── 节点池 ────────────────────────────────────────────────────
@@ -178,6 +186,8 @@ func play_bgm(bgm_name: String, fade_in: float = BGM_DEFAULT_FADE, loop: bool = 
 	if _bgm_fade_tween and _bgm_fade_tween.is_running():
 		_bgm_fade_tween.kill()
 	var target_db: float = linear_to_db(bgm_volume) if bgm_volume > 0.0 else -80.0
+	if bgm_volume > 0.0 and BGM_LOUDNESS_OFFSET.has(bgm_name):
+		target_db += float(BGM_LOUDNESS_OFFSET[bgm_name])
 	_bgm_fade_tween = create_tween().set_parallel(true)
 	if fade_in > 0.0:
 		_bgm_fade_tween.tween_property(
@@ -192,7 +202,7 @@ func play_bgm(bgm_name: String, fade_in: float = BGM_DEFAULT_FADE, loop: bool = 
 					old_player.stop()
 			_bgm_fade_tween.chain().tween_callback(_stop_cb)
 	else:
-		new_player.volume_db = linear_to_db(bgm_volume)
+		new_player.volume_db = target_db
 		if old_player.playing:
 			old_player.stop()
 
@@ -302,6 +312,8 @@ func set_bgm_volume(linear: float) -> void:
 	## 只更新当前活跃播放器：crossfade 期间旧播放器正被 tween 渐出，
 	## 若也覆盖其 volume_db 会导致旧 BGM 跳回满音量再被拉回静音（音量弹跳）
 	var target_db: float = linear_to_db(bgm_volume) if bgm_volume > 0.0 else -80.0
+	if bgm_volume > 0.0 and BGM_LOUDNESS_OFFSET.has(_current_bgm_name):
+		target_db += float(BGM_LOUDNESS_OFFSET[_current_bgm_name])
 	if _active_bgm_player != null:
 		_active_bgm_player.volume_db = target_db
 

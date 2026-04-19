@@ -15,6 +15,18 @@ const _SUYUNWAN_CROP: Rect2 = Rect2(382, 20, 236, 350)
 const _DAYU_TEX: Texture2D = preload("res://assets/wangdayu2.jpg")
 const _DAYU_CROP: Rect2 = Rect2(185, 150, 400, 580)
 
+## 苏明立绘：水墨淡彩全身像
+const _SUMING_TEX: Texture2D = preload("res://assets/suming2.jpg")
+const _SUMING_CROP: Rect2 = Rect2(410, 10, 236, 350)
+
+## 老婆婆立绘：水墨淡彩全身像，竖构图居中，裁剪聚焦头部+上身
+const _LAOPOPO_TEX: Texture2D = preload("res://assets/laopopo3.jpg")
+const _LAOPOPO_CROP: Rect2 = Rect2(250, 15, 236, 350)
+
+## 顾飞白立绘：水墨淡彩全身像，少年剑修
+const _GUFEIBAI_TEX: Texture2D = preload("res://assets/gufeibai.jpg")
+const _GUFEIBAI_CROP: Rect2 = Rect2(394, 15, 236, 350)
+
 var _speaker: String = ""
 var _base_color: Color = Color.TRANSPARENT
 
@@ -29,7 +41,7 @@ func set_speaker(speaker_name: String) -> void:
 func _resolve_color(speaker_name: String) -> Color:
 	match speaker_name:
 		"苏云晚": return Color(0.83, 0.66, 0.34, 0.92)
-		"苏明":   return Color(0.25, 0.35, 0.55, 0.92)
+		"苏明", "苏明〔信〕":   return Color(0.25, 0.35, 0.55, 0.92)
 		"年年":   return Color(0.78, 0.78, 0.88, 0.92)
 		"大鱼":   return Color(0.85, 0.40, 0.15, 0.92)
 		"虚形魇": return Color(0.40, 0.20, 0.50, 0.92)
@@ -65,6 +77,15 @@ func _draw() -> void:
 		"大鱼":
 			real_tex = _DAYU_TEX
 			real_crop = _DAYU_CROP
+		"苏明", "苏明〔信〕":
+			real_tex = _SUMING_TEX
+			real_crop = _SUMING_CROP
+		"老婆婆":
+			real_tex = _LAOPOPO_TEX
+			real_crop = _LAOPOPO_CROP
+		"顾飞白":
+			real_tex = _GUFEIBAI_TEX
+			real_crop = _GUFEIBAI_CROP
 	if real_tex != null:
 		var img_rect := Rect2(4, 4, w - 8, h - 8)
 		draw_texture_rect_region(real_tex, img_rect, real_crop)

@@ -97,9 +97,16 @@ var in_battle: bool:
 signal font_scale_changed(scale_factor: float)
 
 
+## 自定义光标：国风铜矛，热点在矛尖（左上）
+const _CURSOR_TEX: Texture2D = preload("res://assets/cursor.png")
+const _CURSOR_HOTSPOT: Vector2 = Vector2(16, 10)
+
+
 func _ready() -> void:
 	## 确保UIManager在游戏暂停状态下仍能响应ESC输入
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	## 自定义光标接入
+	Input.set_custom_mouse_cursor(_CURSOR_TEX, Input.CURSOR_ARROW, _CURSOR_HOTSPOT)
 	## 加载设置（音量、文字速度等）
 	load_settings_from_file()
 	_build_ui()
@@ -745,7 +752,7 @@ var _last_saved_hash   : int    = 0  ## 最后一次存档时的数据Hash，用
 
 
 func _input(event: InputEvent) -> void:
-	## 主菜单场景不响应ESC
+	## 主菜单场景不响应ESC/背包快捷键
 	var scene = get_tree().current_scene
 	if scene and String(scene.name) == "MainMenuScene":
 		return
@@ -755,6 +762,14 @@ func _input(event: InputEvent) -> void:
 			_close_esc_menu()
 		else:
 			_open_esc_menu()
+		get_viewport().set_input_as_handled()
+		return
+	## 背包快捷键 B：战斗、对话、ESC菜单开启时不响应
+	if event is InputEventKey and event.pressed and not event.echo \
+			and event.keycode == KEY_B:
+		if _in_battle or _esc_open or DialogueManager.is_active:
+			return
+		_toggle_bag()
 		get_viewport().set_input_as_handled()
 
 

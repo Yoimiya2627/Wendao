@@ -354,13 +354,8 @@ func _create_toad(pos: Vector2, toad_id: String) -> Node2D:
 	toad.name = toad_id
 	add_child(toad)
 
-	var rect := ColorRect.new()
-	rect.color = Color(0.45, 0.42, 0.35, 1)
-	rect.offset_left   = -18.0
-	rect.offset_top    = -14.0
-	rect.offset_right  = 18.0
-	rect.offset_bottom = 14.0
-	toad.add_child(rect)
+	## 石皮蟾剪影：蹲坐的蟾蜍，身体+眼+前爪
+	EnemySilhouettes.draw_toad(toad)
 
 	var label := Label.new()
 	label.text = "石皮蟾"
@@ -499,13 +494,8 @@ func _create_wolf(pos: Vector2, wolf_id: String) -> Node2D:
 	wolf.name = wolf_id
 	add_child(wolf)
 
-	var rect := ColorRect.new()
-	rect.color = Color(0.3, 0.15, 0.4, 1)
-	rect.offset_left   = -12.0
-	rect.offset_top    = -20.0
-	rect.offset_right  = 12.0
-	rect.offset_bottom = 20.0
-	wolf.add_child(rect)
+	## 幽影狼剪影：侧身蹲伏，头+身+四腿+尾
+	EnemySilhouettes.draw_wolf(wolf)
 
 	var label := Label.new()
 	label.text = "幽影狼"
@@ -782,6 +772,97 @@ func _update_stone_visuals() -> void:
 			rect.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
 
+## 顾飞白剪影：清冷蓝灰长衫少年剑修，竖剑而立
+func _draw_gufei_silhouette(parent: Node2D) -> void:
+	var robe_color := Color(0.68, 0.74, 0.82, 1.0)       # 淡青白长衫
+	var hair_color := Color(0.12, 0.10, 0.16, 1.0)       # 墨发
+	var skin_color := Color(0.92, 0.86, 0.78, 1.0)       # 脸
+	var sash_color := Color(0.35, 0.40, 0.52, 1.0)       # 腰带
+	var sword_color := Color(0.78, 0.80, 0.82, 1.0)      # 剑身
+	var tassel_color := Color(0.55, 0.30, 0.30, 1.0)     # 剑穗（红）
+
+	# 头发（后）
+	var hair := Polygon2D.new()
+	hair.polygon = PackedVector2Array([
+		Vector2(-5, -22), Vector2(5, -22),
+		Vector2(6, -14), Vector2(-6, -14)
+	])
+	hair.color = hair_color
+	parent.add_child(hair)
+
+	# 脸
+	var face := Polygon2D.new()
+	face.polygon = PackedVector2Array([
+		Vector2(-4, -20), Vector2(4, -20),
+		Vector2(4, -14), Vector2(-4, -14)
+	])
+	face.color = skin_color
+	parent.add_child(face)
+
+	# 长衫上身
+	var upper := Polygon2D.new()
+	upper.polygon = PackedVector2Array([
+		Vector2(-8, -13), Vector2(8, -13),
+		Vector2(7, -2), Vector2(-7, -2)
+	])
+	upper.color = robe_color
+	parent.add_child(upper)
+
+	# 腰带
+	var sash := Polygon2D.new()
+	sash.polygon = PackedVector2Array([
+		Vector2(-7, -3), Vector2(7, -3),
+		Vector2(7, -1), Vector2(-7, -1)
+	])
+	sash.color = sash_color
+	parent.add_child(sash)
+
+	# 长衫下摆（到脚）
+	var lower := Polygon2D.new()
+	lower.polygon = PackedVector2Array([
+		Vector2(-7, -1), Vector2(7, -1),
+		Vector2(9, 16), Vector2(-9, 16)
+	])
+	lower.color = robe_color
+	parent.add_child(lower)
+
+	# 左袖
+	var sleeve_l := Polygon2D.new()
+	sleeve_l.polygon = PackedVector2Array([
+		Vector2(-8, -13), Vector2(-11, -10),
+		Vector2(-10, 0), Vector2(-8, 0)
+	])
+	sleeve_l.color = robe_color
+	parent.add_child(sleeve_l)
+
+	# 右袖（持剑）
+	var sleeve_r := Polygon2D.new()
+	sleeve_r.polygon = PackedVector2Array([
+		Vector2(8, -13), Vector2(11, -10),
+		Vector2(10, 0), Vector2(8, 0)
+	])
+	sleeve_r.color = robe_color
+	parent.add_child(sleeve_r)
+
+	# 剑（右侧竖立）
+	var sword := Polygon2D.new()
+	sword.polygon = PackedVector2Array([
+		Vector2(11, -6), Vector2(13, -6),
+		Vector2(13, 16), Vector2(11, 16)
+	])
+	sword.color = sword_color
+	parent.add_child(sword)
+
+	# 剑穗（红色小束）
+	var tassel := Polygon2D.new()
+	tassel.polygon = PackedVector2Array([
+		Vector2(10, -8), Vector2(14, -8),
+		Vector2(13, -4), Vector2(11, -4)
+	])
+	tassel.color = tassel_color
+	parent.add_child(tassel)
+
+
 func _setup_gufei() -> void:
 	if _npc_gufei != null:
 		return
@@ -791,19 +872,15 @@ func _setup_gufei() -> void:
 	_npc_gufei.position = Vector2(120, -450)
 	add_child(_npc_gufei)
 
-	var npc_body := ColorRect.new()
-	npc_body.offset_left   = -10.0
-	npc_body.offset_top    = -18.0
-	npc_body.offset_right  = 10.0
-	npc_body.offset_bottom = 18.0
-	npc_body.color = Color(0.75, 0.80, 0.85, 1)
-	_npc_gufei.add_child(npc_body)
+	_draw_gufei_silhouette(_npc_gufei)
 
 	var label := Label.new()
 	label.text = "顾飞白"
-	label.position = Vector2(-20, -36)
+	label.position = Vector2(-20, -44)
 	label.add_theme_font_size_override("font_size", 12)
 	label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	label.add_theme_constant_override("outline_size", 3)
 	_npc_gufei.add_child(label)
 
 	var area := Area2D.new()

@@ -471,8 +471,9 @@ func _trigger_night_and_leave() -> void:
 		return
 	_night_leave_triggered = true
 	## 创建黑屏遮罩
+	## layer=9 低于 UILayer(10)，让 DialogueBox 的 night_exit 旁白浮在黑屏上可见
 	var canvas := CanvasLayer.new()
-	canvas.layer = 10
+	canvas.layer = 9
 	add_child(canvas)
 	var overlay := ColorRect.new()
 	overlay.color = Color(0, 0, 0, 0)

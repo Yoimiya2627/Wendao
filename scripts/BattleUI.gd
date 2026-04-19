@@ -20,6 +20,9 @@ extends Control
 @onready var log_text         : RichTextLabel = $LogPanel/LogText
 @onready var _particles       : Node          = $BattleParticles
 
+@onready var _enemy_portrait_slot : Node2D    = $EnemyPortraitSlot
+@onready var _player_portrait_slot: Node2D    = $PlayerPortraitSlot
+
 # ── 子模块 ───────────────────────────────────────────────────
 var _effects   : Node = null
 var _skill_menu: Node = null
@@ -30,6 +33,9 @@ var _enemy  : Character     = null
 
 var _phase2_dialogue_done: bool = false
 var _phase2_in_progress: bool   = false
+
+var _boss_breathing_tween: Tween = null
+var _visuals_playing: bool = false
 
 var _prev_player_hp: int = 0
 var _prev_enemy_hp: int  = 0
@@ -130,6 +136,8 @@ func _start_battle() -> void:
 
 	_battle.setup(GameData.player, _enemy)
 	_refresh_all_hp()
+	_build_player_portrait()
+	_build_enemy_portrait()
 
 	if GameData.current_enemy_id == "boss":
 		AudioManager.play_bgm("battle_boss_p1", 3.0)
@@ -218,13 +226,16 @@ func _on_defend_pressed() -> void:
 
 func _on_turn_changed(state: BattleManager.TurnState) -> void:
 	var is_player_turn := state == BattleManager.TurnState.PLAYER_TURN
-	print("_on_turn_changed: state=%s is_active=%s phase2=%s" % [
-		state, DialogueManager.is_active, _phase2_in_progress])
-	if is_player_turn and (DialogueManager.is_active or _phase2_in_progress):
+	print("_on_turn_changed: state=%s is_active=%s phase2=%s vis=%s" % [
+		state, DialogueManager.is_active, _phase2_in_progress, _visuals_playing])
+	if is_player_turn and (DialogueManager.is_active or _phase2_in_progress \
+			or _visuals_playing):
 		_set_buttons_disabled(true)
 	else:
 		_set_buttons_disabled(not is_player_turn)
-	_refresh_all_hp()
+	# 演出进行中不刷新 HP 条（由演出序列自己按时机刷）
+	if not _visuals_playing:
+		_refresh_all_hp()
 
 
 func _on_battle_log(message: String) -> void:
@@ -282,6 +293,15 @@ func _on_boss_phase2_started() -> void:
 	_set_buttons_disabled(true)
 	_skill_menu.close()
 	AudioManager.play_bgm("battle_boss_p2", 2.0)
+	# 停止呼吸动画，切换到二阶段冰冷方块
+	if _boss_breathing_tween and _boss_breathing_tween.is_valid():
+		_boss_breathing_tween.kill()
+	_enemy_portrait_slot.scale = Vector2.ONE
+	for child in _enemy_portrait_slot.get_children():
+		child.queue_free()
+	_draw_block(_enemy_portrait_slot, Vector2(110, 180),
+		Color(0.06, 0.08, 0.20, 1.0),
+		Color(0.90, 0.96, 1.00, 1.0))  # 冰白眼
 	await get_tree().process_frame
 	DialogueManager.start_scene("boss_phase2_start")
 
@@ -290,11 +310,16 @@ func _on_ready_for_awakening() -> void:
 	_set_buttons_disabled(true)
 	_skill_menu.close()
 
+	if _boss_breathing_tween and _boss_breathing_tween.is_valid():
+		_boss_breathing_tween.kill()
+
 	var tween_out := create_tween().set_parallel(true)
 	tween_out.tween_property($SkillPanel,  "modulate:a", 0.0, 0.5)
 	tween_out.tween_property($PlayerPanel, "modulate:a", 0.0, 0.5)
 	tween_out.tween_property($EnemyPanel,  "modulate:a", 0.0, 0.5)
 	tween_out.tween_property($LogPanel,    "modulate:a", 0.0, 0.5)
+	tween_out.tween_property(_enemy_portrait_slot,  "modulate:a", 0.0, 0.5)
+	tween_out.tween_property(_player_portrait_slot, "modulate:a", 0.0, 0.5)
 	await tween_out.finished
 
 	$SkillPanel.hide()
@@ -394,6 +419,9 @@ func _execute_action(action_type: BattleManager.ActionType) -> void:
 	_prev_player_hp = GameData.player.hp
 	_prev_enemy_hp = _enemy.hp
 
+	_visuals_playing = true
+	_set_buttons_disabled(true)
+
 	match action_type:
 		BattleManager.ActionType.ATTACK:
 			AudioManager.play_sfx("attack_hit")
@@ -406,28 +434,95 @@ func _execute_action(action_type: BattleManager.ActionType) -> void:
 		BattleManager.ActionType.USE_POTION:
 			AudioManager.play_sfx("item_get")
 
+	# 结算伤害（同步），但 HP 条暂时冻结在旧值由演出序列逐步刷新
 	_battle.player_action(action_type)
 
-	var player_took_dmg := GameData.player.hp < _prev_player_hp
-	var enemy_took_dmg := _enemy.hp < _prev_enemy_hp
-	var player_dmg_amount := _prev_player_hp - GameData.player.hp
+	var player_dmg := _prev_player_hp - GameData.player.hp
+	var enemy_dmg := _prev_enemy_hp - _enemy.hp
 
-	if enemy_took_dmg:
+	# 冻结 HP 条
+	player_hp_bar.value = _prev_player_hp
+	enemy_hp_bar.value  = _prev_enemy_hp
+
+	# 进入觉醒等待态时整个演出让位给觉醒仪式的淡出
+	var awakening_imminent: bool = _battle.current_state \
+		== BattleManager.TurnState.WAITING_FOR_AWAKENING
+
+	if action_type == BattleManager.ActionType.USE_POTION:
+		_refresh_player_hp()
+		await get_tree().create_timer(0.4).timeout
+	elif awakening_imminent:
+		# 不播放任何演出，直接把 HP 刷到最终值
+		pass
+	else:
+		var player_first: bool = not _battle._enemy_first
+		if player_first:
+			await _play_player_turn(action_type, enemy_dmg)
+			if is_inside_tree() and player_dmg > 0 \
+					and _battle.current_state != BattleManager.TurnState.BATTLE_END:
+				await _play_enemy_turn(player_dmg)
+		else:
+			if player_dmg > 0:
+				await _play_enemy_turn(player_dmg)
+			if is_inside_tree() \
+					and _battle.current_state != BattleManager.TurnState.BATTLE_END:
+				await _play_player_turn(action_type, enemy_dmg)
+
+	if not is_inside_tree():
+		return
+	_visuals_playing = false
+	_refresh_all_hp()
+	# 演出结束后按当前战斗状态恢复按钮
+	if _battle != null and _battle.current_state == BattleManager.TurnState.PLAYER_TURN \
+			and not DialogueManager.is_active and not _phase2_in_progress:
+		_set_buttons_disabled(false)
+
+
+## 玩家方演出：前冲（攻击类）→ 敌方受击（闪红/飘字/HP 扣）
+func _play_player_turn(action_type: BattleManager.ActionType, enemy_dmg: int) -> void:
+	var is_attack: bool = action_type == BattleManager.ActionType.ATTACK \
+		or action_type == BattleManager.ActionType.BITE
+	if is_attack:
+		_effects.play_attack_animation(true, _player_portrait_slot, _enemy_portrait_slot)
+		await get_tree().create_timer(0.18).timeout
+		if not is_inside_tree():
+			return
+
+	if enemy_dmg > 0:
 		_effects.flash_panel($EnemyPanel, Color(1.0, 0.2, 0.2))
+		_effects.flash_node(_enemy_portrait_slot, Color(1.0, 0.35, 0.35))
 		AudioManager.play_sfx("enemy_hurt")
 		_particles.play_hit($EnemyPanel.get_global_rect().get_center())
-	if player_took_dmg:
-		_effects.flash_panel($PlayerPanel, Color(1.0, 0.2, 0.2))
-		AudioManager.play_sfx("player_hurt")
-		_particles.play_hit($PlayerPanel.get_global_rect().get_center())
-		if player_dmg_amount >= 15:
-			_effects.shake_screen()
+		_effects.spawn_damage_number(
+			_enemy_portrait_slot.position + Vector2(-10, -40),
+			enemy_dmg, false)
+		_refresh_enemy_hp()
+	elif action_type == BattleManager.ActionType.CHARGE \
+			or action_type == BattleManager.ActionType.SENSE:
+		_particles.play_skill($PlayerPanel.get_global_rect().get_center())
 
-	match action_type:
-		BattleManager.ActionType.CHARGE, BattleManager.ActionType.SENSE:
-			_particles.play_skill($PlayerPanel.get_global_rect().get_center())
+	await get_tree().create_timer(0.45).timeout
 
-	_refresh_all_hp()
+
+## 敌方演出：前冲 → 玩家受击
+func _play_enemy_turn(player_dmg: int) -> void:
+	_effects.play_attack_animation(false, _player_portrait_slot, _enemy_portrait_slot)
+	await get_tree().create_timer(0.18).timeout
+	if not is_inside_tree():
+		return
+
+	_effects.flash_panel($PlayerPanel, Color(1.0, 0.2, 0.2))
+	_effects.flash_node(_player_portrait_slot, Color(1.0, 0.35, 0.35))
+	AudioManager.play_sfx("player_hurt")
+	_particles.play_hit($PlayerPanel.get_global_rect().get_center())
+	_effects.spawn_damage_number(
+		_player_portrait_slot.position + Vector2(-10, -40),
+		player_dmg, true)
+	if player_dmg >= 15:
+		_effects.shake_screen()
+	_refresh_player_hp()
+
+	await get_tree().create_timer(0.45).timeout
 
 
 ## 字号变化回调
@@ -452,3 +547,77 @@ func _show_battle_ui(show_ui: bool) -> void:
 	$PlayerPanel.modulate.a = 1.0
 	$SkillPanel.modulate.a  = 1.0
 	$LogPanel.modulate.a    = 1.0
+
+
+# ── 立绘构建（战斗中用简化方块） ─────────────────────────────
+
+func _build_player_portrait() -> void:
+	if _player_portrait_slot == null:
+		return
+	_player_portrait_slot.scale = Vector2.ONE
+	_draw_block(_player_portrait_slot, Vector2(90, 150),
+		Color(0.32, 0.24, 0.42, 1.0), Color(0.55, 0.42, 0.28, 1.0))
+
+
+func _build_enemy_portrait() -> void:
+	if _enemy_portrait_slot == null:
+		return
+	_enemy_portrait_slot.scale = Vector2.ONE
+	var eid: String = GameData.current_enemy_id
+	var size: Vector2
+	var body_color: Color
+	var accent_color: Color
+	if eid == "boss":
+		size = Vector2(100, 170)
+		body_color = Color(0.18, 0.10, 0.30, 1.0)
+		accent_color = Color(0.95, 0.35, 0.45, 1.0)  # 红眼
+		_start_boss_phase1_breathing()
+	elif eid.begins_with("toad"):
+		size = Vector2(140, 110)
+		body_color = Color(0.42, 0.38, 0.28, 1.0)
+		accent_color = Color(0.85, 0.70, 0.25, 1.0)  # 金黄眼
+	else:
+		size = Vector2(130, 100)
+		body_color = Color(0.25, 0.14, 0.32, 1.0)
+		accent_color = Color(0.85, 0.75, 0.35, 1.0)  # 狼眼
+	_draw_block(_enemy_portrait_slot, size, body_color, accent_color)
+
+
+## 绘制一个方块立绘：主体 + 两个小高光（示意眼/光斑）
+func _draw_block(parent: Node2D, size: Vector2,
+		body_color: Color, accent_color: Color) -> void:
+	var hx := size.x * 0.5
+	var hy := size.y * 0.5
+	var body := Polygon2D.new()
+	body.polygon = PackedVector2Array([
+		Vector2(-hx, -hy), Vector2(hx, -hy),
+		Vector2(hx, hy), Vector2(-hx, hy)
+	])
+	body.color = body_color
+	parent.add_child(body)
+
+	for dx: float in [-hx * 0.35, hx * 0.35]:
+		var accent := Polygon2D.new()
+		var ar: float = 5.0
+		accent.polygon = PackedVector2Array([
+			Vector2(dx - ar, -hy * 0.55), Vector2(dx + ar, -hy * 0.55),
+			Vector2(dx + ar, -hy * 0.55 + ar * 2),
+			Vector2(dx - ar, -hy * 0.55 + ar * 2)
+		])
+		accent.color = accent_color
+		parent.add_child(accent)
+
+
+## BOSS P1 呼吸动画（缓慢缩放循环，模拟"形态不稳"）
+func _start_boss_phase1_breathing() -> void:
+	if _boss_breathing_tween and _boss_breathing_tween.is_valid():
+		_boss_breathing_tween.kill()
+	_boss_breathing_tween = create_tween().set_loops()
+	_boss_breathing_tween.tween_property(
+		_enemy_portrait_slot, "scale",
+		Vector2(1.06, 1.06), 1.6)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	_boss_breathing_tween.tween_property(
+		_enemy_portrait_slot, "scale",
+		Vector2(0.96, 0.96), 1.8)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
