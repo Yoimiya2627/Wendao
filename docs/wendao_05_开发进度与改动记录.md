@@ -2759,3 +2759,129 @@ const BGM_LOUDNESS_OFFSET: Dictionary = {
 **实现要点**：
 - ShopScene 针线篓互动加 phase 5 分支
 - chapter1.json 新增 `needlework_basket_return_final` 场景
+
+
+---
+
+## v38：小镇扩展 A+B 实装 + 多处一致性修复（2026-04-21）
+
+### A. 打水叔敲门（phase 3 门口首次触发）
+
+**实现路径**：与 v37 规划的"黄昏小镇"方案不同，最终采用**门口敲门**——剧情更温柔、零新场景、零 phase 改动。
+
+- `chapter1.json` 新增 `water_carrier_evening` 场景（15 节点）：
+  - 敲门三下 → 开门 → 打水叔提水桶 + 鱼干纸包
+  - 爹信里"打水叔今晚来喂猫"伏笔直接兑现
+  - 关键台词："你爹以前也出过几回远门。回来时，都是半夜。" / "有一次衣裳上带了血。他说是路上摔的——我没多问。" / "姑娘，没事的。他嘱咐的我都记着。"
+  - 暗示爹"去办事"不是第一次，不点破身份
+- `ShopScene.gd`：
+  - `_on_exit_body_entered` 加 phase 3 首次触发分支：`_cats_interactable && !water_carrier_visit_done && !_water_carrier_scene_started && !DialogueManager.is_active`
+  - 0.4s 延迟触发（留出玩家"推门"动作想象空间）
+  - `_on_event_triggered` 新增 `water_carrier_visit_done` 分支置位 flag
+  - `_on_dialogue_ended` 对话结束后若玩家仍在出口区域，恢复出口提示气泡
+  - 新增本地锁 `_water_carrier_scene_started` 防止进出门框重复触发
+- `GameData.gd`：新增 `water_carrier_visit_done: bool`，接入 `reset_to_default` / `save_data` / `load_data` 三处
+- **未动 `story_phase` 状态机**——旁路 flag 方案，不扩展线性 phase
+
+### B. 针线篓第三幕（letter 场景内插入）
+
+**实现路径**：与 v37 规划的"再次互动"方案不同，最终以 narration 形式内嵌在 letter 场景结尾。原因：letter 自动播 + 触发 start_chapter_end_b，中间没有玩家自由移动窗口，插入独立互动反而割裂情感流。
+
+- `chapter1.json` letter 场景改造：
+  - `lt_11b` 选择分支两条路（"知道了，爹" / "我会回来的"）都接 `lt_basket_01`
+  - `lt_11c` 原本 next → `lt_end`，改为 next → `lt_basket_01`
+  - 新增 6 行 narration `lt_basket_01..06`：
+    > 她把信折好，起身，顺手收拾了桌子。
+    > 目光掠过书架角落。
+    > 那个针线篓还在原处。线头别在那里，和早上一样。
+    > 可是——针脚多缝了两针。
+    > 不是她的。也不是爹的。
+    > 家里会缝针线的，只有她。
+  - 最后一行是"支撑句"——确保未读过 phase 0/3 针线篓互动的玩家也能接住"妈妈"的暗示，不依赖前序互动
+- 不需要 ShopScene 代码改动（原方案里的"针线篓 phase 5 分支"废弃）
+
+### C. 章末 TEXT_B_LINE3 重写（猫线闭环 + 玩家情感共鸣）
+
+**问题**：原版 TEXT_B_LINE3 只交代"后窗留了一线，灶下压了几日的鱼干。锁了门，钥匙放在年年够不到的地方"——如果几日没回来猫会饿死，且"钥匙放年年够不到"逻辑怪（猫不会开门）。
+
+**修复**（`ChapterEndScene.gd`）：
+```
+"第二天一早，她收拾好东西。年年还在睡，她没叫醒它。
+大鱼从后院回来，蹭了蹭她的脚，又走了。
+她数了数灶下的鱼干，犹豫了一下，又加了几条。
+后窗留了一线，锁了门，钥匙压在门口的石板下——打水叔会懂。"
+```
+
+三层情感锚点：
+- "年年还在睡，她没叫醒它" / "大鱼蹭了蹭她的脚" → 不说煽情，但告别动作到位
+- **"她数了数灶下的鱼干，犹豫了一下，又加了几条"** → 这是给女朋友看的一行（她平时出门也会算猫粮够吃几天）
+- "钥匙压在石板下，打水叔会懂" → 呼应 A 路径"打水叔今晚会来喂猫"，两条路的猫照顾线完整闭合
+
+同时 `ChapterEndScene.gd` 给 `_line1/2/3` 三个 Label 加了 `autowrap_mode = TextServer.AUTOWRAP_WORD_SMART` + `custom_minimum_size.x = 900`，防止长文本横向溢出。
+
+### D. 废庙战前旁白"猫路径"逻辑修复
+
+**问题**：`chapter1.json` 的 `temple` (tp_06) 和 `妖兽靠近` (ma_05) 两个场景原文本说"年年和大鱼每天都走这条路回家"/"年年还在铺子门口冲她挥手"——猫不会通勤，也不会"挥手"。
+
+**修复**：
+- tp_06/tp_06b：`"她想跑。但镇子就在这条路的另一头。年年此刻还趴在柜台上等她回家。大鱼大概又躲在后院偷吃东西。"`
+- ma_05：`"但这条路的另一头就是镇子。今天下午出门前，年年还靠在她手心里。"`
+- 情感逻辑重构：从"猫走这条路会遇险"改为"镇子在路另一头，妖兽不清掉会摸到家里，猫在家等我"
+
+### E. DialogueBox 跨场景崩溃修复
+
+**崩溃现场**：打水叔对话结束出门，走夜晚 night_exit 流程时 `Cannot call method 'set_input_as_handled' on a null value`。
+
+**原因**：`DialogueBox._input` 调用 `DialogueManager.advance()` 后再调 `get_viewport().set_input_as_handled()`。但 advance 可能触发事件导致场景切换，DialogueBox 已脱离场景树时 `get_viewport()` 返回 null。
+
+**修复**（`DialogueBox.gd:258`）：
+```gdscript
+if is_inside_tree():
+    get_viewport().set_input_as_handled()
+```
+
+### F. night_exit 对话在黑屏上不可见
+
+**问题**：`ShopScene._trigger_night_and_leave` 在本地遮罩淡入全黑后立刻调 `SceneTransition.set_overlay_opaque()`，把 SceneTransition 的 layer 128 遮罩也变不透明。之后 `DialogueManager.start_scene("night_exit")` 播放的 DialogueBox 在 layer 10，被 layer 128 遮罩完全盖住——玩家以为卡死了。
+
+**修复**（`ShopScene.gd`）：把 `SceneTransition.set_overlay_opaque()` 挪到 night_exit 对话结束后、`change_scene` 之前。
+
+### G. F9 → F10 调试键迁移（Godot 编辑器 F9 冲突）
+
+**耗时最久的 bug**：F9 跳调试入口会触发 Godot 编辑器的"断点切换"快捷键，导致游戏主循环异常（无任何明显错误，物理 process 停止、所有输入无响应）。诊断过程花了很多轮 log 才定位。
+
+**修复**：`UIManager._input` 里的调试键从 `KEY_F9` 改为 `KEY_F10`。
+
+### H. 调试代码清理
+
+F9 诊断过程中在 `Player.gd` / `ShopScene.gd` / `UIManager.gd` 留了大量 `[DEBUG]` print、`_dbg_frame_count`、`debug_start_dense_print` 等。清理策略：
+- Player.gd / ShopScene.gd / DialogueBox.gd：**全部移除**（污染 Output 面板）
+- UIManager.gd 的 F10 handler 相关 print：**保留**（仅 F10 按下 + debug build 时触发）
+- ShopScene.gd 的 `_debug_force_return_home_state`：**保留**（F10 用，体积小）
+
+### 文件变更清单
+
+```
+修改：
+  data/chapter1.json          (+water_carrier_evening +lt_basket_01..06, tp_06/ma_05 文案修正)
+  scripts/ShopScene.gd        (+打水叔触发点 +_debug_force_return_home_state, night 遮罩顺序修复)
+  scripts/GameData.gd         (+water_carrier_visit_done 字段 + 序列化)
+  scripts/UIManager.gd        (F9→F10, +_debug_jump_to_water_carrier_test)
+  scripts/Player.gd           (调试代码清理)
+  scripts/DialogueBox.gd      (is_inside_tree 守卫)
+  scripts/ChapterEndScene.gd  (TEXT_B_LINE3 重写 + Label autowrap)
+```
+
+### 验收状态
+
+- ✅ A 路径（打水叔敲门）流程跑通，对话节奏被用户认可
+- ✅ B 路径针线篓第三幕玩家理解（通过"家里会缝针线的，只有她"支撑句）
+- ✅ 章末 TEXT_B_LINE3 情感落点到位（用户反馈"为我女朋友定制"的细节戳中）
+- ✅ 废庙战前旁白不再出现猫通勤逻辑错误
+- ✅ DialogueBox 跨场景崩溃修复
+- ✅ night_exit 对话在黑屏上可见
+
+### 仍需测试
+
+- 全流程无 F10 打通一次（morning → 测灵 → 回家 → 水叔 → 废庙 → BOSS → 章末 A/B）
+- 路径 A 章末没有针线篓段（只路径 B 看得到），确认无穿帮

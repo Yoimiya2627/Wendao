@@ -771,6 +771,66 @@ func _input(event: InputEvent) -> void:
 			return
 		_toggle_bag()
 		get_viewport().set_input_as_handled()
+		return
+
+	## 调试快捷键 F10：跳到 ShopScene phase 3（return_home 已播），
+	## 出门即可测打水叔敲门剧情。仅 debug 构建生效。
+	## 之前用 F9 会触发 Godot 编辑器的断点切换，导致游戏主循环异常
+	if OS.is_debug_build() \
+			and event is InputEventKey and event.pressed and not event.echo \
+			and event.keycode == KEY_F10:
+		if _in_battle:
+			print("[DEBUG] F10 被拒：当前在战斗中")
+			return
+		_debug_jump_to_water_carrier_test()
+		get_viewport().set_input_as_handled()
+
+
+## 调试：跳到 ShopScene phase 3 且 return_home 已播完状态
+## 玩家进入即可走到门口触发打水叔敲门
+func _debug_jump_to_water_carrier_test() -> void:
+	print("[DEBUG] F10 → 跳到 ShopScene phase 3 打水叔测试入口")
+	## 强清场
+	DialogueManager.force_stop()
+	_bag_open = false
+	_esc_open = false
+	_skill_open = false
+	if is_instance_valid(_bag_panel):
+		_bag_panel.hide()
+	if is_instance_valid(_skill_panel):
+		_skill_panel.hide()
+	get_tree().paused = false
+
+	## 设置 GameData 状态
+	GameData.story_phase = 3
+	GameData.morning_triggered = true
+	GameData.night_triggered = false
+	GameData.water_carrier_visit_done = false
+	var skip_events := [
+		"return_home_done", "dayu_approach_triggered",
+		"niannian_comforted", "dayu_comforted",
+		"sword_tassel_triggered", "tutorial_first_battle",
+	]
+	for evt in skip_events:
+		if not GameData.triggered_events.has(evt):
+			GameData.triggered_events.append(evt)
+	if "sword_tassel" not in GameData.unlocked_old_items:
+		GameData.unlocked_old_items.append("sword_tassel")
+	GameData.story_phase_changed.emit(GameData.story_phase)
+
+	## 如果当前就在 ShopScene，直接调场景方法原地切换到回家态
+	var cur = get_tree().current_scene
+	if cur and cur.name == "ShopScene" \
+			and cur.has_method("_debug_force_return_home_state"):
+		print("[DEBUG] F10 原地切换（不重载场景）")
+		cur._debug_force_return_home_state()
+		print("[DEBUG] F10 完成")
+	else:
+		## 不在 ShopScene，才切场景
+		print("[DEBUG] F10 切到 ShopScene（非本场景）")
+		GameData.last_scene = ""
+		GameData.saved_player_position = Vector2.ZERO
+		get_tree().change_scene_to_file("res://scenes/ShopScene.tscn")
 
 
 ## 判断当前场景是否允许手动存档

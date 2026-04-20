@@ -51,6 +51,7 @@ var _sword_tassel_triggered : bool = false
 var _dayu_approach_triggered : bool = false
 ## 夜晚出门是否已触发（防止重复）
 var _night_leave_triggered : bool = false
+var _water_carrier_scene_started : bool = false
 
 
 func _ready() -> void:
@@ -211,6 +212,41 @@ func _start_return_home_flow() -> void:
 	DialogueManager.start_scene(_DIALOGUE_RETURN_HOME)
 
 
+## 调试：原地切换到回家态（不重载场景），供 UIManager F10 调用
+func _debug_force_return_home_state() -> void:
+	## 重置本 ShopScene 实例的内部 flag
+	_cats_interactable = true
+	_niannian_comforted = true
+	_dayu_comforted = true
+	_dayu_approach_triggered = true
+	_sword_tassel_triggered = true
+	_night_leave_triggered = false
+	_water_carrier_scene_started = false
+	_player_in_exit = false
+	_current_interactable = ""
+	_nearby_interactables.clear()
+	_exit_hint.hide()
+	_interact_hint.hide()
+
+	## 把玩家拉回出生点
+	_player.global_position = _spawn_point.global_position
+	_player.velocity = Vector2.ZERO
+
+	## inline 回家态关键视觉变化
+	_fathers_letter.hide()
+	_fathers_letter_area.set_deferred("monitoring", false)
+	if GameData.bowl_interacted:
+		_broken_bowl_area.set_deferred("monitoring", false)
+	_npc_suming.disappear()
+	_player.npc_interaction_enabled = true
+	_npc_niannian.dialogue_scene_id = ""
+	_npc_dayu.dialogue_scene_id = ""
+	_npc_niannian.position = NIANNIAN_RETURN_POS
+	_npc_dayu.position = DAYU_RETURN_POS
+
+	AudioManager.play_bgm("shop_return")
+
+
 ## 看信流程（phase 5，路径B）：战斗后回家看爹的信
 func _start_letter_flow() -> void:
 	## phase 5 不应再允许猫咪NPC交互，避免空对话场景ID
@@ -345,6 +381,10 @@ func _on_event_triggered(event_name: String) -> void:
 			GameData.chapter_end_path = "b"
 			SceneTransition.change_scene(
 				"res://scenes/ChapterEndScene.tscn")
+		"water_carrier_visit_done":
+			## 打水叔敲门场景结束，置位 flag 防止重复触发
+			GameData.water_carrier_visit_done = true
+			DialogueManager.finish_event()
 		_:
 			DialogueManager.finish_event()
 
@@ -391,6 +431,11 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			## 看完爹的信，start_chapter_end_b事件
 			## 已在对话内处理，此处不需要额外操作
 			pass
+
+		"water_carrier_evening":
+			## 打水叔离开后，若玩家仍在出口区域，恢复出口提示
+			if _player_in_exit and _current_interactable.is_empty():
+				_exit_hint.show()
 
 
 ## 检查是否触发旧剑穗烫手旁白
@@ -452,10 +497,30 @@ func _on_interactable_exited(body: Node2D, dialogue_id: String) -> void:
 # ── 出口检测回调 ──────────────────────────────────────
 
 func _on_exit_body_entered(body: Node2D) -> void:
-	if body is CharacterBody2D:
-		_player_in_exit = true
-		if _current_interactable.is_empty():
-			_exit_hint.show()
+	if not body is CharacterBody2D:
+		return
+	_player_in_exit = true
+
+	## 回家流程首次到达出口：触发打水叔敲门
+	## 条件：phase 3 + 回家对话已放完（_cats_interactable）+ 未触发过 + 无其他对话
+	if GameData.story_phase == 3 \
+			and _cats_interactable \
+			and not GameData.water_carrier_visit_done \
+			and not _water_carrier_scene_started \
+			and not DialogueManager.is_active \
+			and not _night_leave_triggered:
+		_water_carrier_scene_started = true
+		_exit_hint.hide()
+		await get_tree().create_timer(0.4).timeout
+		if not is_inside_tree():
+			return
+		if DialogueManager.is_active:
+			return
+		DialogueManager.start_scene("water_carrier_evening")
+		return
+
+	if _current_interactable.is_empty():
+		_exit_hint.show()
 
 
 func _on_exit_body_exited(body: Node2D) -> void:
@@ -486,16 +551,19 @@ func _trigger_night_and_leave() -> void:
 		.set_ease(Tween.EASE_IN_OUT)\
 		.set_trans(Tween.TRANS_SINE)
 	await tween.finished
-	## 画面已全黑，直接把SceneTransition遮罩设为不透明，跳过重复淡出
-	SceneTransition.set_overlay_opaque()
 	## 标记夜晚已触发
 	GameData.night_triggered = true
 	GameData.last_scene = "shop"
 	## 夜晚出门氛围旁白（黑屏上播放，一次性）
+	## 注意：此时不能提前调 SceneTransition.set_overlay_opaque()，
+	## 否则它的遮罩（layer 128）会盖在 DialogueBox（layer 10）前面，
+	## 玩家看不到对话文字
 	if not GameData.triggered_events.has("night_exit"):
 		GameData.triggered_events.append("night_exit")
 		DialogueManager.start_scene("night_exit")
 		await DialogueManager.dialogue_ended
 		if not is_inside_tree():
 			return
+	## 对话播完后才提示 SceneTransition 画面已经黑透，跳过它的淡出
+	SceneTransition.set_overlay_opaque()
 	SceneTransition.change_scene("res://scenes/TownScene.tscn")

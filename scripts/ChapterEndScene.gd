@@ -12,7 +12,7 @@ const TEXT_A_LINE3 := "身后，碎玉镇的灯火一盏一盏亮起来。铺子
 ## 路径B的文字
 const TEXT_B_LINE1 := "一封没有署名的信。"
 const TEXT_B_LINE2 := "一碗早就凉透的饭。"
-const TEXT_B_LINE3 := "第二天一早，她收拾好东西。后窗留了一线，灶下压了几日的鱼干。锁了门，钥匙放在年年够不到的地方。"
+const TEXT_B_LINE3 := "第二天一早，她收拾好东西。年年还在睡，她没叫醒它。大鱼从后院回来，蹭了蹭她的脚，又走了。她数了数灶下的鱼干，犹豫了一下，又加了几条。后窗留了一线，锁了门，钥匙压在门口的石板下——打水叔会懂。"
 
 ## 动态创建的节点引用
 var _line1  : Label
@@ -55,8 +55,14 @@ func _ready() -> void:
 	var line_size: int = int(round(24 * scale_f))
 	var title_size: int = int(round(36 * scale_f))
 
+	## Label 开启智能换行，防止长文本横向溢出
+	## 固定宽度 900，章末画面居中，足够容纳长句且保留视觉留白
+	var line_width: int = 900
+
 	_line1 = Label.new()
 	_line1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_line1.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_line1.custom_minimum_size = Vector2(line_width, 0)
 	_line1.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	_line1.add_theme_font_override("font", _font_regular)
 	_line1.add_theme_font_size_override("font_size", line_size)
@@ -64,6 +70,8 @@ func _ready() -> void:
 
 	_line2 = Label.new()
 	_line2.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_line2.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_line2.custom_minimum_size = Vector2(line_width, 0)
 	_line2.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	_line2.add_theme_font_override("font", _font_regular)
 	_line2.add_theme_font_size_override("font_size", line_size)
@@ -71,6 +79,8 @@ func _ready() -> void:
 
 	_line3 = Label.new()
 	_line3.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_line3.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_line3.custom_minimum_size = Vector2(line_width, 0)
 	_line3.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	_line3.add_theme_font_override("font", _font_regular)
 	_line3.add_theme_font_size_override("font_size", line_size)

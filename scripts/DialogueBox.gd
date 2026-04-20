@@ -253,7 +253,10 @@ func _input(event: InputEvent) -> void:
 		AudioManager.play_sfx("dialogue_advance")
 		DialogueManager.advance()
 
-	get_viewport().set_input_as_handled()
+	## DialogueManager.advance() 可能触发事件导致场景切换，此时本节点已脱离场景树
+	## 必须先检查 is_inside_tree()，否则 get_viewport() 为 null 会崩溃
+	if is_inside_tree():
+		get_viewport().set_input_as_handled()
 
 
 # ── DialogueManager 直接调用的公开方法（同时也作为信号回调）────

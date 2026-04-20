@@ -43,6 +43,8 @@ var night_triggered: bool = false
 var got_coin: bool = false
 ## 是否拿到老婆婆给的平安符
 var got_charm: bool = false
+## 是否已经触发打水叔黄昏敲门（phase 3 场景内一次性）
+var water_carrier_visit_done: bool = false
 
 ## 章末路径标记（"a"=一起走，"b"=回去看爹，""=未到章末）
 var chapter_end_path: String = ""
@@ -137,6 +139,7 @@ func reset_to_default() -> void:
 
 	got_coin           = false
 	got_charm          = false
+	water_carrier_visit_done = false
 	chapter_end_path   = ""
 	heal_potions       = 0
 	incenses           = 0
@@ -185,6 +188,7 @@ func save_data() -> Dictionary:
 
 		"got_coin":           got_coin,
 		"got_charm":          got_charm,
+		"water_carrier_visit_done": water_carrier_visit_done,
 		"chapter_end_path":  chapter_end_path,
 		"story_phase":       story_phase,
 		"morning_triggered": morning_triggered,
@@ -219,6 +223,7 @@ func load_data(data: Dictionary) -> void:
 
 	got_coin           = data.get("got_coin", false)
 	got_charm          = data.get("got_charm", false)
+	water_carrier_visit_done = data.get("water_carrier_visit_done", false)
 	chapter_end_path   = data.get("chapter_end_path", "")
 	story_phase        = data.get("story_phase", 0)
 	morning_triggered  = data.get("morning_triggered", false)

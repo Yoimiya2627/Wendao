@@ -58,17 +58,13 @@ func _physics_process(_delta: float) -> void:
 	# 剑穗视觉成长：每物理帧检查 stones_read 数量是否变化（开销忽略不计）
 	_refresh_sword_tassel_glow()
 
-	# 对话进行中或场景切换黑屏期间禁止移动（修复3：防止幽灵移动）
+	# 对话进行中或场景切换黑屏期间禁止移动（防止幽灵移动）
 	if DialogueManager.is_active or SceneTransition.is_transitioning:
-		# DEBUG: 每秒打印一次卡住原因（避免刷屏）
-		if Engine.get_physics_frames() % 60 == 0:
-			print("Player BLOCKED — is_active=%s  is_transitioning=%s" % [
-				DialogueManager.is_active, SceneTransition.is_transitioning])
 		velocity = Vector2.ZERO
 		move_and_slide()
 		return
 
-	# 修复4：get_vector 原生处理死区与斜向归一化
+	# get_vector 原生处理死区与斜向归一化
 	var dir := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	velocity = dir * SPEED
 	move_and_slide()

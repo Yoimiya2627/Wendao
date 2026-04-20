@@ -324,12 +324,17 @@
 				},
 				"tp_06": {
 					"type": "narration",
-					"text": "她想跑。但年年和大鱼每天都走这条路回家。今天下午她出门时，年年还在铺子门口冲她挥手。",
+					"text": "她想跑。但镇子就在这条路的另一头。",
+					"next": "tp_06b"
+				},
+				"tp_06b": {
+					"type": "narration",
+					"text": "年年此刻还趴在柜台上等她回家。大鱼大概又躲在后院偷吃东西。",
 					"next": "tp_07"
 				},
 				"tp_07": {
 					"speaker": "苏云晚",
-					"text": "不行。不能死在这里，也不能让它们留在这里。",
+					"text": "不行。不能死在这里，也不能让它们摸到镇子里去。",
 					"next": "tp_07b"
 				},
 				"tp_07b": {
@@ -648,7 +653,7 @@
 					"choices": [
 						{
 							"text": "「知道了，爹。」（轻声）",
-							"next": "lt_end"
+							"next": "lt_basket_01"
 						},
 						{
 							"text": "「……我会回来的。」",
@@ -662,6 +667,36 @@
 				"lt_11c": {
 					"type": "narration",
 					"text": "她对着空房子说了这句话。窗外风吹过，灯芯抖了一下，没有灭。",
+					"next": "lt_basket_01"
+				},
+				"lt_basket_01": {
+					"type": "narration",
+					"text": "她把信折好，起身，顺手收拾了桌子。",
+					"next": "lt_basket_02"
+				},
+				"lt_basket_02": {
+					"type": "narration",
+					"text": "目光掠过书架角落。",
+					"next": "lt_basket_03"
+				},
+				"lt_basket_03": {
+					"type": "narration",
+					"text": "那个针线篓还在原处。线头别在那里，和早上一样。",
+					"next": "lt_basket_04"
+				},
+				"lt_basket_04": {
+					"type": "narration",
+					"text": "可是——针脚多缝了两针。",
+					"next": "lt_basket_05"
+				},
+				"lt_basket_05": {
+					"type": "narration",
+					"text": "不是她的。也不是爹的。",
+					"next": "lt_basket_06"
+				},
+				"lt_basket_06": {
+					"type": "narration",
+					"text": "家里会缝针线的，只有她。",
 					"next": "lt_end"
 				},
 				"lt_12": {
@@ -907,6 +942,91 @@
 					"speaker": "",
 					"text": "路过那少年家门口时，灯笼还亮着。",
 					"next": "rh_01"
+				}
+			}
+		},
+		"water_carrier_evening": {
+			"title": "打水叔·敲门",
+			"start": "wce_01",
+			"nodes": {
+				"wce_01": {
+					"type": "narration",
+					"text": "门外传来三下敲门声。不急，不轻。",
+					"next": "wce_02"
+				},
+				"wce_02": {
+					"type": "narration",
+					"text": "她走过去，把门拉开。",
+					"next": "wce_03"
+				},
+				"wce_03": {
+					"type": "narration",
+					"text": "打水叔站在门外，一手提着水桶，一手拎着一个小纸包。",
+					"next": "wce_04"
+				},
+				"wce_04": {
+					"speaker": "打水叔",
+					"text": "你爹早上捎了话给我，说让我今晚顺路过来给两只猫添点吃的。",
+					"next": "wce_05"
+				},
+				"wce_05": {
+					"type": "narration",
+					"text": "他把纸包递过来，没进门。",
+					"next": "wce_06"
+				},
+				"wce_06": {
+					"speaker": "打水叔",
+					"text": "鱼干。挑软的剁碎给年年，大鱼自己会啃。",
+					"next": "wce_07"
+				},
+				"wce_07": {
+					"speaker": "苏云晚",
+					"text": "……谢谢叔。",
+					"next": "wce_08"
+				},
+				"wce_08": {
+					"type": "narration",
+					"text": "纸包有点潮，可能是老人手心的汗。",
+					"next": "wce_09"
+				},
+				"wce_09": {
+					"type": "narration",
+					"text": "打水叔朝屋里看了一眼，像要说什么，又收了回去。",
+					"next": "wce_10"
+				},
+				"wce_10": {
+					"speaker": "打水叔",
+					"text": "你爹以前也出过几回远门。回来时，都是半夜。",
+					"next": "wce_11"
+				},
+				"wce_11": {
+					"speaker": "打水叔",
+					"text": "有一次衣裳上带了血。他说是路上摔的——我没多问。",
+					"next": "wce_12"
+				},
+				"wce_12": {
+					"speaker": "打水叔",
+					"text": "姑娘，没事的。他嘱咐的我都记着。你只管去你的。",
+					"next": "wce_13"
+				},
+				"wce_13": {
+					"type": "narration",
+					"text": "她没有接话。",
+					"next": "wce_14"
+				},
+				"wce_14": {
+					"type": "narration",
+					"text": "老人提起水桶，退了两步，转身走了。",
+					"next": "wce_15"
+				},
+				"wce_15": {
+					"type": "narration",
+					"text": "巷子里只剩水桶碰到青石板的轻响，一下，一下，远了。",
+					"next": "wce_end"
+				},
+				"wce_end": {
+					"type": "event",
+					"event": "water_carrier_visit_done"
 				}
 			}
 		},
@@ -1906,7 +2026,7 @@
 				},
 				"ma_05": {
 					"type": "narration",
-					"text": "但年年每天都走这条路回家。今天下午出门的时候，它还靠在她手心里，看着她出门。",
+					"text": "但这条路的另一头就是镇子。今天下午出门前，年年还靠在她手心里。",
 					"next": "ma_06"
 				},
 				"ma_06": {
