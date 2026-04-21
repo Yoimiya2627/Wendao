@@ -555,8 +555,58 @@ func _build_player_portrait() -> void:
 	if _player_portrait_slot == null:
 		return
 	_player_portrait_slot.scale = Vector2.ONE
-	_draw_block(_player_portrait_slot, Vector2(90, 150),
-		Color(0.32, 0.24, 0.42, 1.0), Color(0.55, 0.42, 0.28, 1.0))
+	_draw_yunwan_silhouette(_player_portrait_slot, 3.2)
+
+
+## 苏云晚战斗立绘：沿用大世界 Player.gd 的剪影，按 scale 放大
+## 坐标与 Player._build_player_silhouette 保持一致，便于后续同步改动
+func _draw_yunwan_silhouette(parent: Node2D, s: float) -> void:
+	var main_color  := Color(0.38, 0.18, 0.72, 1.0)   # 暖紫短衣
+	var hair_color  := Color(0.12, 0.08, 0.18, 1.0)   # 墨发
+	var skin_color  := Color(0.94, 0.84, 0.76, 1.0)   # 浅肤
+	var sash_color  := Color(0.75, 0.45, 0.35, 1.0)   # 朱红腰带
+	var pants_color := Color(0.22, 0.12, 0.40, 1.0)   # 深紫束脚裤
+
+	var mk := func(pts: PackedVector2Array, col: Color) -> void:
+		var scaled := PackedVector2Array()
+		for p: Vector2 in pts:
+			scaled.append(p * s)
+		var poly := Polygon2D.new()
+		poly.polygon = scaled
+		poly.color = col
+		parent.add_child(poly)
+
+	# 短衣
+	mk.call(PackedVector2Array([
+		Vector2(-8, -5), Vector2(8, -5),
+		Vector2(9, 6), Vector2(-9, 6)
+	]), main_color)
+	# 朱红腰带
+	mk.call(PackedVector2Array([
+		Vector2(-9, 5), Vector2(9, 5),
+		Vector2(9, 8), Vector2(-9, 8)
+	]), sash_color)
+	# 束脚裤
+	mk.call(PackedVector2Array([
+		Vector2(-8, 8), Vector2(8, 8),
+		Vector2(7, 18), Vector2(-7, 18)
+	]), pants_color)
+	# 后发
+	mk.call(PackedVector2Array([
+		Vector2(-7, -17), Vector2(7, -17),
+		Vector2(8, -4), Vector2(-8, -4)
+	]), hair_color)
+	# 脸（椭圆）
+	var face_pts := PackedVector2Array()
+	for i in 14:
+		var a := TAU * i / 14.0
+		face_pts.append(Vector2(cos(a) * 5.5, -12.0 + sin(a) * 6.5))
+	mk.call(face_pts, skin_color)
+	# 前刘海
+	mk.call(PackedVector2Array([
+		Vector2(-5.5, -18), Vector2(5.5, -18),
+		Vector2(5.5, -12), Vector2(-5.5, -12)
+	]), hair_color)
 
 
 func _build_enemy_portrait() -> void:

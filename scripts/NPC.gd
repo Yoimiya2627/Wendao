@@ -34,6 +34,10 @@ func _build_silhouette() -> void:
 		_build_cat_silhouette()
 		return
 
+	## 独特剧情 NPC 剪影（由 NPCSilhouettes 库处理）
+	if NPCSilhouettes.try_draw(self, _body, body_shape, body_color):
+		return
+
 	var body_pts: PackedVector2Array
 	match body_shape:
 		"woman":

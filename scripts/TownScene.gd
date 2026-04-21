@@ -1455,6 +1455,96 @@ func _check_bubble_triggers() -> void:
 			return
 
 
+## 药婆剪影：驼背老妇人，灰发 + 深紫长袍 + 侧挂药篓
+func _draw_yaopo_silhouette(parent: Node2D) -> void:
+	var robe_color := Color(0.32, 0.26, 0.38, 1.0)       # 深紫长袍
+	var hair_color := Color(0.78, 0.76, 0.72, 1.0)       # 白灰头发
+	var skin_color := Color(0.86, 0.80, 0.72, 1.0)       # 脸色偏黄
+	var basket_color := Color(0.48, 0.36, 0.22, 1.0)     # 藤编药篓
+	var basket_dark := Color(0.32, 0.22, 0.14, 1.0)      # 药篓编纹
+
+	# 头发（后脑灰白，略往前倾表示驼背）
+	var hair := Polygon2D.new()
+	hair.polygon = PackedVector2Array([
+		Vector2(-5, -20), Vector2(5, -20),
+		Vector2(6, -12), Vector2(-6, -12)
+	])
+	hair.color = hair_color
+	parent.add_child(hair)
+
+	# 脸（偏下偏前，驼背的姿态）
+	var face := Polygon2D.new()
+	face.polygon = PackedVector2Array([
+		Vector2(-4, -18), Vector2(4, -18),
+		Vector2(4, -13), Vector2(-4, -13)
+	])
+	face.color = skin_color
+	parent.add_child(face)
+
+	# 驼背上身：头往前倾，肩膀不对称
+	var upper := Polygon2D.new()
+	upper.polygon = PackedVector2Array([
+		Vector2(-7, -12), Vector2(8, -12),
+		Vector2(9, -3), Vector2(-8, -3)
+	])
+	upper.color = robe_color
+	parent.add_child(upper)
+
+	# 长袍下摆（到脚，老人步子小所以下摆窄一点）
+	var lower := Polygon2D.new()
+	lower.polygon = PackedVector2Array([
+		Vector2(-8, -3), Vector2(9, -3),
+		Vector2(8, 16), Vector2(-7, 16)
+	])
+	lower.color = robe_color
+	parent.add_child(lower)
+
+	# 左袖
+	var sleeve_l := Polygon2D.new()
+	sleeve_l.polygon = PackedVector2Array([
+		Vector2(-7, -11), Vector2(-10, -8),
+		Vector2(-9, -2), Vector2(-7, -2)
+	])
+	sleeve_l.color = robe_color
+	parent.add_child(sleeve_l)
+
+	# 右臂提着药篓，袖子往下垂
+	var sleeve_r := Polygon2D.new()
+	sleeve_r.polygon = PackedVector2Array([
+		Vector2(8, -11), Vector2(11, -8),
+		Vector2(12, 2), Vector2(9, 2)
+	])
+	sleeve_r.color = robe_color
+	parent.add_child(sleeve_r)
+
+	# 右手药篓（主体 + 编纹）
+	var basket_body := Polygon2D.new()
+	basket_body.polygon = PackedVector2Array([
+		Vector2(9, 2), Vector2(16, 2),
+		Vector2(15, 12), Vector2(10, 12)
+	])
+	basket_body.color = basket_color
+	parent.add_child(basket_body)
+
+	# 药篓提手
+	var basket_handle := Polygon2D.new()
+	basket_handle.polygon = PackedVector2Array([
+		Vector2(10, 2), Vector2(11, -1),
+		Vector2(14, -1), Vector2(15, 2)
+	])
+	basket_handle.color = basket_dark
+	parent.add_child(basket_handle)
+
+	# 药篓横纹
+	var basket_stripe := Polygon2D.new()
+	basket_stripe.polygon = PackedVector2Array([
+		Vector2(9, 6), Vector2(16, 6),
+		Vector2(15, 7), Vector2(10, 7)
+	])
+	basket_stripe.color = basket_dark
+	parent.add_child(basket_stripe)
+
+
 ## 创建夜晚药婆商人节点
 ## 位置：格(35,26)，像素(1120,832)，废庙入口左上方
 func _setup_night_vendor() -> void:
@@ -1467,21 +1557,17 @@ func _setup_night_vendor() -> void:
 	vendor.position = Vector2(1120, 832)
 	add_child(vendor)
 
-	## 视觉色块
-	var rect := ColorRect.new()
-	rect.color = Color(0.55, 0.50, 0.60, 1.0)
-	rect.offset_left   = -10.0
-	rect.offset_top    = -18.0
-	rect.offset_right  = 10.0
-	rect.offset_bottom = 18.0
-	vendor.add_child(rect)
+	## 药婆剪影：驼背老妇人 + 药篓
+	_draw_yaopo_silhouette(vendor)
 
 	## 头顶名字Label
 	var label := Label.new()
 	label.text = "药婆"
-	label.position = Vector2(-16, -36)
+	label.position = Vector2(-16, -42)
 	label.add_theme_font_size_override("font_size", 12)
 	label.add_theme_color_override("font_color", ThemeManager.COLOR_ACCENT_GOLD)
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	label.add_theme_constant_override("outline_size", 3)
 	vendor.add_child(label)
 
 	## 物理碰撞体（阻止玩家穿透）

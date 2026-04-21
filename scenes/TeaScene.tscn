@@ -150,13 +150,14 @@ npc_name = "掌柜"
 dialogue_scene_id = "teahouse_before"
 dialogue_scene_id_after = "teahouse_after"
 body_color = Color(0.30, 0.50, 0.80, 1)
+body_shape = "tea_keeper"
 
 [node name="NPC_Storyteller" parent="NPCLayer" instance=ExtResource("2")]
 position = Vector2(400, 200)
 npc_name = "说书人"
 dialogue_scene_id = "storyteller"
 body_color = Color(0.60, 0.40, 0.20, 1)
-body_shape = "old"
+body_shape = "storyteller"
 
 [node name="NPC_DiscipleA" parent="NPCLayer" instance=ExtResource("2")]
 position = Vector2(120, 160)
@@ -177,7 +178,7 @@ position = Vector2(300, 240)
 npc_name = "老江湖"
 dialogue_scene_id = "old_wanderer"
 body_color = Color(0.45, 0.40, 0.35, 1)
-body_shape = "old"
+body_shape = "wanderer"
 
 ; ── 出口检测区域 ──────────────────────────────────────────────────
 [node name="ExitArea" type="Area2D" parent="."]

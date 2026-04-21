@@ -80,14 +80,14 @@ position = Vector2(352, 672)
 npc_name = "老婆婆"
 dialogue_scene_id = "market"
 body_color = Color(0.72, 0.67, 0.6, 1)
-body_shape = "old"
+body_shape = "granny"
 
 [node name="NPC_FortuneTeller" parent="NPCLayer" unique_id=434028795 instance=ExtResource("2")]
 position = Vector2(256, 704)
 npc_name = "算命先生"
 dialogue_scene_id = "fortune_teller"
 body_color = Color(0.6, 0.45, 0.2, 1)
-body_shape = "old"
+body_shape = "fortune_teller"
 dialogue_scene_id_after = "fortune_teller_return"
 
 [node name="NPC_AuntA" parent="NPCLayer" unique_id=94885309 instance=ExtResource("2")]
@@ -95,7 +95,7 @@ position = Vector2(448, 448)
 npc_name = "大婶"
 dialogue_scene_id = "aunts_before"
 body_color = Color(0.8, 0.6, 0.55, 1)
-body_shape = "woman"
+body_shape = "matron"
 dialogue_scene_id_after = "aunts_return"
 
 [node name="NPC_WaterCarrier" parent="NPCLayer" unique_id=1606685697 instance=ExtResource("2")]
@@ -103,6 +103,7 @@ position = Vector2(672, 480)
 npc_name = "打水人"
 dialogue_scene_id = "water_carrier_before"
 body_color = Color(0.45, 0.45, 0.55, 1)
+body_shape = "water_carrier"
 dialogue_scene_id_after = "water_carrier_return"
 
 [node name="NPC_OldDog" parent="NPCLayer" unique_id=1908173483 instance=ExtResource("2")]
@@ -110,6 +111,7 @@ position = Vector2(544, 512)
 npc_name = "老狗"
 dialogue_scene_id = "dog_before"
 body_color = Color(0.55, 0.45, 0.35, 1)
+body_shape = "dog"
 dialogue_scene_id_after = "dog_return"
 
 [node name="NPC_Guard" parent="NPCLayer" unique_id=1329392274 instance=ExtResource("2")]
@@ -117,6 +119,7 @@ position = Vector2(640, 928)
 npc_name = "守卫"
 dialogue_scene_id = "guard"
 body_color = Color(0.4, 0.4, 0.5, 1)
+body_shape = "guard"
 dialogue_scene_id_after = "guard_return"
 
 [node name="NPC_Examiner" parent="NPCLayer" unique_id=1153897598 instance=ExtResource("2")]
@@ -124,7 +127,7 @@ position = Vector2(1024, 224)
 npc_name = "测验师"
 dialogue_scene_id = "test"
 body_color = Color(0.6, 0.55, 0.7, 1)
-body_shape = "monk"
+body_shape = "examiner"
 dialogue_scene_id_after = "examiner_after"
 
 [node name="NPC_Vendor_A" parent="NPCLayer" unique_id=700903852 instance=ExtResource("2")]
@@ -132,6 +135,7 @@ position = Vector2(128, 640)
 npc_name = "糖葫芦摊"
 dialogue_scene_id = "vendor_a"
 body_color = Color(0.7, 0.35, 0.25, 1)
+body_shape = "vendor_tanghulu"
 dialogue_scene_id_after = "vendor_a_return"
 
 [node name="NPC_Vendor_B" parent="NPCLayer" unique_id=776050637 instance=ExtResource("2")]
@@ -139,7 +143,7 @@ position = Vector2(288, 736)
 npc_name = "香料摊"
 dialogue_scene_id = "vendor_b"
 body_color = Color(0.55, 0.42, 0.2, 1)
-body_shape = "woman"
+body_shape = "vendor_spice"
 dialogue_scene_id_after = "vendor_b_return"
 
 [node name="NPC_Vendor_C" parent="NPCLayer" unique_id=340157143 instance=ExtResource("2")]
@@ -147,6 +151,7 @@ position = Vector2(448, 800)
 npc_name = "鸡鸭摊"
 dialogue_scene_id = "vendor_c"
 body_color = Color(0.55, 0.48, 0.3, 1)
+body_shape = "vendor_poultry"
 dialogue_scene_id_after = "vendor_c_return"
 
 [node name="PlazaLayer" type="Node2D" parent="." unique_id=1096653151]

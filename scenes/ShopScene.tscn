@@ -161,7 +161,7 @@ position = Vector2(240, 145)
 npc_name = "苏明"
 dialogue_scene_id = "suming"
 body_color = Color(0.25, 0.35, 0.55, 1)
-body_shape = "old"
+body_shape = "shopkeeper"
 
 [node name="NPC_Niannian" parent="NPCLayer" unique_id=1766833831 instance=ExtResource("2")]
 position = Vector2(144, 155)

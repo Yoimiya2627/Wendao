@@ -29,15 +29,60 @@ func _ready() -> void:
 	_setup_sword_tassel_visual()
 
 
+## 苏云晚剪影：16 岁小镇姑娘，长发 + 短衣 + 腰带 + 束脚裤
+## 主色沿用原暖紫，细节加深色头发、浅肤色、亮色腰带作辨识
+## ⚠ 同步提醒：战斗立绘 BattleUI._draw_yunwan_silhouette 是这份几何的拷贝，
+##   修改坐标/配色时两处须一起改。
 func _build_player_silhouette() -> void:
 	var body: Polygon2D = $Body
+	var main_color := body.color                              # 暖紫（保留原主色）
+	var hair_color := Color(0.12, 0.08, 0.18, 1.0)            # 墨发
+	var skin_color := Color(0.94, 0.84, 0.76, 1.0)            # 浅肤
+	var sash_color := Color(0.75, 0.45, 0.35, 1.0)            # 朱红腰带（唯一亮点）
+	var pants_color := Color(0.22, 0.12, 0.40, 1.0)           # 深紫束脚裤
+
+	# 短衣（上身梯形，肩膀略窄）
 	body.polygon = PackedVector2Array([
-		Vector2(-10, -5), Vector2(10, -5),
+		Vector2(-8, -5), Vector2(8, -5),
+		Vector2(9, 6), Vector2(-9, 6)])
+
+	# 朱红腰带（上衣下缘横条）
+	var sash := Polygon2D.new()
+	sash.polygon = PackedVector2Array([
+		Vector2(-9, 5), Vector2(9, 5),
+		Vector2(9, 8), Vector2(-9, 8)])
+	sash.color = sash_color
+	add_child(sash)
+
+	# 束脚裤（腰带下方到脚）
+	var pants := Polygon2D.new()
+	pants.polygon = PackedVector2Array([
+		Vector2(-8, 8), Vector2(8, 8),
 		Vector2(7, 18), Vector2(-7, 18)])
-	var head := Polygon2D.new()
-	head.polygon = _make_ellipse(0.0, -12.0, 6.0, 7.0, 10)
-	head.color = body.color
-	add_child(head)
+	pants.color = pants_color
+	add_child(pants)
+
+	# 头发后片（长发披到肩后，能看到的部分）
+	var hair_back := Polygon2D.new()
+	hair_back.polygon = PackedVector2Array([
+		Vector2(-7, -17), Vector2(7, -17),
+		Vector2(8, -4), Vector2(-8, -4)])
+	hair_back.color = hair_color
+	add_child(hair_back)
+
+	# 脸（椭圆，盖在头发前面）
+	var face := Polygon2D.new()
+	face.polygon = _make_ellipse(0.0, -12.0, 5.5, 6.5, 10)
+	face.color = skin_color
+	add_child(face)
+
+	# 前刘海（盖住脸上半部分，制造少女感）
+	var bangs := Polygon2D.new()
+	bangs.polygon = PackedVector2Array([
+		Vector2(-5.5, -18), Vector2(5.5, -18),
+		Vector2(5.5, -12), Vector2(-5.5, -12)])
+	bangs.color = hair_color
+	add_child(bangs)
 
 
 func _make_ellipse(cx: float, cy: float, rx: float, ry: float, n: int) -> PackedVector2Array:
