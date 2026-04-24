@@ -309,6 +309,13 @@ func _on_boss_phase2_started() -> void:
 	DialogueManager.start_scene("boss_phase2_start")
 
 
+## 觉醒演出五幕结构（v40.2 重新编排）：
+##   1 静默：UI 淡出 1.5s + BGM 同步静音 → 纯静默 2.0s
+##   2 浮现：按钮淡入 2.0s → 停留+呼吸 1.5s
+##   3 决定：玩家按下 → 按钮淡出 0.3s → 静默 0.4s → 爆发
+##   4-5 见 _on_awakening_triggered
+##
+## 设计要点：静默比爆发更有力。两段纯空白（2s + 0.4s）是让玩家的眼睛和耳朵停下来。
 func _on_ready_for_awakening() -> void:
 	_set_buttons_disabled(true)
 	_skill_menu.close()
@@ -316,23 +323,32 @@ func _on_ready_for_awakening() -> void:
 	if _boss_breathing_tween and _boss_breathing_tween.is_valid():
 		_boss_breathing_tween.kill()
 
+	# ── 第一幕：静默 ─────────────────────────────────────
+	# UI 和 BGM 同步淡出 1.5 秒
+	AudioManager.fade_bgm_to(0.0, 1.5)
 	var tween_out := create_tween().set_parallel(true)
-	tween_out.tween_property($SkillPanel,  "modulate:a", 0.0, 0.5)
-	tween_out.tween_property($PlayerPanel, "modulate:a", 0.0, 0.5)
-	tween_out.tween_property($EnemyPanel,  "modulate:a", 0.0, 0.5)
-	tween_out.tween_property($LogPanel,    "modulate:a", 0.0, 0.5)
-	tween_out.tween_property(_enemy_portrait_slot,  "modulate:a", 0.0, 0.5)
-	tween_out.tween_property(_player_portrait_slot, "modulate:a", 0.0, 0.5)
+	tween_out.tween_property($SkillPanel,  "modulate:a", 0.0, 1.5)
+	tween_out.tween_property($PlayerPanel, "modulate:a", 0.0, 1.5)
+	tween_out.tween_property($EnemyPanel,  "modulate:a", 0.0, 1.5)
+	tween_out.tween_property($LogPanel,    "modulate:a", 0.0, 1.5)
+	tween_out.tween_property(_enemy_portrait_slot,  "modulate:a", 0.0, 1.5)
+	tween_out.tween_property(_player_portrait_slot, "modulate:a", 0.0, 1.5)
 	await tween_out.finished
-
-	$SkillPanel.hide()
-	await get_tree().create_timer(0.8).timeout
 	if not is_inside_tree():
 		return
 
+	$SkillPanel.hide()
+
+	# 纯静默 2 秒 —— 让玩家停下来
+	await get_tree().create_timer(2.0).timeout
+	if not is_inside_tree():
+		return
+
+	# ── 第二幕：浮现 ─────────────────────────────────────
 	var awaken_btn := Button.new()
 	awaken_btn.text = "——挥出去。"
 	awaken_btn.name = "AwakenButton"
+	awaken_btn.disabled = true   # 淡入期间不可点
 	awaken_btn.set_anchors_preset(Control.PRESET_CENTER)
 	awaken_btn.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	awaken_btn.grow_vertical   = Control.GROW_DIRECTION_BOTH
@@ -347,34 +363,128 @@ func _on_ready_for_awakening() -> void:
 	awaken_btn.focus_mode = Control.FOCUS_NONE
 	add_child(awaken_btn)
 
+	# 按钮缓慢淡入 2 秒
 	var tween_in := create_tween()
-	tween_in.tween_property(awaken_btn, "modulate:a", 1.0, 0.8)\
+	tween_in.tween_property(awaken_btn, "modulate:a", 1.0, 2.0)\
 		.set_ease(Tween.EASE_IN_OUT)\
 		.set_trans(Tween.TRANS_SINE)
 	await tween_in.finished
+	if not is_inside_tree():
+		return
 
-	awaken_btn.pressed.connect(func():
+	# 开始轻微呼吸动画（让按钮"活着"，暗示可以点）
+	awaken_btn.pivot_offset = awaken_btn.size * 0.5
+	var breathing := create_tween().set_loops()
+	breathing.tween_property(awaken_btn, "scale", Vector2(1.04, 1.04), 1.2)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	breathing.tween_property(awaken_btn, "scale", Vector2(0.98, 0.98), 1.2)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+	# 让玩家多呼吸 1.5 秒再给点击权
+	await get_tree().create_timer(1.5).timeout
+	if not is_inside_tree():
+		return
+
+	# ── 第三幕：决定 ─────────────────────────────────────
+	awaken_btn.disabled = false
+	awaken_btn.pressed.connect(func() -> void:
 		awaken_btn.disabled = true
+		if breathing and breathing.is_valid():
+			breathing.kill()
+		# 按钮淡出 0.3s
+		var out_tw := create_tween()
+		out_tw.tween_property(awaken_btn, "modulate:a", 0.0, 0.3)\
+			.set_ease(Tween.EASE_OUT)
+		await out_tw.finished
+		if not is_inside_tree():
+			return
 		awaken_btn.queue_free()
+		# 静默 0.4s —— "我按了，但还没发生" 的悬停感
+		await get_tree().create_timer(0.4).timeout
+		if not is_inside_tree():
+			return
 		_battle.execute_awakening()
 	)
 
 
+## 觉醒演出第 4-5 幕（v40.2 重新编排）
+##   4 爆发：重震屏 0.7s + 长版白光 2.3s + 剑穗爆发 + 中央浮字"混沌灵根，觉醒"
+##   5 余波：章末 BGM 淡入 + 1.5s 静止 → 切到 boss_awakening 对话
 func _on_awakening_triggered() -> void:
 	_set_buttons_disabled(true)
 	_skill_menu.close()
-	AudioManager.stop_bgm(0.3)
+
+	# ── 第四幕：爆发 ────────────────────────────────
+	# BGM 已在第一幕淡出，这里直接播冲击音
 	AudioManager.play_sfx("awakening_flash")
 	_effects.battle_tassel_awaken_burst()
-	_effects.flash_white()
-	_effects.shake_screen()
+	# 重震屏：振幅 1.8x、15 次、共约 0.7s
+	_effects.shake_screen(1.8, 15, 0.04)
+	# 长白光：拉起 0.2s + 保持 0.6s + 消退 1.5s = 2.3s 总
+	_effects.flash_white(1.0, 0.2, 0.6, 1.5)
+
+	# log 保留，给认真读 log 的玩家
 	log_text.append_text(
 		"\n[color=gold]【 混沌灵根，觉醒。】[/color]\n")
+
+	# 白光最亮时（~0.5s 后）屏幕中央浮现大字
 	await get_tree().create_timer(0.5).timeout
 	if not is_inside_tree():
 		return
-	AudioManager.play_bgm_once("awakening", 1.0)
+	_spawn_center_awakening_text()
+
+	# ── 第五幕：余波 ────────────────────────────────
+	# 等白光彻底消退（从闪光开始共 2.3s，这里再等 1.8s 凑够）
+	await get_tree().create_timer(1.8).timeout
+	if not is_inside_tree():
+		return
+
+	# 章末 BGM 从静默缓慢升起（2 秒淡入）
+	AudioManager.play_bgm_once("awakening", 2.0)
+
+	# 余震 1.5 秒 —— 屏幕已恢复清亮但无 UI，只有 BGM 在起
+	await get_tree().create_timer(1.5).timeout
+	if not is_inside_tree():
+		return
+
 	DialogueManager.start_scene("boss_awakening")
+
+
+## 觉醒瞬间屏幕中央浮现"混沌灵根，觉醒"大字
+## 淡入 0.8s → 保持 1.2s → 淡出 1.0s（总 3.0s，于 boss_awakening 对话出现前结束）
+func _spawn_center_awakening_text() -> void:
+	var lbl := Label.new()
+	lbl.text = "混沌灵根，觉醒。"
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	lbl.set_anchors_preset(Control.PRESET_CENTER)
+	lbl.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	lbl.grow_vertical   = Control.GROW_DIRECTION_BOTH
+	lbl.offset_left   = -240.0
+	lbl.offset_top    = -30.0
+	lbl.offset_right  = 240.0
+	lbl.offset_bottom = 30.0
+	lbl.add_theme_font_size_override("font_size", 44)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.70, 0.0))
+	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.0))
+	lbl.add_theme_constant_override("outline_size", 4)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(lbl)
+
+	var tw := create_tween()
+	# 淡入
+	tw.tween_property(lbl, "theme_override_colors/font_color:a", 1.0, 0.8)\
+		.set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.9, 0.8)\
+		.set_ease(Tween.EASE_OUT)
+	# 停留
+	tw.tween_interval(1.2)
+	# 淡出
+	tw.tween_property(lbl, "theme_override_colors/font_color:a", 0.0, 1.0)\
+		.set_ease(Tween.EASE_IN_OUT)
+	tw.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.0, 1.0)\
+		.set_ease(Tween.EASE_IN_OUT)
+	tw.tween_callback(lbl.queue_free)
 
 
 # ── 内部辅助 ─────────────────────────────────────────────────

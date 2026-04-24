@@ -117,7 +117,10 @@ func flash_panel(panel: Control, flash_color: Color) -> void:
 
 
 ## 屏幕震动
-func shake_screen() -> void:
+## intensity: 振幅倍率（默认 1.0 对应 ±8/±6 px），觉醒演出可传 1.8+
+## shakes: 震动次数（默认 6，觉醒演出可传 15+）
+## per_shake: 单次时长（默认 0.04s）
+func shake_screen(intensity: float = 1.0, shakes: int = 6, per_shake: float = 0.04) -> void:
 	if not _original_pos_saved:
 		_original_pos = _root_ctrl.position
 		_original_pos_saved = true
@@ -125,23 +128,28 @@ func shake_screen() -> void:
 		_shake_tween.kill()
 		_root_ctrl.position = _original_pos
 	_shake_tween = _root_ctrl.create_tween()
-	for i in range(6):
-		var offset := Vector2(randf_range(-8, 8), randf_range(-6, 6))
-		_shake_tween.tween_property(_root_ctrl, "position", _original_pos + offset, 0.04)
-	_shake_tween.tween_property(_root_ctrl, "position", _original_pos, 0.04)
+	for i in range(shakes):
+		var offset := Vector2(
+			randf_range(-8.0 * intensity, 8.0 * intensity),
+			randf_range(-6.0 * intensity, 6.0 * intensity)
+		)
+		_shake_tween.tween_property(_root_ctrl, "position", _original_pos + offset, per_shake)
+	_shake_tween.tween_property(_root_ctrl, "position", _original_pos, per_shake)
 
 
 ## 全屏白光闪烁（觉醒演出）
-func flash_white() -> void:
+## peak: 峰值透明度（0-1），rise: 拉起时长，hold: 保持时长，fade: 消退时长
+## 默认参数适合单次闪爆；觉醒演出传 (1.0, 0.2, 0.6, 1.5) 让白光更有重量
+func flash_white(peak: float = 0.9, rise: float = 0.12, hold: float = 0.3, fade: float = 0.8) -> void:
 	if _white_overlay == null or not is_instance_valid(_white_overlay):
 		return
 	_white_overlay.color = Color(1.0, 1.0, 1.0, 0.0)
 	_white_overlay.show()
 	var tw := _root_ctrl.create_tween()
-	tw.tween_property(_white_overlay, "color:a", 0.9, 0.12)\
+	tw.tween_property(_white_overlay, "color:a", peak, rise)\
 		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
-	tw.tween_interval(0.3)
-	tw.tween_property(_white_overlay, "color:a", 0.0, 0.8)\
+	tw.tween_interval(hold)
+	tw.tween_property(_white_overlay, "color:a", 0.0, fade)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
 
 
