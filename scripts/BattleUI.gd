@@ -297,7 +297,10 @@ func _on_boss_phase2_started() -> void:
 	if _boss_breathing_tween and _boss_breathing_tween.is_valid():
 		_boss_breathing_tween.kill()
 	_enemy_portrait_slot.scale = Vector2.ONE
+	## 同步移除：queue_free 是异步的，若只 queue_free 再 _draw_block，
+	## 旧立绘会多活一帧与新立绘叠加。先 remove_child 让它立刻脱离渲染。
 	for child in _enemy_portrait_slot.get_children():
+		_enemy_portrait_slot.remove_child(child)
 		child.queue_free()
 	_draw_block(_enemy_portrait_slot, Vector2(110, 180),
 		Color(0.06, 0.08, 0.20, 1.0),

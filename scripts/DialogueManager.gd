@@ -256,5 +256,9 @@ func force_stop() -> void:
 
 
 ## 修复5：DialogueBox 在 _ready 中主动注册，此处直接返回缓存引用
+## 防御：节点可能已被 queue_free 但 _dialogue_box 还指向它（跨场景切换瞬间），
+## 用 is_instance_valid 过滤并顺手清掉悬空引用
 func _get_dialogue_box() -> Node:
+	if _dialogue_box != null and not is_instance_valid(_dialogue_box):
+		_dialogue_box = null
 	return _dialogue_box

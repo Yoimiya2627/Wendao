@@ -219,8 +219,10 @@ static func draw_boss(parent: Node2D) -> void:
 
 
 ## 清除 parent 下所有子节点（切换形态前调用）
+## 同步 remove_child 再 queue_free：避免与紧随其后的 draw_* 产生一帧视觉叠加
 static func clear(parent: Node2D) -> void:
 	for child in parent.get_children():
+		parent.remove_child(child)
 		child.queue_free()
 
 

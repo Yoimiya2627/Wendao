@@ -210,6 +210,33 @@ func save_data() -> Dictionary:
 	}
 
 
+## 防御性类型数组转换：原生 Array(..., TYPE_X, "", null) 遇到异常元素会直接抛错
+## 这里逐元素过滤，只保留类型匹配的项，类型不符时整体返回 fallback
+## 用于读档：避免损坏/篡改的存档导致游戏在主菜单卡住
+func _safe_typed_array(raw: Variant, elem_type: int, fallback: Array) -> Array:
+	if raw == null or not raw is Array:
+		return _coerce_fallback(elem_type, fallback)
+	var filtered: Array = []
+	for v in raw:
+		if typeof(v) == elem_type:
+			filtered.append(v)
+		elif elem_type == TYPE_BOOL and typeof(v) in [TYPE_INT, TYPE_FLOAT]:
+			## 旧存档可能把 bool 存成 0/1，宽容处理
+			filtered.append(bool(v))
+		elif elem_type == TYPE_STRING and typeof(v) == TYPE_STRING_NAME:
+			filtered.append(String(v))
+		## 其它类型直接丢弃
+	return _coerce_fallback(elem_type, filtered)
+
+
+## 把过滤后的松散 Array 收紧成 Typed Array（保持与原代码签名一致）
+func _coerce_fallback(elem_type: int, arr: Array) -> Array:
+	match elem_type:
+		TYPE_BOOL:   return Array(arr, TYPE_BOOL, "", null)
+		TYPE_STRING: return Array(arr, TYPE_STRING, "", null)
+		_:           return arr
+
+
 ## 从字典恢复玩家数据，用于读档。
 func load_data(data: Dictionary) -> void:
 	player          = Character.new(
@@ -227,12 +254,12 @@ func load_data(data: Dictionary) -> void:
 	chapter_end_path   = data.get("chapter_end_path", "")
 	story_phase        = data.get("story_phase", 0)
 	morning_triggered  = data.get("morning_triggered", false)
-	triggered_events   = Array(data.get("triggered_events", []), TYPE_STRING, "", null)
+	triggered_events   = _safe_typed_array(data.get("triggered_events", null), TYPE_STRING, [])
 	## 兼容旧存档：若曾触发过market对话，视为已拿到平安符
 	if not got_charm and triggered_events.has("market_done"):
 		got_charm = true
 	bowl_interacted    = data.get("bowl_interacted", false)
-	stones_read        = Array(data.get("stones_read", [false, false, false, false]), TYPE_BOOL, "", null)
+	stones_read        = _safe_typed_array(data.get("stones_read", null), TYPE_BOOL, [false, false, false, false])
 	night_triggered    = data.get("night_triggered", false)
 	var default_dungeon_state := {
 		"wolf_left_defeated": false,
@@ -247,7 +274,7 @@ func load_data(data: Dictionary) -> void:
 	heal_potions = data.get("heal_potions", 0)
 	incenses     = data.get("incenses", 0)
 	talismans    = data.get("talismans", 0)
-	unlocked_old_items = Array(data.get("unlocked_old_items", []), TYPE_STRING, "", null)
+	unlocked_old_items = _safe_typed_array(data.get("unlocked_old_items", null), TYPE_STRING, [])
 	well_used_today = false
 	saved_scene_name = data.get("saved_scene_name", "TownScene")
 	saved_player_position = Vector2(
@@ -255,7 +282,7 @@ func load_data(data: Dictionary) -> void:
 		data.get("saved_player_position_y", 0.0)
 	)
 	narrative_flags = data.get("narrative_flags", {})
-	charm_spoken_stages = Array(data.get("charm_spoken_stages", []), TYPE_STRING, "", null)
+	charm_spoken_stages = _safe_typed_array(data.get("charm_spoken_stages", null), TYPE_STRING, [])
 
 	## 迁移：清理旧版本 NPC.gd 错误写入的 _triggered keys。
 	## 旧版本在 interact() 里会给所有有 dialogue_scene_id_after 的 NPC

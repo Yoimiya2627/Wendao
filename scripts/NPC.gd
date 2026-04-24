@@ -25,8 +25,34 @@ func _ready() -> void:
 	_label.text = npc_name
 	_label.hide()
 	_build_silhouette()
+	_refresh_phase_visibility()
+	## 订阅 phase 变化：同场景内 phase 推进（如 TownScene 的 set_phase(3)）时
+	## NPC 自动 show/hide，不必等到切场景重载 _ready
+	if not GameData.story_phase_changed.is_connected(_on_story_phase_changed):
+		GameData.story_phase_changed.connect(_on_story_phase_changed)
+
+
+func _exit_tree() -> void:
+	if GameData.story_phase_changed.is_connected(_on_story_phase_changed):
+		GameData.story_phase_changed.disconnect(_on_story_phase_changed)
+
+
+func _on_story_phase_changed(_new_phase: int) -> void:
+	## 已被 disappear() 处理过的 NPC 不再复活（_gone 持久化标志优先）
+	if GameData.triggered_events.has(_get_save_key() + "_gone"):
+		return
+	_refresh_phase_visibility()
+
+
+func _refresh_phase_visibility() -> void:
+	## 已被 disappear() 移除的 NPC 永远保持隐藏
+	if GameData.triggered_events.has(_get_save_key() + "_gone"):
+		hide()
+		return
 	if required_phase >= 0 and GameData.story_phase < required_phase:
 		hide()
+	elif required_phase >= 0:
+		show()
 
 
 func _build_silhouette() -> void:

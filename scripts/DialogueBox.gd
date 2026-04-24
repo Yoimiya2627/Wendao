@@ -55,6 +55,9 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
+	## IoC 注销：若当前注册的就是自己，清掉指针防止后续访问到已销毁节点
+	if DialogueManager._dialogue_box == self:
+		DialogueManager._dialogue_box = null
 	if UIManager and UIManager.has_signal("font_scale_changed") \
 			and UIManager.font_scale_changed.is_connected(_on_font_scale_changed):
 		UIManager.font_scale_changed.disconnect(_on_font_scale_changed)
