@@ -955,6 +955,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_interact_hint.text = "有什么东西压在石头下面……"
 			get_viewport().set_input_as_handled()
+			return
 
 	## 靠近石皮蟾：按E触发战前旁白，旁白结束后自动进入战斗
 	if _near_toad and _toad != null:

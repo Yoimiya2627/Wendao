@@ -283,6 +283,7 @@ func _do_player_quixue() -> void:
 		_log("👻 强行发力，但攻击穿透了虚影……（自损 %d HP，当前 %d/%d HP）" % [
 			self_dmg, player.hp, player.max_hp])
 		_charged = false
+		_sense_buff = false
 		return
 
 	var self_dmg: int = min(10, player.hp - 1)
@@ -304,6 +305,7 @@ func _do_player_quixue() -> void:
 		_log("🩸 %s 淬血挥出 %d 点伤害——但那道伤口转眼就合上了。" % [
 			player.char_name, raw_dmg])
 		_charged = false
+		_sense_buff = false
 		return
 
 	var dmg: int = enemy.take_damage_raw(raw_dmg)
@@ -311,6 +313,7 @@ func _do_player_quixue() -> void:
 		player.char_name, dmg, enemy.char_name, enemy.hp])
 
 	_charged = false
+	_sense_buff = false
 
 	if _is_boss_fight and not _boss_phase2:
 		if float(enemy.hp) / enemy.max_hp <= 0.5:

@@ -168,7 +168,7 @@ func _pick_line(stage: String) -> String:
 
 
 func _show_whisper(text: String) -> void:
-	if _whisper_tween:
+	if _whisper_tween and _whisper_tween.is_valid():
 		_whisper_tween.kill()
 
 	## 重置初始状态——文字加「」括号，暗示"这是被听见的声音"
