@@ -407,84 +407,163 @@ func _on_ready_for_awakening() -> void:
 	)
 
 
-## 觉醒演出第 4-5 幕（v40.2 重新编排）
-##   4 爆发：重震屏 0.7s + 长版白光 2.3s + 剑穗爆发 + 中央浮字"混沌灵根，觉醒"
-##   5 余波：章末 BGM 淡入 + 1.5s 静止 → 切到 boss_awakening 对话
+## 觉醒演出第 4-5 幕（v40.3 闪回式重构）
+##   4 爆发：重震屏 + 长白光（移除"混沌灵根，觉醒"标题大字，让闪回直接接棒）
+##   5 闪回：不走 DialogueBox，自己读取 boss_awakening 场景 JSON，逐行中央浮字
+##          最后一句"剑穗在黑暗里划出一道白光"同步柔和白闪，视觉文字一体
+##   6 落地：闪回结束后手动切到 TempleScene（跳过 _on_dialogue_ended boss_awakening 分支）
 func _on_awakening_triggered() -> void:
 	_set_buttons_disabled(true)
 	_skill_menu.close()
 
 	# ── 第四幕：爆发 ────────────────────────────────
-	# BGM 已在第一幕淡出，这里直接播冲击音
 	AudioManager.play_sfx("awakening_flash")
 	_effects.battle_tassel_awaken_burst()
-	# 重震屏：振幅 1.8x、15 次、共约 0.7s
 	_effects.shake_screen(1.8, 15, 0.04)
-	# 长白光：拉起 0.2s + 保持 0.6s + 消退 1.5s = 2.3s 总
 	_effects.flash_white(1.0, 0.2, 0.6, 1.5)
 
-	# log 保留，给认真读 log 的玩家
 	log_text.append_text(
 		"\n[color=gold]【 混沌灵根，觉醒。】[/color]\n")
 
-	# 白光最亮时（~0.5s 后）屏幕中央浮现大字
-	await get_tree().create_timer(0.5).timeout
+	# 章末 BGM 在白光消退期间缓慢升起（闪回段落需要音乐托底）
+	await get_tree().create_timer(1.0).timeout
 	if not is_inside_tree():
 		return
-	_spawn_center_awakening_text()
+	AudioManager.play_bgm_once("awakening", 3.0)
 
-	# ── 第五幕：余波 ────────────────────────────────
-	# 等白光彻底消退（从闪光开始共 2.3s，这里再等 1.8s 凑够）
-	await get_tree().create_timer(1.8).timeout
+	# 等白光彻底消退（从闪光开始共 2.3s，已过 1.0s，再等 1.3s）
+	await get_tree().create_timer(1.3).timeout
 	if not is_inside_tree():
 		return
 
-	# 章末 BGM 从静默缓慢升起（2 秒淡入）
-	AudioManager.play_bgm_once("awakening", 2.0)
+	# ── 第五幕：闪回独白 ─────────────────────────────
+	# 接管 boss_awakening 场景数据，自己以中央大字方式逐行播放
+	await _play_awakening_flashback()
+	if not is_inside_tree():
+		return
 
-	# 余震 1.5 秒 —— 屏幕已恢复清亮但无 UI，只有 BGM 在起
+	# ── 第六幕：落地 ────────────────────────────────
+	# 闪回结束后手动完成原本由 _on_dialogue_ended("boss_awakening") 处理的转场
+	GameData.battle_won = true
+	UIManager.on_battle_end()
 	await get_tree().create_timer(1.5).timeout
 	if not is_inside_tree():
 		return
+	SceneTransition.change_scene("res://scenes/TempleScene.tscn")
 
-	DialogueManager.start_scene("boss_awakening")
+
+## 播放觉醒闪回：从 JSON 读取 boss_awakening 场景的 narration，
+## 以屏幕中央大字逐行淡入淡出的方式呈现，支持 if_flag 分支
+func _play_awakening_flashback() -> void:
+	var lines := _collect_boss_awakening_lines()
+	if lines.is_empty():
+		push_warning("BattleUI: boss_awakening 场景数据为空，跳过闪回")
+		return
+
+	for i in range(lines.size()):
+		var line: String = lines[i]
+		var is_last: bool = (i == lines.size() - 1)
+
+		# 最后一句"剑穗在黑暗里划出一道白光"同步一次柔和白闪
+		# 让视觉和文字同时发生，完成首尾呼应
+		if is_last and "白光" in line:
+			_effects.flash_white(0.55, 0.5, 0.4, 1.8)
+
+		await _fade_in_flashback_line(line, is_last)
+		if not is_inside_tree():
+			return
 
 
-## 觉醒瞬间屏幕中央浮现"混沌灵根，觉醒"大字
-## 淡入 0.8s → 保持 1.2s → 淡出 1.0s（总 3.0s，于 boss_awakening 对话出现前结束）
-func _spawn_center_awakening_text() -> void:
+## 顺着 boss_awakening 场景的 start → next → if_flag 链路，
+## 收集所有实际会播放的 text（按 narrative_flags 决定分支节点是否进入）
+func _collect_boss_awakening_lines() -> Array[String]:
+	var scene_data: Dictionary = DialogueManager._all_data.get("scenes", {}).get("boss_awakening", {})
+	var nodes: Dictionary = scene_data.get("nodes", {})
+	var lines: Array[String] = []
+	var current_id: String = scene_data.get("start", "")
+	var safety: int = 0
+	while current_id != "" and current_id != "_end" and safety < 60:
+		safety += 1
+		if not nodes.has(current_id):
+			break
+		var node: Dictionary = nodes[current_id]
+
+		# if_flag 优先：flag 命中则跳转，否则（若本节点无 text）走 next
+		var if_flag: Dictionary = node.get("if_flag", {})
+		if not if_flag.is_empty():
+			var matched: bool = false
+			for flag_key: String in if_flag:
+				if GameData.narrative_flags.get(flag_key, false):
+					current_id = if_flag[flag_key]
+					matched = true
+					break
+			if matched:
+				continue
+			if not node.has("text"):
+				current_id = node.get("next", "")
+				continue
+
+		# 收集本节点的 text
+		var text: String = node.get("text", "")
+		if not text.is_empty():
+			lines.append(text)
+
+		current_id = node.get("next", "")
+
+	return lines
+
+
+## 闪回单行演出：淡入 0.8s → 保持 (末句 2.8s / 常规 1.8s) → 淡出 0.8s → 间隙 0.3s
+func _fade_in_flashback_line(text: String, is_final: bool) -> void:
 	var lbl := Label.new()
-	lbl.text = "混沌灵根，觉醒。"
+	lbl.text = text
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	lbl.autowrap_mode        = TextServer.AUTOWRAP_WORD_SMART
 	lbl.set_anchors_preset(Control.PRESET_CENTER)
 	lbl.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	lbl.grow_vertical   = Control.GROW_DIRECTION_BOTH
-	lbl.offset_left   = -240.0
-	lbl.offset_top    = -30.0
-	lbl.offset_right  = 240.0
-	lbl.offset_bottom = 30.0
-	lbl.add_theme_font_size_override("font_size", 44)
-	lbl.add_theme_color_override("font_color", Color(1.0, 0.95, 0.70, 0.0))
+	lbl.offset_left   = -500.0
+	lbl.offset_top    = -50.0
+	lbl.offset_right  = 500.0
+	lbl.offset_bottom = 50.0
+	lbl.add_theme_font_size_override("font_size", 28)
+	lbl.add_theme_color_override("font_color", Color(0.95, 0.90, 0.75, 0.0))
 	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.0))
-	lbl.add_theme_constant_override("outline_size", 4)
+	lbl.add_theme_constant_override("outline_size", 3)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(lbl)
 
-	var tw := create_tween()
 	# 淡入
-	tw.tween_property(lbl, "theme_override_colors/font_color:a", 1.0, 0.8)\
-		.set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.9, 0.8)\
-		.set_ease(Tween.EASE_OUT)
-	# 停留
-	tw.tween_interval(1.2)
+	var tw_in := create_tween()
+	tw_in.tween_property(lbl, "theme_override_colors/font_color:a", 0.95, 0.8)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+	tw_in.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.7, 0.8)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
+	await tw_in.finished
+	if not is_inside_tree():
+		return
+
+	# 保持（末句多留 1 秒让它沉淀）
+	var hold_time: float = 2.8 if is_final else 1.8
+	await get_tree().create_timer(hold_time).timeout
+	if not is_inside_tree():
+		return
+
 	# 淡出
-	tw.tween_property(lbl, "theme_override_colors/font_color:a", 0.0, 1.0)\
-		.set_ease(Tween.EASE_IN_OUT)
-	tw.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.0, 1.0)\
-		.set_ease(Tween.EASE_IN_OUT)
-	tw.tween_callback(lbl.queue_free)
+	var tw_out := create_tween()
+	tw_out.tween_property(lbl, "theme_override_colors/font_color:a", 0.0, 0.8)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tw_out.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.0, 0.8)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	await tw_out.finished
+	if not is_inside_tree():
+		return
+	lbl.queue_free()
+
+	# 句间间隙 0.3s（末句不加，外层 _on_awakening_triggered 自己留了 1.5s 落地缓冲）
+	if not is_final:
+		await get_tree().create_timer(0.3).timeout
 
 
 # ── 内部辅助 ─────────────────────────────────────────────────
