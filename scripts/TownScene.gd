@@ -301,7 +301,24 @@ func _unhandled_input(event: InputEvent) -> void:
 	# 调试快捷键：强制设置 story_phase（仅 debug 构建生效）
 	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
-			KEY_1: GameData.debug_set_phase(1)
+			KEY_1:
+				## 调试 (v40.6): 快速测试"测灵失败"演出
+				## 原 KEY_1=debug_set_phase(1) 被覆盖，重置相关状态后直接进入 test_stone
+				if DialogueManager.is_active:
+					DialogueManager.force_stop()
+				# 清理上一次测试可能残留的暗化遮罩
+				if _test_dim_canvas != null and is_instance_valid(_test_dim_canvas):
+					_test_dim_canvas.queue_free()
+				_test_dim_canvas = null
+				_test_dim_overlay = null
+				# 重置 phase 与选择 flag, 允许重复触发并测两种选择分支
+				GameData.story_phase = 1
+				GameData.narrative_flags.erase("self_test_calm")
+				GameData.narrative_flags.erase("self_test_hurt")
+				# 重置 BGM 到当前场景应有音量 (避免上次测试压低后没回升)
+				AudioManager.fade_bgm_to(AudioManager.bgm_volume, 0.3)
+				print("[DEBUG] KEY_1 → 触发测灵失败演出 (test_stone)")
+				DialogueManager.start_scene("test_stone")
 			KEY_2: GameData.debug_set_phase(2)
 			KEY_3: GameData.debug_set_phase(3)
 			KEY_4: GameData.debug_set_phase(4)
