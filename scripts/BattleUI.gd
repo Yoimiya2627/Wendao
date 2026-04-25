@@ -348,7 +348,10 @@ func _on_ready_for_awakening() -> void:
 	var awaken_btn := Button.new()
 	awaken_btn.text = "——挥出去。"
 	awaken_btn.name = "AwakenButton"
-	awaken_btn.disabled = true   # 淡入期间不可点
+	# 一直保持 enabled, 让白色边框 stylebox 从一开始就和文字一起淡入
+	# (disabled 状态会切到灰边 stylebox, 用户会看到"白边延迟 1 秒才亮起")
+	# 通过 mouse_filter = IGNORE 在淡入+呼吸期间阻止误点
+	awaken_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	awaken_btn.set_anchors_preset(Control.PRESET_CENTER)
 	awaken_btn.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	awaken_btn.grow_vertical   = Control.GROW_DIRECTION_BOTH
@@ -386,9 +389,10 @@ func _on_ready_for_awakening() -> void:
 		return
 
 	# ── 第三幕：决定 ─────────────────────────────────────
-	awaken_btn.disabled = false
+	# 解封点击 (white-border stylebox 一直在, 这里只放开鼠标过滤)
+	awaken_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 	awaken_btn.pressed.connect(func() -> void:
-		awaken_btn.disabled = true
+		awaken_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		if breathing and breathing.is_valid():
 			breathing.kill()
 		# 按钮淡出 0.3s
@@ -433,6 +437,12 @@ func _on_awakening_triggered() -> void:
 
 	# 等白光彻底消退（从闪光开始共 2.3s，已过 1.0s，再等 1.3s）
 	await get_tree().create_timer(1.3).timeout
+	if not is_inside_tree():
+		return
+
+	# 闪回前的"冷却":让玩家从战斗心跳节奏切到内省心跳节奏
+	# 没有这段过渡, 闪回内容(私密回忆)和爆发气质(燃)的反差会让人"找不到落点"
+	await get_tree().create_timer(2.0).timeout
 	if not is_inside_tree():
 		return
 
@@ -513,7 +523,12 @@ func _collect_boss_awakening_lines() -> Array[String]:
 	return lines
 
 
-## 闪回单行演出：淡入 0.8s → 保持 (末句 2.8s / 常规 1.8s) → 淡出 0.8s → 间隙 0.3s
+## 闪回单行演出
+## 视觉气质刻意往"内省/私密"调:
+##   - 字号 22pt(原 28pt 偏宣言), 透明度 0.82(原 0.95 偏闪耀)
+##   - 短句(<=8 字)单独处理: 保持时间从 1.8s 拉到 2.4s, 间隙从 0.3s 拉到 0.6s
+##     "就是——" 这种顿挫句需要喘息, 不能和长句同节奏被冲过去
+##   - 末句保持 2.8s (与白光二次闪起同步)
 func _fade_in_flashback_line(text: String, is_final: bool) -> void:
 	var lbl := Label.new()
 	lbl.text = text
@@ -524,46 +539,57 @@ func _fade_in_flashback_line(text: String, is_final: bool) -> void:
 	lbl.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	lbl.grow_vertical   = Control.GROW_DIRECTION_BOTH
 	lbl.offset_left   = -500.0
-	lbl.offset_top    = -50.0
+	lbl.offset_top    = -40.0
 	lbl.offset_right  = 500.0
-	lbl.offset_bottom = 50.0
-	lbl.add_theme_font_size_override("font_size", 28)
+	lbl.offset_bottom = 40.0
+	lbl.add_theme_font_size_override("font_size", 22)
 	lbl.add_theme_color_override("font_color", Color(0.95, 0.90, 0.75, 0.0))
 	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.0))
-	lbl.add_theme_constant_override("outline_size", 3)
+	lbl.add_theme_constant_override("outline_size", 2)
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(lbl)
 
-	# 淡入
+	# 淡入(目标透明度 0.82, 比 v40.3 的 0.95 更柔)
 	var tw_in := create_tween()
-	tw_in.tween_property(lbl, "theme_override_colors/font_color:a", 0.95, 0.8)\
+	tw_in.tween_property(lbl, "theme_override_colors/font_color:a", 0.82, 0.9)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
-	tw_in.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.7, 0.8)\
+	tw_in.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.55, 0.9)\
 		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_SINE)
 	await tw_in.finished
 	if not is_inside_tree():
 		return
 
-	# 保持（末句多留 1 秒让它沉淀）
-	var hold_time: float = 2.8 if is_final else 1.8
+	# 保持时间分三档:
+	#   - 末句: 2.8s (与白光闪起同步, 让"白光"二字有时间被读到)
+	#   - 短句(<=8 字): 2.4s (顿挫句需要呼吸)
+	#   - 常规: 1.8s
+	var char_count: int = text.length()
+	var hold_time: float
+	if is_final:
+		hold_time = 2.8
+	elif char_count <= 8:
+		hold_time = 2.4
+	else:
+		hold_time = 1.8
 	await get_tree().create_timer(hold_time).timeout
 	if not is_inside_tree():
 		return
 
 	# 淡出
 	var tw_out := create_tween()
-	tw_out.tween_property(lbl, "theme_override_colors/font_color:a", 0.0, 0.8)\
+	tw_out.tween_property(lbl, "theme_override_colors/font_color:a", 0.0, 0.9)\
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
-	tw_out.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.0, 0.8)\
+	tw_out.parallel().tween_property(lbl, "theme_override_colors/font_outline_color:a", 0.0, 0.9)\
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 	await tw_out.finished
 	if not is_inside_tree():
 		return
 	lbl.queue_free()
 
-	# 句间间隙 0.3s（末句不加，外层 _on_awakening_triggered 自己留了 1.5s 落地缓冲）
+	# 句间间隙: 短句之后多停 0.3s, 让顿挫真的"顿"住
 	if not is_final:
-		await get_tree().create_timer(0.3).timeout
+		var gap: float = 0.6 if char_count <= 8 else 0.3
+		await get_tree().create_timer(gap).timeout
 
 
 # ── 内部辅助 ─────────────────────────────────────────────────
