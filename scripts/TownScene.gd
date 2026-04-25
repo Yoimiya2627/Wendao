@@ -317,6 +317,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				GameData.narrative_flags.erase("self_test_hurt")
 				# 重置 BGM 到当前场景应有音量 (避免上次测试压低后没回升)
 				AudioManager.fade_bgm_to(AudioManager.bgm_volume, 0.3)
+				# 把玩家送到测灵石跟前 (960, 280): 视觉上下文对得上"广场上测灵那一刻"
+				_player.global_position = Vector2(960, 280)
 				print("[DEBUG] KEY_1 → 触发测灵失败演出 (test_stone)")
 				DialogueManager.start_scene("test_stone")
 			KEY_2: GameData.debug_set_phase(2)
@@ -1166,10 +1168,14 @@ func _on_event_triggered(event_name: String) -> void:
 			_stone_interactable = true
 
 		"test_pause_pre_verdict":
-			## ts_01 "灵石纹丝不动" → 暗化 + BGM 压低 + 静默 1.5s → ts_02
-			## 让玩家在测验师宣判前有时间消化"灵石不动"这个视觉
+			## ts_01 "灵石纹丝不动" → 暗化 + BGM 压低 + sfx + 静默 → ts_02
+			## v40.7 调整: 让节奏更"砸下来", 不再是缓慢氛围漂移
+			##   - dim 0.55→0.7 alpha, 1.5s→0.8s 淡入 (更快更暗)
+			##   - BGM 0.18→0.10, 1.0s→0.5s 淡出 (更狠更快)
+			##   - 加 sense sfx 给"时间停止"一个听觉锚点
 			_show_test_dim_overlay()
-			AudioManager.fade_bgm_to(0.18, 1.0)
+			AudioManager.fade_bgm_to(0.10, 0.5)
+			AudioManager.play_sfx("sense")
 			await get_tree().create_timer(1.5).timeout
 			if not is_inside_tree():
 				return
@@ -1178,6 +1184,7 @@ func _on_event_triggered(event_name: String) -> void:
 		"test_pause_post_verdict":
 			## ts_02 "无灵根" 之后 → 沉淀 2.0s → ts_03
 			## 让"无灵根"三个字停留在玩家脑里
+			AudioManager.play_sfx("sense")
 			await get_tree().create_timer(2.0).timeout
 			if not is_inside_tree():
 				return
@@ -1317,10 +1324,12 @@ func _show_test_dim_overlay() -> void:
 	_test_dim_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_test_dim_canvas.add_child(_test_dim_overlay)
 
-	# 缓慢淡入到 alpha 0.55 (暗但不全黑, 玩家还能看到镇子轮廓)
+	# v40.7: 0.55→0.70 alpha, 1.5s→0.8s 淡入
+	# 试玩反馈"感觉不到改变"——0.55 太柔和+1.5s 太慢, 玩家眼睛在对话框上时背景渐暗
+	# 完全不被注意。改大 + 改快, 让镇子明显"沉一下"才能进入潜意识
 	var tw := create_tween()
-	tw.tween_property(_test_dim_overlay, "color:a", 0.55, 1.5)\
-		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_test_dim_overlay, "color:a", 0.70, 0.8)\
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 
 
 ## 测灵失败演出收尾：暗色遮罩缓慢淡出, 世界恢复明亮
