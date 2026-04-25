@@ -225,11 +225,21 @@
 				"ts_01": {
 					"type": "narration",
 					"text": "灵石纹丝不动。",
+					"next": "ts_pause_pre"
+				},
+				"ts_pause_pre": {
+					"type": "event",
+					"event": "test_pause_pre_verdict",
 					"next": "ts_02"
 				},
 				"ts_02": {
 					"speaker": "测验师",
 					"text": "无灵根。下去吧，后面还有人。",
+					"next": "ts_pause_post"
+				},
+				"ts_pause_post": {
+					"type": "event",
+					"event": "test_pause_post_verdict",
 					"next": "ts_03"
 				},
 				"ts_03": {

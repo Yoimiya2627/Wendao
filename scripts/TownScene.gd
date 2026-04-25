@@ -179,6 +179,10 @@ var _nearby_hidden_interact: int = -1
 ## 玩家是否在药婆感应区内
 var _near_vendor: bool = false
 
+## 测灵失败演出: 暗化遮罩节点（在 DialogueBox 之下、世界之上）
+var _test_dim_canvas: CanvasLayer = null
+var _test_dim_overlay: ColorRect = null
+
 
 # ══════════════════════════════════════════════════════════════════
 # 六、生命周期
@@ -1144,6 +1148,24 @@ func _on_event_triggered(event_name: String) -> void:
 			DialogueManager.finish_event()
 			_stone_interactable = true
 
+		"test_pause_pre_verdict":
+			## ts_01 "灵石纹丝不动" → 暗化 + BGM 压低 + 静默 1.5s → ts_02
+			## 让玩家在测验师宣判前有时间消化"灵石不动"这个视觉
+			_show_test_dim_overlay()
+			AudioManager.fade_bgm_to(0.18, 1.0)
+			await get_tree().create_timer(1.5).timeout
+			if not is_inside_tree():
+				return
+			DialogueManager.finish_event()
+
+		"test_pause_post_verdict":
+			## ts_02 "无灵根" 之后 → 沉淀 2.0s → ts_03
+			## 让"无灵根"三个字停留在玩家脑里
+			await get_tree().create_timer(2.0).timeout
+			if not is_inside_tree():
+				return
+			DialogueManager.finish_event()
+
 		"get_cinnamon":
 			UIManager.add_item("cinnamon")
 			_sync_vendor_b_return_dialogue()
@@ -1217,11 +1239,17 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			## test第一段结束，phase推进已移到test_stone
 			pass
 		"test_stone":
+			## 测灵失败演出收尾：先慢慢恢复世界（暗化淡出 + BGM 慢回正常）
+			## 再推进 phase / 触发符灵 —— 避免"对话框关闭就立刻亮回去"的割裂
+			_hide_test_dim_overlay(2.5)
+			# 恢复 BGM 到用户设置的正常音量
+			AudioManager.fade_bgm_to(AudioManager.bgm_volume, 2.5)
+
 			## 测灵石对话结束，推进phase到3（跳过phase 2，走set_phase接口）
 			if GameData.story_phase == 1:
 				GameData.set_phase(3)
-			## 符灵第一声（测灵失败，回家途中）
-			get_tree().create_timer(1.5).timeout.connect(
+			## 符灵第一声延迟到 dim 淡出后才响（原 1.5s → 3.0s, 给画面恢复留时间）
+			get_tree().create_timer(3.0).timeout.connect(
 				func(): CharmSpirit.try_whisper("after_test_fail"), CONNECT_ONE_SHOT)
 			## 记录测验师已触发，读取其自身配置的after对话，不硬编码字符串
 			var examiner = get_node_or_null("NPCLayer/NPC_Examiner")
@@ -1254,6 +1282,46 @@ func _on_dialogue_ended(scene_id: String) -> void:
 # ══════════════════════════════════════════════════════════════════
 # 十四、剧情触发检测
 # ══════════════════════════════════════════════════════════════════
+
+## 测灵失败演出：在画面上叠一层缓慢淡入的暗色遮罩
+## CanvasLayer.layer = 5 (在世界 0/1 之上, 在 DialogueBox layer=10 之下)
+## 让对话框文字和角花等装饰仍然清晰, 但镇子的明亮被压住, 制造"这一刻不是日常"的潜意识
+func _show_test_dim_overlay() -> void:
+	if _test_dim_canvas != null and is_instance_valid(_test_dim_canvas):
+		return  # 已存在, 不重复创建
+	_test_dim_canvas = CanvasLayer.new()
+	_test_dim_canvas.layer = 5
+	add_child(_test_dim_canvas)
+
+	_test_dim_overlay = ColorRect.new()
+	# 暗色冷调 (略带蓝紫), 不是纯黑——纯黑会像 SceneTransition 转场
+	_test_dim_overlay.color = Color(0.04, 0.05, 0.10, 0.0)
+	_test_dim_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_test_dim_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_test_dim_canvas.add_child(_test_dim_overlay)
+
+	# 缓慢淡入到 alpha 0.55 (暗但不全黑, 玩家还能看到镇子轮廓)
+	var tw := create_tween()
+	tw.tween_property(_test_dim_overlay, "color:a", 0.55, 1.5)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+
+## 测灵失败演出收尾：暗色遮罩缓慢淡出, 世界恢复明亮
+func _hide_test_dim_overlay(duration: float = 2.5) -> void:
+	if _test_dim_overlay == null or not is_instance_valid(_test_dim_overlay):
+		return
+	var overlay := _test_dim_overlay
+	var canvas  := _test_dim_canvas
+	_test_dim_overlay = null
+	_test_dim_canvas  = null
+	var tw := create_tween()
+	tw.tween_property(overlay, "color:a", 0.0, duration)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(canvas):
+			canvas.queue_free()
+	)
+
 
 ## 创建夜晚渐变遮罩层（默认透明，剧情触发后缓慢变暗）
 func _setup_night_overlay() -> void:
