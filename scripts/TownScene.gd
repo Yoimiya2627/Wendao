@@ -246,10 +246,11 @@ func _ready() -> void:
 	## 读档后全量同步UI（HP条+背包+心绪面板）
 	UIManager.refresh_all_data()
 	## BGM：夜晚 / phase ≥ 3 白天 / phase < 3 白天 三档
-	## v40.8: phase 3 白天玩家从测灵失败回家途中, 心境已沉, 用 shop_return 钢琴感
-	## 而不是 phase 1 时的 town_day 明亮感
+	## v40.8: phase 3 白天用 shop_return 钢琴感 (心境已沉)
+	## v40.9: town_night 用 3.0s 慢淡入 (默认 1.5s 太"扑面")
+	##        让"夜的声音慢慢浮起来"——配合 ShopScene 出门时 BGM 已渐止到无声
 	if GameData.night_triggered:
-		AudioManager.play_bgm("town_night")
+		AudioManager.play_bgm("town_night", 3.0)
 	elif GameData.story_phase >= 3:
 		AudioManager.play_bgm("shop_return")
 	else:

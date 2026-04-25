@@ -529,12 +529,21 @@ func _on_exit_body_exited(body: Node2D) -> void:
 		_exit_hint.hide()
 
 
-## 回家状态出门：1.5秒黑屏渐变后切回TownScene夜晚状态
+## 回家状态出门：黑屏 + BGM 同步淡出, 黑屏上播 night_exit 旁白, 末句后多挂 1s
+## v40.9: 三处改动让转场不再"视觉切, 听觉没切":
+##   1. BGM (shop_return) 与黑屏同步开始淡出 (1.5s), 比黑屏多挂 0.6s
+##      → 黑屏完成时 BGM 还在最后尾巴, 全暗时 BGM 才完全消失
+##      → "白天的声音抽空"的感觉, 而不是"屏幕变黑但音乐还在响"的割裂
+##   2. night_exit 对话末句之后保留 1.0s 黑屏静默
+##      → "她站在门口, 往废庙方向看了一眼" 这个动作定格有时间发生
+##   3. TownScene._ready 把 town_night BGM 淡入从 1.5s 拉到 3.0s
+##      (改动在 TownScene 而不是这里, 见 TownScene._ready)
 func _trigger_night_and_leave() -> void:
 	## 防止重复触发
 	if _night_leave_triggered:
 		return
 	_night_leave_triggered = true
+
 	## 创建黑屏遮罩
 	## layer=9 低于 UILayer(10)，让 DialogueBox 的 night_exit 旁白浮在黑屏上可见
 	var canvas := CanvasLayer.new()
@@ -545,12 +554,18 @@ func _trigger_night_and_leave() -> void:
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	canvas.add_child(overlay)
-	## 0.9秒渐变到全黑（原 1.5s，压缩以减少黑屏等待感）
+
+	## v40.9 改动 1: BGM 与黑屏同时淡出 (1.5s), 黑屏只用 0.9s
+	## 黑屏完成时 BGM 还有 0.6s 尾巴, 全暗时 BGM 完全消失
+	AudioManager.fade_bgm_to(0.0, 1.5)
 	var tween := create_tween()
 	tween.tween_property(overlay, "color:a", 1.0, 0.9)\
 		.set_ease(Tween.EASE_IN_OUT)\
 		.set_trans(Tween.TRANS_SINE)
 	await tween.finished
+	if not is_inside_tree():
+		return
+
 	## 标记夜晚已触发
 	GameData.night_triggered = true
 	GameData.last_scene = "shop"
@@ -564,6 +579,12 @@ func _trigger_night_and_leave() -> void:
 		await DialogueManager.dialogue_ended
 		if not is_inside_tree():
 			return
+
+	## v40.9 改动 2: 末句之后保留 1.0s 黑屏静默, 让"往废庙方向看了一眼"有时间发生
+	await get_tree().create_timer(1.0).timeout
+	if not is_inside_tree():
+		return
+
 	## 对话播完后才提示 SceneTransition 画面已经黑透，跳过它的淡出
 	SceneTransition.set_overlay_opaque()
 	SceneTransition.change_scene("res://scenes/TownScene.tscn")
