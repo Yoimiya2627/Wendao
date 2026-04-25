@@ -440,9 +440,8 @@ func _on_awakening_triggered() -> void:
 	if not is_inside_tree():
 		return
 
-	# 闪回前的"冷却":让玩家从战斗心跳节奏切到内省心跳节奏
-	# 没有这段过渡, 闪回内容(私密回忆)和爆发气质(燃)的反差会让人"找不到落点"
-	await get_tree().create_timer(2.0).timeout
+	# 闪回前的"冷却"(v40.5: 2.0→0.5s, 试玩反馈 2s 太长)
+	await get_tree().create_timer(0.5).timeout
 	if not is_inside_tree():
 		return
 
@@ -524,10 +523,10 @@ func _collect_boss_awakening_lines() -> Array[String]:
 
 
 ## 闪回单行演出
-## 视觉气质刻意往"内省/私密"调:
-##   - 字号 22pt(原 28pt 偏宣言), 透明度 0.82(原 0.95 偏闪耀)
-##   - 短句(<=8 字)单独处理: 保持时间从 1.8s 拉到 2.4s, 间隙从 0.3s 拉到 0.6s
-##     "就是——" 这种顿挫句需要喘息, 不能和长句同节奏被冲过去
+## v40.5 调参:
+##   - 字号 22→25pt (试玩反馈 22 太小)
+##   - 透明度 0.82, 描边 0.55 (内省感保留)
+##   - 全部句子统一保持 1.8s (取消短句特殊节奏, 试玩反馈不需要)
 ##   - 末句保持 2.8s (与白光二次闪起同步)
 func _fade_in_flashback_line(text: String, is_final: bool) -> void:
 	var lbl := Label.new()
@@ -542,7 +541,7 @@ func _fade_in_flashback_line(text: String, is_final: bool) -> void:
 	lbl.offset_top    = -40.0
 	lbl.offset_right  = 500.0
 	lbl.offset_bottom = 40.0
-	lbl.add_theme_font_size_override("font_size", 22)
+	lbl.add_theme_font_size_override("font_size", 25)
 	lbl.add_theme_color_override("font_color", Color(0.95, 0.90, 0.75, 0.0))
 	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.0))
 	lbl.add_theme_constant_override("outline_size", 2)
@@ -559,18 +558,8 @@ func _fade_in_flashback_line(text: String, is_final: bool) -> void:
 	if not is_inside_tree():
 		return
 
-	# 保持时间分三档:
-	#   - 末句: 2.8s (与白光闪起同步, 让"白光"二字有时间被读到)
-	#   - 短句(<=8 字): 2.4s (顿挫句需要呼吸)
-	#   - 常规: 1.8s
-	var char_count: int = text.length()
-	var hold_time: float
-	if is_final:
-		hold_time = 2.8
-	elif char_count <= 8:
-		hold_time = 2.4
-	else:
-		hold_time = 1.8
+	# 保持时间: 末句 2.8s (与白光闪起同步), 其余统一 1.8s
+	var hold_time: float = 2.8 if is_final else 1.8
 	await get_tree().create_timer(hold_time).timeout
 	if not is_inside_tree():
 		return
@@ -586,10 +575,9 @@ func _fade_in_flashback_line(text: String, is_final: bool) -> void:
 		return
 	lbl.queue_free()
 
-	# 句间间隙: 短句之后多停 0.3s, 让顿挫真的"顿"住
+	# 句间间隙: 统一 0.3s
 	if not is_final:
-		var gap: float = 0.6 if char_count <= 8 else 0.3
-		await get_tree().create_timer(gap).timeout
+		await get_tree().create_timer(0.3).timeout
 
 
 # ── 内部辅助 ─────────────────────────────────────────────────

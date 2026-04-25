@@ -45,6 +45,14 @@ func _ready() -> void:
 	## 通过场景树设置默认主题
 	get_tree().root.theme = _theme
 
+	## 运行时强制设置内容缩放, 不依赖 project.godot 的持久化
+	## (Godot 编辑器有时会把它认为"默认值"的设置剥离, 导致 stretch/aspect 丢失)
+	## CANVAS_ITEMS + KEEP: 内容随窗口等比缩放, 保持 16:9, 超比例时黑边
+	var win := get_tree().root
+	win.content_scale_mode   = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+	win.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
+	win.content_scale_size   = Vector2i(1280, 720)
+
 
 # ══════════════════════════════════════════════════════════════
 # Theme 构建
