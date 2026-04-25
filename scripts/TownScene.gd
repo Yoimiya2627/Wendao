@@ -245,9 +245,13 @@ func _ready() -> void:
 	_sync_vendor_b_return_dialogue()
 	## 读档后全量同步UI（HP条+背包+心绪面板）
 	UIManager.refresh_all_data()
-	## BGM：白天/夜晚分差
+	## BGM：夜晚 / phase ≥ 3 白天 / phase < 3 白天 三档
+	## v40.8: phase 3 白天玩家从测灵失败回家途中, 心境已沉, 用 shop_return 钢琴感
+	## 而不是 phase 1 时的 town_day 明亮感
 	if GameData.night_triggered:
 		AudioManager.play_bgm("town_night")
+	elif GameData.story_phase >= 3:
+		AudioManager.play_bgm("shop_return")
 	else:
 		AudioManager.play_bgm("town_day")
 	_initialized = true
@@ -315,8 +319,9 @@ func _unhandled_input(event: InputEvent) -> void:
 				GameData.story_phase = 1
 				GameData.narrative_flags.erase("self_test_calm")
 				GameData.narrative_flags.erase("self_test_hurt")
-				# 重置 BGM 到当前场景应有音量 (避免上次测试压低后没回升)
-				AudioManager.fade_bgm_to(AudioManager.bgm_volume, 0.3)
+				# v40.8: KEY_1 强制把 BGM 切回 town_day, 保证每次测试起点一致
+				# (上一次测试结尾会切到 shop_return, 不重置就测的是 shop_return 衔接)
+				AudioManager.play_bgm("town_day", 0.3)
 				# 把玩家送到测灵石跟前 (960, 280): 视觉上下文对得上"广场上测灵那一刻"
 				_player.global_position = Vector2(960, 280)
 				print("[DEBUG] KEY_1 → 触发测灵失败演出 (test_stone)")
@@ -1168,14 +1173,14 @@ func _on_event_triggered(event_name: String) -> void:
 			_stone_interactable = true
 
 		"test_pause_pre_verdict":
-			## ts_01 "灵石纹丝不动" → 暗化 + BGM 压低 + sfx + 静默 → ts_02
-			## v40.7 调整: 让节奏更"砸下来", 不再是缓慢氛围漂移
-			##   - dim 0.55→0.7 alpha, 1.5s→0.8s 淡入 (更快更暗)
-			##   - BGM 0.18→0.10, 1.0s→0.5s 淡出 (更狠更快)
-			##   - 加 sense sfx 给"时间停止"一个听觉锚点
+			## ts_01 "灵石纹丝不动" → 暗化 + BGM 渐止 + 静默 1.5s → ts_02
+			## v40.8: 改回克制路线
+			##   - dim 0.45 / 2.0s sine (温柔, 见 _show_test_dim_overlay)
+			##   - BGM 不压低, 直接 fade out 到 0 / 2.0s
+			##     ("音乐不见了"比"音乐变小了"更克制, 配合主角"装作没事走开"的气质)
+			##   - 移除 sense sfx (sfx 会引入"事件感", 对克制气质有害)
 			_show_test_dim_overlay()
-			AudioManager.fade_bgm_to(0.10, 0.5)
-			AudioManager.play_sfx("sense")
+			AudioManager.fade_bgm_to(0.0, 2.0)
 			await get_tree().create_timer(1.5).timeout
 			if not is_inside_tree():
 				return
@@ -1183,8 +1188,7 @@ func _on_event_triggered(event_name: String) -> void:
 
 		"test_pause_post_verdict":
 			## ts_02 "无灵根" 之后 → 沉淀 2.0s → ts_03
-			## 让"无灵根"三个字停留在玩家脑里
-			AudioManager.play_sfx("sense")
+			## 让"无灵根"三个字停留在玩家脑里 (v40.8 移除 sfx)
 			await get_tree().create_timer(2.0).timeout
 			if not is_inside_tree():
 				return
@@ -1263,11 +1267,12 @@ func _on_dialogue_ended(scene_id: String) -> void:
 			## test第一段结束，phase推进已移到test_stone
 			pass
 		"test_stone":
-			## 测灵失败演出收尾：先慢慢恢复世界（暗化淡出 + BGM 慢回正常）
+			## 测灵失败演出收尾：先慢慢恢复世界（暗化淡出 + 切到 phase 3 的 BGM）
 			## 再推进 phase / 触发符灵 —— 避免"对话框关闭就立刻亮回去"的割裂
 			_hide_test_dim_overlay(2.5)
-			# 恢复 BGM 到用户设置的正常音量
-			AudioManager.fade_bgm_to(AudioManager.bgm_volume, 2.5)
+			## v40.8: 不再恢复到 town_day, 改切 shop_return (低落钢琴感)
+			## 心绪都从 phase 1 切到 phase 3 了, 背景音也该换色调
+			AudioManager.play_bgm("shop_return", 2.5)
 
 			## 测灵石对话结束，推进phase到3（跳过phase 2，走set_phase接口）
 			if GameData.story_phase == 1:
@@ -1324,12 +1329,12 @@ func _show_test_dim_overlay() -> void:
 	_test_dim_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_test_dim_canvas.add_child(_test_dim_overlay)
 
-	# v40.7: 0.55→0.70 alpha, 1.5s→0.8s 淡入
-	# 试玩反馈"感觉不到改变"——0.55 太柔和+1.5s 太慢, 玩家眼睛在对话框上时背景渐暗
-	# 完全不被注意。改大 + 改快, 让镇子明显"沉一下"才能进入潜意识
+	# v40.8: 回归克制 (0.45 alpha / 2.0s sine)
+	# v40.7 的 0.7+0.8s 砸下来太"事件感", 与主角"装作没事走开"的克制气质冲突
+	# 改回温柔的 0.45 + 2.0s sine, 让"世界悄悄安静下来"而不是"砸一下"
 	var tw := create_tween()
-	tw.tween_property(_test_dim_overlay, "color:a", 0.70, 0.8)\
-		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(_test_dim_overlay, "color:a", 0.45, 2.0)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 
 ## 测灵失败演出收尾：暗色遮罩缓慢淡出, 世界恢复明亮
