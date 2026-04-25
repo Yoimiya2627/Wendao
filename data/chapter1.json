@@ -2782,6 +2782,11 @@
 				"tfb_02": {
 					"type": "narration",
 					"text": "脑子里却很清楚——",
+					"next": "tfb_02b"
+				},
+				"tfb_02b": {
+					"type": "narration",
+					"text": "剑穗烫了一下。她说不清——但她知道。",
 					"next": "tfb_03"
 				},
 				"tfb_03": {
