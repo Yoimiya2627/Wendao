@@ -615,11 +615,18 @@ func _enter_scene(entrance: String) -> void:
 			SceneTransition.change_scene("res://scenes/TeaScene.tscn")
 		"temple":
 			## 夜晚首次进废庙：播放入口氛围旁白
+			## v40.10: 加入 BGM duck + 末句沉淀
 			if GameData.night_triggered \
 					and not GameData.triggered_events.has("temple_entrance_night"):
 				GameData.triggered_events.append("temple_entrance_night")
+				## 在町夜的 BGM 之上 duck 一下, 让"她在门口看着废庙"有时间感
+				AudioManager.fade_bgm_to(0.20, 1.0)
 				DialogueManager.start_scene("temple_entrance_night")
 				await DialogueManager.dialogue_ended
+				if not is_inside_tree():
+					return
+				## 末句"风把枯叶卷进去, 很快不见了" 之后保留 1s, 让画面有时间发生
+				await get_tree().create_timer(1.0).timeout
 				if not is_inside_tree():
 					return
 			## 进入废庙前保存：废庙内战斗不保存，以此为最后存档点

@@ -185,7 +185,9 @@ func _play_ending() -> void:
 	hook.offset_left  = -400.0
 	hook.offset_right = 400.0
 	hook.offset_top   = -120.0
-	hook.text = "「有人动了手脚。那个人，认识你。」"
+	## v40.10: 原 hook "有人动了手脚。那个人，认识你。" 是 RPG 阴谋型,
+	## 与本作散文气质不符。改为内省/转变型——不预告剧情, 只承认变化已发生。
+	hook.text = "「走出去的，不是同一个人。」"
 	_canvas.add_child(hook)
 	## 淡入钩子文字
 	var hook_tween := create_tween()

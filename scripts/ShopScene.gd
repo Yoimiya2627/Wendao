@@ -204,10 +204,17 @@ func _start_return_home_flow() -> void:
 		_cats_interactable = true
 		return
 
-	## 等待一帧确保节点就位
-	await get_tree().process_frame
+	## v40.10: 给玩家 2 秒空间走入空房间, 再触发对话
+	## 不剥夺控制权——shop_return BGM 已从 town 衔接过来, 玩家可以走、可以看, 但
+	## 一进门就立刻砸对话框是错的, 应该让玩家在空屋子里站一会儿
+	## 期间临时禁用 broken_bowl 交互避免抢夺即将开始的 return_home 对话
+	_broken_bowl_area.set_deferred("monitoring", false)
+	await get_tree().create_timer(2.0).timeout
 	if not is_inside_tree():
 		return
+	## 恢复 bowl monitoring: 已交互过则保持禁用 (原逻辑), 未交互过则恢复 active
+	if not GameData.bowl_interacted:
+		_broken_bowl_area.set_deferred("monitoring", true)
 	## 自动播放return_home对话（爹不在，饭盛好了）
 	DialogueManager.start_scene(_DIALOGUE_RETURN_HOME)
 

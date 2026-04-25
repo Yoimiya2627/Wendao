@@ -14,7 +14,10 @@ const FADE_DURATION := 0.3
 const SCENE_BGM_MAP: Dictionary = {
 	"MainMenuScene" : ["main_menu",      1.5],
 	"TeaScene"      : ["tea_house",      1.5],
-	"TempleScene"   : ["temple_explore", 1.5],
+	## v40.10: TempleScene BGM 淡入 1.5→3.0s
+	## 进废庙时玩家 BGM 已经被 town 的 fade_bgm_to(0.20) 压低,
+	## 切到 TempleScene 后从静默缓缓浮起 3s 才合理 (不"扑面")
+	"TempleScene"   : ["temple_explore", 3.0],
 }
 
 var _overlay: ColorRect

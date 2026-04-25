@@ -77,6 +77,10 @@ var _near_door_back_boss: bool = false
 ## 石皮蟾战前旁白是否已触发
 var _toad_approach_triggered: bool = false
 
+## 碑文阅读小仪式: 暗化遮罩 (与测灵失败同款思路, 但更克制)
+var _stone_dim_canvas: CanvasLayer = null
+var _stone_dim_overlay: ColorRect = null
+
 ## 石皮蟾节点引用
 var _toad: Node2D = null
 ## 是否靠近石皮蟾
@@ -758,6 +762,43 @@ func _connect_stone_areas() -> void:
 		monolith_area.body_exited.connect(_on_monolith_exited)
 
 
+## v40.10: 碑文阅读小仪式 — 比测灵失败克制
+## CanvasLayer.layer = 5 (在世界之上, DialogueBox layer=10 之下)
+## alpha 0.30 (vs 测灵 0.45), 1.0s sine 淡入
+func _show_stone_dim_overlay() -> void:
+	if _stone_dim_canvas != null and is_instance_valid(_stone_dim_canvas):
+		return
+	_stone_dim_canvas = CanvasLayer.new()
+	_stone_dim_canvas.layer = 5
+	add_child(_stone_dim_canvas)
+
+	_stone_dim_overlay = ColorRect.new()
+	_stone_dim_overlay.color = Color(0.04, 0.05, 0.10, 0.0)
+	_stone_dim_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_stone_dim_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stone_dim_canvas.add_child(_stone_dim_overlay)
+
+	var tw := create_tween()
+	tw.tween_property(_stone_dim_overlay, "color:a", 0.30, 1.0)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+
+
+func _hide_stone_dim_overlay(duration: float = 1.5) -> void:
+	if _stone_dim_overlay == null or not is_instance_valid(_stone_dim_overlay):
+		return
+	var overlay := _stone_dim_overlay
+	var canvas  := _stone_dim_canvas
+	_stone_dim_overlay = null
+	_stone_dim_canvas  = null
+	var tw := create_tween()
+	tw.tween_property(overlay, "color:a", 0.0, duration)\
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(canvas):
+			canvas.queue_free()
+	)
+
+
 func _update_stone_visuals() -> void:
 	for i in 4:
 		var stone = get_node_or_null("Stones/Stone%d" % (i + 1))
@@ -927,6 +968,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		_stones_read[_nearby_stone] = true
 		GameData.stones_read[_nearby_stone] = true
+		## v40.10: 碑文阅读小仪式 — BGM 轻 duck + 世界轻微暗化
+		## 比测灵失败克制 (alpha 0.30 vs 0.45, BGM 到 0.30 vs 完全静默)
+		_show_stone_dim_overlay()
+		AudioManager.fade_bgm_to(0.30, 1.0)
 		DialogueManager.start_scene(STONE_SCENE_IDS[_nearby_stone])
 		_update_stone_visuals()
 		_check_all_stones_read()
@@ -1092,6 +1137,10 @@ func _on_dialogue_ended(scene_id: String) -> void:
 	# 碑文阅读：首次解锁感应时给予提示
 	if scene_id in ["temple_stone_1", "temple_stone_2",
 					"temple_stone_3", "temple_stone_4"]:
+		## v40.10: 碑文仪式收尾 — 暗化淡出 + BGM 慢恢复
+		_hide_stone_dim_overlay(1.5)
+		AudioManager.fade_bgm_to(AudioManager.bgm_volume, 1.5)
+
 		var total_read := 0
 		for state in GameData.stones_read:
 			if state:
