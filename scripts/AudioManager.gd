@@ -56,7 +56,7 @@ const BGM_ALIAS: Dictionary = {
 ## 因各音频文件未做统一响度归一化，这里手动补偿
 ## 键用"真实文件名"（别名解析之后），不要写别名
 const BGM_LOUDNESS_OFFSET: Dictionary = {
-	"temple_boss" : -5.0,   ## 普通战斗 BGM 母带偏响，压低 5dB
+	"temple_boss" : -15.0,  ## 普通战斗 BGM 母带偏响，压低 15dB（v40.x 调过 -5dB 仍偏响）
 }
 
 ## SFX 音调微扰：每种音效的随机偏移幅度（0.05 = ±5%）
