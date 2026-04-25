@@ -77,11 +77,14 @@ const FORCE_TRIGGER_NODES : Array = [
 # ══════════════════════════════════════════════════════════════════
 
 const BUBBLE_NODES : Array = [
+	{ "grid": Vector2i(11, 12), "text": "若真测出来，学几年还能回来。" },
+	{ "grid": Vector2i(13, 12), "text": "三年了，再不测出来，又得等三年。" },
+	{ "grid": Vector2i(17, 14), "text": "老榕树的根把石板路拱起来了一块。" },
+	{ "grid": Vector2i(22, 17), "text": "井沿磨得很光，往下看，黑洞洞的。" },
+	{ "grid": Vector2i(24, 12), "text": "十年带走十一个。回来的不到一半。" },
 	{ "grid": Vector2i(28, 11), "text": "也不知道能测出什么来……" },
 	{ "grid": Vector2i(34, 10), "text": "今年来的人不少。" },
 	{ "grid": Vector2i(35,  9), "text": "八品！能进门就行，够了够了。" },
-	{ "grid": Vector2i(17, 14), "text": "老榕树的根把石板路拱起来了一块。" },
-	{ "grid": Vector2i(22, 17), "text": "井沿磨得很光，往下看，黑洞洞的。" },
 ]
 
 ## 隐藏交互点：玩家走近后按E触发，每个只触发一次
@@ -1539,6 +1542,8 @@ func _hide_bubble() -> void:
 
 
 ## 检测玩家是否靠近气泡节点（距离≤2格），依次触发未触发的气泡
+## 已触发的气泡若玩家已走出范围则重置，允许再次靠近时重新触发——
+## 防止"路过没看清就再也看不到"的 UX 问题（_bubble_timer = 3.0 期间不会刷屏）
 func _check_bubble_triggers() -> void:
 	## 有对话进行中，或当前气泡仍在显示，则跳过
 	if DialogueManager.is_active or _bubble_timer > 0.0:
@@ -1547,6 +1552,14 @@ func _check_bubble_triggers() -> void:
 		int(_player.global_position.x / TILE_SIZE),
 		int(_player.global_position.y / TILE_SIZE)
 	)
+	## 第一遍：已触发但玩家已离开范围 → 重置 triggered，允许再触发
+	for state in _bubble_states:
+		if not state["triggered"]:
+			continue
+		var bg: Vector2i = state["grid"]
+		if abs(pg.x - bg.x) > 2 or abs(pg.y - bg.y) > 2:
+			state["triggered"] = false
+	## 第二遍：检查未触发的气泡，按数组顺序取第一个范围内的触发
 	for state in _bubble_states:
 		if state["triggered"]:
 			continue

@@ -69,7 +69,7 @@
 | 时令 | 初春，岭南小城 | chapter1.json:49 |
 | 家庭 | 爹=苏明，杂货铺；年年/大鱼是两只猫 | ShopScene / chapter1.json |
 | 环境 | 皂角、桂皮气味；薄荷嫩芽；晨雾 | chapter1.json:49 |
-| 测灵 | 太平宗招募；年十四至二十五；五品以上录；**无灵根者不录** | notice_board_before |
+| 测灵 | 太平宗招募；年十四至二十五；八品以上录；**无灵根者不录** | notice_board_before |
 | 情感钉子 | "无灵根者，不在招募之列" | notice_board_before |
 | 关键道具 | 旧剑穗（大鱼带出的，褪色但结打得紧，握着有温热） | chapter1.json (morning_shop) |
 | 废庙 | 城外，神像缺半脸，香案已倒，蛛网结檐 | chapter1.json (temple) |
