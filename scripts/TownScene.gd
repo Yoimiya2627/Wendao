@@ -1181,23 +1181,22 @@ func _on_event_triggered(event_name: String) -> void:
 			_stone_interactable = true
 
 		"test_pause_pre_verdict":
-			## ts_01 "灵石纹丝不动" → 暗化 + BGM 渐止 + 静默 1.5s → ts_02
-			## v40.8: 改回克制路线
-			##   - dim 0.45 / 2.0s sine (温柔, 见 _show_test_dim_overlay)
-			##   - BGM 不压低, 直接 fade out 到 0 / 2.0s
-			##     ("音乐不见了"比"音乐变小了"更克制, 配合主角"装作没事走开"的气质)
-			##   - 移除 sense sfx (sfx 会引入"事件感", 对克制气质有害)
+			## ts_01 "灵石纹丝不动" → 暗化 + BGM duck + 静默 → ts_02
+			## v40.11 降重 (前面承不住就让后面轻一点):
+			##   - BGM 不再 fade 到 0 (太"史诗"), 改 duck 到 30%
+			##   - 静默 1.5s → 1.0s (短一点, 玩家不会觉得卡)
+			##   - dim 0.45→0.30 (在 _show_test_dim_overlay 里改)
 			_show_test_dim_overlay()
-			AudioManager.fade_bgm_to(0.0, 2.0)
-			await get_tree().create_timer(1.5).timeout
+			AudioManager.fade_bgm_to(0.30, 1.5)
+			await get_tree().create_timer(1.0).timeout
 			if not is_inside_tree():
 				return
 			DialogueManager.finish_event()
 
 		"test_pause_post_verdict":
-			## ts_02 "无灵根" 之后 → 沉淀 2.0s → ts_03
-			## 让"无灵根"三个字停留在玩家脑里 (v40.8 移除 sfx)
-			await get_tree().create_timer(2.0).timeout
+			## ts_02 "无灵根" 之后 → 沉淀 → ts_03
+			## v40.11: 沉淀 2.0s → 1.5s (整体降重)
+			await get_tree().create_timer(1.5).timeout
 			if not is_inside_tree():
 				return
 			DialogueManager.finish_event()
@@ -1337,11 +1336,11 @@ func _show_test_dim_overlay() -> void:
 	_test_dim_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_test_dim_canvas.add_child(_test_dim_overlay)
 
-	# v40.8: 回归克制 (0.45 alpha / 2.0s sine)
-	# v40.7 的 0.7+0.8s 砸下来太"事件感", 与主角"装作没事走开"的克制气质冲突
-	# 改回温柔的 0.45 + 2.0s sine, 让"世界悄悄安静下来"而不是"砸一下"
+	# v40.11: 进一步降重 (0.45→0.30 alpha)
+	# 试玩反馈: 测灵失败演出比早晨/路途的"轻"重得多, 落差太大
+	# 不加内容只能减重——dim 浅一些, 让测灵那一刻"重而不史诗"
 	var tw := create_tween()
-	tw.tween_property(_test_dim_overlay, "color:a", 0.45, 2.0)\
+	tw.tween_property(_test_dim_overlay, "color:a", 0.30, 2.0)\
 		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 

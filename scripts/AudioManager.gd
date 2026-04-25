@@ -216,6 +216,10 @@ func play_bgm_once(bgm_name: String, fade_in: float = BGM_DEFAULT_FADE) -> void:
 ## 动态渐变 BGM 音量（不停止，用于战斗紧张感过渡、感知技能演出等）
 ## target_vol : 目标音量（0.0 ~ 1.0，不受 bgm_volume 上限约束，可压低到 0）
 ## duration   : 渐变时长（秒）
+## v40.11 修复: 加上 BGM_LOUDNESS_OFFSET 应用——之前只有 play_bgm 用了,
+## fade_bgm_to 直接 linear_to_db(vol) 会导致带 offset 的 BGM 被拉到错误音量
+## (典型症状: 战斗 tutorial 对话结束后 BGM 跳响 5dB, 因为 _on_dialogue_duck_end
+## 也走 linear_to_db 没加 offset)
 func fade_bgm_to(target_vol: float, duration: float = 1.0) -> void:
 	if _active_bgm_player == null or not _active_bgm_player.playing:
 		return
@@ -226,10 +230,13 @@ func fade_bgm_to(target_vol: float, duration: float = 1.0) -> void:
 		_duck_tween.kill()
 		_duck_tween = null
 	var vol: float = clamp(target_vol, 0.0, 1.0)
+	var target_db: float = linear_to_db(vol) if vol > 0.0 else -80.0
+	if vol > 0.0 and BGM_LOUDNESS_OFFSET.has(_current_bgm_name):
+		target_db += float(BGM_LOUDNESS_OFFSET[_current_bgm_name])
 	_bgm_fade_tween = create_tween()
 	_bgm_fade_tween.tween_property(
 		_active_bgm_player, "volume_db",
-		linear_to_db(vol) if vol > 0.0 else -80.0,
+		target_db,
 		duration
 	).set_ease(Tween.EASE_IN_OUT)
 
@@ -366,29 +373,38 @@ func _setup_audio_buses() -> void:
 
 
 ## 对话开始：BGM 压至 40%（0.4秒渐变）
+## v40.11: duck 目标也要应用 LOUDNESS_OFFSET, 否则带 offset 的 BGM duck 后比应有水平高
 func _on_dialogue_duck_start(_scene_id: String) -> void:
 	if not _active_bgm_player or not _active_bgm_player.playing:
 		return
 	if _duck_tween and _duck_tween.is_valid():
 		_duck_tween.kill()
+	var target_db: float = linear_to_db(max(bgm_volume * 0.4, 0.0001))
+	if BGM_LOUDNESS_OFFSET.has(_current_bgm_name):
+		target_db += float(BGM_LOUDNESS_OFFSET[_current_bgm_name])
 	_duck_tween = create_tween()
 	_duck_tween.tween_property(
 		_active_bgm_player, "volume_db",
-		linear_to_db(max(bgm_volume * 0.4, 0.0001)), 0.4
+		target_db, 0.4
 	).set_ease(Tween.EASE_OUT)
 
 
 ## 对话结束：等待1.5秒后缓慢恢复原音量（1.0秒渐变）
+## v40.11 修复: 恢复目标也要应用 LOUDNESS_OFFSET
+## (典型症状: 战斗 tutorial 对话结束后 BGM 跳响 5dB, 因为没加 offset)
 func _on_dialogue_duck_end(_scene_id: String) -> void:
 	if _duck_tween and _duck_tween.is_valid():
 		_duck_tween.kill()
+	var target_db: float = linear_to_db(max(bgm_volume, 0.0001))
+	if BGM_LOUDNESS_OFFSET.has(_current_bgm_name):
+		target_db += float(BGM_LOUDNESS_OFFSET[_current_bgm_name])
 	_duck_tween = create_tween()
 	# 先等待，再恢复（用tween串联，比SceneTreeTimer更易取消）
 	_duck_tween.tween_interval(1.5)
 	if _active_bgm_player:
 		_duck_tween.tween_property(
 			_active_bgm_player, "volume_db",
-			linear_to_db(max(bgm_volume, 0.0001)), 1.0
+			target_db, 1.0
 		).set_ease(Tween.EASE_IN_OUT)
 
 

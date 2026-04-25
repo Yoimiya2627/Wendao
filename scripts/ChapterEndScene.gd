@@ -172,46 +172,10 @@ func _play_ending() -> void:
 		await get_tree().create_timer(1.0).timeout
 		if not is_inside_tree(): return
 
-	## 显示悬念钩子文字
-	await get_tree().create_timer(1.0).timeout
-	if not is_inside_tree(): return
-	var hook := Label.new()
-	hook.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hook.add_theme_color_override("font_color", Color(0.7, 0.65, 0.6, 0.0))
-	hook.add_theme_font_override("font", _font_regular)
-	hook.add_theme_font_size_override("font_size", int(round(20 * scale_f)))
-	hook.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	hook.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	hook.offset_left  = -400.0
-	hook.offset_right = 400.0
-	hook.offset_top   = -120.0
-	## v40.10: 原 hook "有人动了手脚。那个人，认识你。" 是 RPG 阴谋型,
-	## 与本作散文气质不符。改为内省/转变型——不预告剧情, 只承认变化已发生。
-	hook.text = "「走出去的，不是同一个人。」"
-	_canvas.add_child(hook)
-	## 淡入钩子文字
-	var hook_tween := create_tween()
-	hook_tween.tween_property(
-		hook,
-		"theme_override_colors/font_color:a",
-		0.85,
-		2.0
-	).set_ease(Tween.EASE_IN_OUT)
-	await hook_tween.finished
-	if not is_inside_tree(): return
-	## 停留后淡出
-	await get_tree().create_timer(3.0).timeout
-	if not is_inside_tree(): return
-	var fade_tween := create_tween()
-	fade_tween.tween_property(
-		hook,
-		"theme_override_colors/font_color:a",
-		0.0,
-		1.5
-	).set_ease(Tween.EASE_IN_OUT)
-	await fade_tween.finished
-	if not is_inside_tree(): return
-	await get_tree().create_timer(1.5).timeout
+	## v40.11: 删除原"悬念钩子文字"段落
+	## 散文游戏不需要硬凑一句话总结整章——留白比任何 hook line 都强。
+	## 现在序列直接跳到第二章预告 (前后留 1.5s 间隔确保章节标题有时间沉淀)
+	await get_tree().create_timer(2.5).timeout
 	if not is_inside_tree(): return
 
 	## 第二章预告
