@@ -2960,3 +2960,52 @@ F9 诊断过程中在 `Player.gd` / `ShopScene.gd` / `UIManager.gd` 留了大量
 - 8 条 bubble 总长 24 秒，玩家慢走 / 快走两端体感
 - bubble 可重触发机制——来回走是否过吵
 - 苏云晚 inner (11,12) 和镇民 overhead 浮字视觉是否区分
+
+---
+
+## v40.13：觉醒小硌点 — 剑穗烫了一下 (2026-04-25)
+
+**问题**：第一次战斗 (`tutorial_first_battle`) 从 tfb_02 直接跳到战斗术语
+描述，缺一个 in-character 桥——16 岁镇上姑娘"突然懂战斗"没来源。
+
+**改动**（`data/chapter1.json`）：tfb_02 后插入 tfb_02b
+> "剑穗烫了一下。她说不清——但她知道。"
+
+剑穗作为父亲修士时代遗物的引导。完成剑穗温度 motif 闭环：
+温热（晨起）→ 硌（测灵失败）→ 烫了一下（战斗）→ 颤+烫（boss 觉醒）。
+
+---
+
+## v40.14：战斗 BGM 响度补偿 -5dB → -15dB (2026-04-25)
+
+**问题**：进战斗时 BGM 比镇上 BGM 突然变响（用户反馈）。v40.x 调过 -5dB
+仍偏响。
+
+**改动**（`scripts/AudioManager.gd`）：战斗 BGM 响度补偿继续压低 10dB，
+让两边响度匹配。
+
+---
+
+## v40.15：dead-code 清理 + flag 链迁移 (2026-04-26)
+
+**背景**：会话核实时发现 `data/chapter1.json` 里 `temple` scene 是 dead
+code（无 `start_scene("temple")` 调用），但它是唯一 set 关键 flag
+`self_temple_brave/scared` 的地方。这两个 flag 被 `after_battle/ab_01_*`
+分支消费，断链导致玩家永远走默认分支。
+
+**修复**（`data/chapter1.json`）：
+- 删除整个 `temple` scene（共 9 个节点：tp_01 - tp_08）
+- 把 brave/scared 选择支搬到 `monster_approach/ma_07b`，与
+  `TempleScene.gd:743 → start_scene("monster_approach")` 真触发对齐
+- 选择支无 `next` 字段——`DialogueManager._end_scene()` 自然结束 →
+  TempleScene.gd `await dialogue_ended` 解锁 → 触发战斗，链路完整
+
+**核实**：
+- `after_battle/ab_01_temple_check` (line 467) ✅ 消费 brave/scared
+- `after_battle_coin/ab_01_temple_check` (line 2293) ✅ 消费 brave/scared
+- `boss_awakening` 的 `ba_cb_brave/scared` 觉醒回响 callback 已不存在
+  （之前某次设计取舍砍掉，after_battle 两处回响保留即可）
+
+**文档同步**：重写 `README.md`（之前停在项目最早期 v1 骨架阶段，与
+v40.14 真实形态严重脱节），按"散文叙事 + 回合制壳"重新组织结构。
+

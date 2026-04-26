@@ -318,76 +318,6 @@
 				}
 			}
 		},
-		"temple": {
-			"title": "废庙·独白",
-			"start": "tp_01",
-			"nodes": {
-				"tp_01": {
-					"type": "narration",
-					"text": "城外有座废庙，神像缺了半张脸，香案已倒，蛛网结在檐角。苏云晚在里面坐了很久，直到星子出来，才想起抬头。",
-					"next": "tp_02"
-				},
-				"tp_02": {
-					"speaker": "苏云晚",
-					"text": "年年。大鱼。",
-					"next": "tp_03"
-				},
-				"tp_03": {
-					"speaker": "苏云晚",
-					"text": "就算什么灵根都没有，这双手还在。",
-					"next": "tp_04"
-				},
-				"tp_04": {
-					"type": "narration",
-					"text": "远处传来声音。不像野兽嗥叫，更像是——某种东西正在接近，朝这里来。",
-					"next": "tp_05"
-				},
-				"tp_05": {
-					"speaker": "苏云晚",
-					"text": "……妖？",
-					"next": "tp_06"
-				},
-				"tp_06": {
-					"type": "narration",
-					"text": "她想跑。但镇子就在这条路的另一头。",
-					"next": "tp_06b"
-				},
-				"tp_06b": {
-					"type": "narration",
-					"text": "年年此刻还趴在柜台上等她回家。大鱼大概又躲在后院偷吃东西。",
-					"next": "tp_07"
-				},
-				"tp_07": {
-					"speaker": "苏云晚",
-					"text": "不行。不能死在这里，也不能让它们摸到镇子里去。",
-					"next": "tp_07b"
-				},
-				"tp_07b": {
-					"type": "choice",
-					"text": "她握住口袋里的剑穗。",
-					"choices": [
-						{
-							"text": "（她没有退，挡在路前）",
-							"set_flag": {
-								"self_temple_brave": true
-							},
-							"next": "tp_08"
-						},
-						{
-							"text": "（手在抖，但没有退）",
-							"set_flag": {
-								"self_temple_scared": true
-							},
-							"next": "tp_08"
-						}
-					]
-				},
-				"tp_08": {
-					"type": "event",
-					"event": "trigger_battle"
-				}
-			}
-		},
 		"after_battle": {
 			"title": "战斗后·顾飞白",
 			"start": "ab_01",
@@ -2061,7 +1991,26 @@
 				},
 				"ma_07": {
 					"speaker": "苏云晚",
-					"text": "不行。不能让它留在这里。"
+					"text": "不行。不能让它留在这里。",
+					"next": "ma_07b"
+				},
+				"ma_07b": {
+					"type": "choice",
+					"text": "她握住口袋里的剑穗。",
+					"choices": [
+						{
+							"text": "（她没有退，挡在路前）",
+							"set_flag": {
+								"self_temple_brave": true
+							}
+						},
+						{
+							"text": "（手在抖，但没有退）",
+							"set_flag": {
+								"self_temple_scared": true
+							}
+						}
+					]
 				}
 			}
 		},
