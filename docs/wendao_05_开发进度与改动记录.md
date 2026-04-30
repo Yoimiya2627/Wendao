@@ -1,64 +1,46 @@
-# 《问道》第七版文档
+# 《问道》开发文档
 # 开发进度 · 改动记录 · 待办清单
 
 ---
 
 ## 一、当前完成状态（最新）
 
+**当前版本**：v40.15（2026-04-26）　**分支**：main　**已 push**
+
 ### 链路状态
 
 | 链路 | 状态 | 备注 |
 |------|------|------|
-| 链路一 morning流程 | ✅ 完整可测 | 猫咪互动、针线篓均正常 |
-| 链路二 测灵广场 | ✅ 完整可测 | 两段式、飘字、围观NPC |
+| 链路一 morning 流程 | ✅ 完整可测 | 爹三拍对白 + 苏云晚 B1 内心独白 + 两支选择差异化 |
+| 链路二 测灵广场 | ✅ 完整可测 | 两段式演出 + NPC 浮字（8条可重触发）+ 八品门槛设定 |
 | 链路三 回家流程 | ✅ 完整可测 | 猫咪安慰、夜晚切换正常 |
-| 链路四 废庙流程 | ✅ 五房间完整可测 | 幽影狼×2、石皮蟾、BOSS |
-| 链路五 章末流程 | ✅ 完整可测 | 路径A/B均验证通过 |
+| 链路四 废庙流程 | ✅ 五房间完整可测 | monster_approach 含 brave/scared 选择支；幽影狼×2、石皮蟾、BOSS |
+| 链路五 章末流程 | ✅ 完整可测 | 路径 A/B 均验证通过 |
 
-### 本轮新增完成（第七版）
+### 叙事分支 flag 链路（已核实）
 
-**一致性修复（新增）**
-- TeaScene.gd：修复测灵前老江湖不可对话，phase<3 时恢复 `old_wanderer` 对话
-- chapter1.json：老江湖去程台词改为测灵前语境，去除“测出来什么/无灵根”时序冲突
-- TempleScene.gd：碑文已读后按E不再重播；`sense_unlocked_hint` 改为一次性触发，修复可重复刷“感应·已领悟”
-- chapter1.json + TownScene.gd：香料摊回程文案按是否买桂皮动态切换（`vendor_b_return` / `vendor_b_return_no_cinnamon`）
-- BattleUI.gd：战斗 BGM 进场淡入延长至 3.0 秒，缓解“突然过响”
-- chapter1.json + ChapterEndScene.gd：章末“平安符”文案去穿帮（无符走中性文案）
-- GameData.gd + TownScene.gd + ChapterEndScene.gd：新增 `got_charm` 持久化分支，章末路径A按是否拿到平安符切换首句文案
+| flag | 设置位置 | 消费位置 |
+|------|----------|----------|
+| `father_morning_warm/silent` | `morning/m_08b` | `letter/lt_06c_warm`、`boss_awakening/ba_cb_father` |
+| `self_test_calm/hurt` | `test/ts_05b` | `examiner_after`、各 NPC 安慰分支 |
+| `self_temple_brave/scared` | `monster_approach/ma_07b` | `after_battle/ab_01_*`、`after_battle_coin/ab_01_*` |
+| `father_cinnamon_forgot` | `market/mk_*` | `boss_awakening/ba_cb_cinnamon` |
+| `father_letter_promise_return` | `letter/lt_11c` | `boss_awakening/ba_cb_promise` |
+| `gu_pressed_who/where` | `after_battle/ab_07b` | `after_battle/ab_recall_*` |
+| `path_ending` | `after_battle/ab_ending` | `ChapterEndScene.gd` |
 
-**Bug修复（4个）**
-- BattleManager.gd：BOSS第二阶段固定伤害12→10
-- BattleUI.gd：删除gain_exp()调用，普通胜利改为灵石奖励
-- TempleScene.gd：读档后石碑Area2D+碰撞体正确恢复
-- DialogueManager.gd：空事件节点兜底advance()防假死
+### 已确认设计决策
 
-**药婆商人系统**
-- 位置：格(35,26)，夜晚(night_triggered=true)且story_phase<5时刷出
-- 消耗品：伤药10灵石/定神香20灵石/辟邪符15灵石，无限购买
-- 购买反馈：灵石足够→气泡"买下了。"，不足→气泡"灵石不够……"
-- 对话循环：JSON内部next指回choice节点，选"算了不买"才退出
-- chapter1.json新增：night_vendor_shop、night_vendor_return
-
-**古井回血系统**
-- 位置：格(21,16)中心，像素(688,528)
-- 触发条件：夜晚+phase3-4+未用过今日额度+HP未满
-- 回血量：ceil(max_hp * 0.3)
-- 重置时机：每次进入TownScene._ready()重置well_used_today=false
-- chapter1.json新增：well_heal
-
-**基础UI三件套**
-- UIManager.gd：新建AutoLoad单例，CanvasLayer layer=50
-- HP条：左上角，苏云晚 HP x/x + 进度条，低血量变深红
-- 心绪面板：右侧，第一人称独白，随story_phase_changed信号自动更新
-- 旧物背包：右下角"囊"按钮展开，6格，点击看描述，仅叙事道具
-- 战斗中：BattleUI._ready()调用on_battle_start()隐藏，结束时on_battle_end()恢复
-- 读档同步：TownScene._ready()末尾调用UIManager.refresh_all_data()
-
-**已确认设计决策补充**
+- `boss_awakening` callback 链只保留家相关三条（父亲回头/桂皮/便条），
+  **不补** brave/scared 觉醒回响——三家闪回主题统一，已够
+- `self_temple_brave/scared` 选择支在 `monster_approach/ma_07b`，
+  无 `next` 字段→ `_end_scene()` 自然结束 → TempleScene 触发战斗，链路正确
 - 幽影狼：碰触强制战斗（不需要按E确认），设计已确认不更改
-- 消耗品不放旧物背包：旧物面板仅限叙事道具，消耗品只记录在GameData
-- 信号方案技术债：未来加主菜单时，将TownScene._ready()的
-  UIManager.refresh_all_data()改为GameData.data_loaded信号驱动
+- 消耗品不放旧物背包：旧物面板仅限叙事道具
+
+### 下一步
+
+- **Step 4**：第二章「离别清晨」扩展（bible §八）—— 待开始
 
 ---
 
